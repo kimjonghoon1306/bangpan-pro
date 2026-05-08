@@ -5,10 +5,9 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   LayoutDashboard, Users, ShoppingBag, Calculator,
-  Settings, TrendingUp, LogOut, ChevronLeft, GitBranch,
-  Wallet, Package, Bell, Menu,
+  Settings, TrendingUp, LogOut, GitBranch,
+  Wallet, Package, Bell, Menu, X, ChevronLeft,
 } from "lucide-react";
-import { cn } from "@/lib/utils";
 import ThemeToggle from "@/components/ui/ThemeToggle";
 
 const NAV = [
@@ -28,77 +27,173 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const [mobileOpen, setMobileOpen] = useState(false);
 
   return (
-    <div className="flex h-screen overflow-hidden" style={{ background: "var(--bg)" }}>
+    <div style={{ display: "flex", height: "100vh", overflow: "hidden", background: "var(--bg)" }}>
+      {/* 모바일 오버레이 */}
       {mobileOpen && (
-        <div className="fixed inset-0 bg-black/60 z-40 md:hidden" onClick={() => setMobileOpen(false)} />
+        <div
+          onClick={() => setMobileOpen(false)}
+          style={{
+            position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)",
+            zIndex: 40, backdropFilter: "blur(4px)",
+          }}
+        />
       )}
 
-      <aside className={cn(
-        "fixed md:relative z-50 h-full flex flex-col transition-all duration-300",
-        collapsed ? "w-[68px]" : "w-[240px]",
-        mobileOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
-      )} style={{ background: "var(--bg-surface)", borderRight: "1px solid var(--bg-border)" }}>
-
-        <div className="h-16 flex items-center justify-between px-4 flex-shrink-0" style={{ borderBottom: "1px solid var(--bg-border)" }}>
+      {/* 사이드바 */}
+      <aside style={{
+        position: "fixed", top: 0, left: 0, height: "100%", zIndex: 50,
+        width: collapsed ? "68px" : "240px",
+        background: "var(--bg-surface)",
+        borderRight: "1px solid var(--bg-border)",
+        display: "flex", flexDirection: "column",
+        transition: "width 0.3s cubic-bezier(0.4,0,0.2,1), transform 0.3s cubic-bezier(0.4,0,0.2,1)",
+        transform: mobileOpen ? "translateX(0)" : undefined,
+      }}
+        className={!mobileOpen ? "max-md:-translate-x-full" : ""}
+      >
+        {/* 로고 */}
+        <div style={{
+          height: "64px", display: "flex", alignItems: "center",
+          justifyContent: "space-between", padding: "0 16px",
+          borderBottom: "1px solid var(--bg-border)", flexShrink: 0,
+        }}>
           {!collapsed && (
-            <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: "rgba(201,168,76,0.1)", border: "1px solid rgba(201,168,76,0.2)" }}>
-                <TrendingUp className="w-4 h-4" style={{ color: "var(--gold)" }} />
+            <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+              {/* SVG 로고 아이콘 */}
+              <div style={{
+                width: 34, height: 34, borderRadius: "10px",
+                background: "rgba(201,168,76,0.1)",
+                border: "1px solid rgba(201,168,76,0.25)",
+                display: "flex", alignItems: "center", justifyContent: "center",
+              }}>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                  <polyline points="22,7 13.5,15.5 8.5,10.5 2,17" stroke="var(--gold)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+                  <polyline points="16,7 22,7 22,13" stroke="var(--gold)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
               </div>
-              <span className="font-bold text-sm" style={{ color: "var(--text-primary)", fontFamily: "Syne, sans-serif" }}>BangpanPRO</span>
+              <div>
+                <p style={{ fontFamily: "Syne, sans-serif", fontWeight: 800, fontSize: "15px", color: "var(--text-primary)", lineHeight: 1.2 }}>BangpanPRO</p>
+                <p style={{ fontSize: "10px", color: "var(--text-muted)", letterSpacing: "0.05em" }}>ADMIN</p>
+              </div>
             </div>
           )}
           {collapsed && (
-            <div className="w-8 h-8 rounded-lg flex items-center justify-center mx-auto" style={{ background: "rgba(201,168,76,0.1)", border: "1px solid rgba(201,168,76,0.2)" }}>
-              <TrendingUp className="w-4 h-4" style={{ color: "var(--gold)" }} />
+            <div style={{
+              width: 34, height: 34, borderRadius: "10px", margin: "0 auto",
+              background: "rgba(201,168,76,0.1)", border: "1px solid rgba(201,168,76,0.25)",
+              display: "flex", alignItems: "center", justifyContent: "center",
+            }}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                <polyline points="22,7 13.5,15.5 8.5,10.5 2,17" stroke="var(--gold)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+                <polyline points="16,7 22,7 22,13" stroke="var(--gold)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
             </div>
           )}
-          <button onClick={() => setCollapsed(!collapsed)} className="hidden md:flex w-6 h-6 items-center justify-center transition-colors" style={{ color: "var(--text-muted)" }}>
-            <ChevronLeft className={cn("w-4 h-4 transition-transform", collapsed && "rotate-180")} />
+          <button
+            onClick={() => setCollapsed(!collapsed)}
+            className="max-md:hidden"
+            style={{
+              width: 28, height: 28, borderRadius: "8px", border: "1px solid var(--bg-border)",
+              background: "transparent", cursor: "pointer", display: "flex",
+              alignItems: "center", justifyContent: "center", color: "var(--text-muted)",
+              transition: "all 0.2s",
+            }}
+          >
+            <ChevronLeft size={14} style={{ transform: collapsed ? "rotate(180deg)" : "none", transition: "transform 0.3s" }} />
+          </button>
+          <button
+            onClick={() => setMobileOpen(false)}
+            className="md:hidden"
+            style={{
+              width: 28, height: 28, borderRadius: "8px", border: "none",
+              background: "transparent", cursor: "pointer", color: "var(--text-muted)",
+            }}
+          >
+            <X size={16} />
           </button>
         </div>
 
-        <nav className="flex-1 py-4 overflow-y-auto">
-          <ul className="space-y-0.5 px-2">
-            {NAV.map((item) => {
-              const active = pathname === item.href || pathname.startsWith(item.href + "/");
-              return (
-                <li key={item.href}>
-                  <Link
-                    href={item.href}
-                    onClick={() => setMobileOpen(false)}
-                    className={cn("flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-150 group", collapsed && "justify-center")}
-                    style={{
-                      background: active ? "rgba(201,168,76,0.1)" : "transparent",
-                      border: active ? "1px solid rgba(201,168,76,0.15)" : "1px solid transparent",
-                      color: active ? "var(--gold)" : "var(--text-secondary)",
-                    }}
-                  >
-                    <item.icon style={{ width: 18, height: 18, flexShrink: 0, color: active ? "var(--gold)" : "var(--text-muted)" }} />
-                    {!collapsed && <span className="text-sm font-medium">{item.label}</span>}
-                    {!collapsed && item.highlight && !active && (
-                      <span className="ml-auto w-1.5 h-1.5 rounded-full animate-glow-pulse" style={{ background: "var(--gold)" }} />
-                    )}
-                  </Link>
-                </li>
-              );
-            })}
-          </ul>
+        {/* 네비 */}
+        <nav style={{ flex: 1, padding: "12px 8px", overflowY: "auto" }}>
+          {NAV.map((item, i) => {
+            const active = pathname === item.href || pathname.startsWith(item.href + "/");
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                onClick={() => setMobileOpen(false)}
+                style={{
+                  display: "flex", alignItems: "center",
+                  gap: collapsed ? 0 : "12px",
+                  justifyContent: collapsed ? "center" : "flex-start",
+                  padding: collapsed ? "12px 0" : "10px 12px",
+                  borderRadius: "10px", marginBottom: "2px",
+                  background: active ? "rgba(201,168,76,0.1)" : "transparent",
+                  border: active ? "1px solid rgba(201,168,76,0.2)" : "1px solid transparent",
+                  color: active ? "var(--gold)" : "var(--text-secondary)",
+                  textDecoration: "none",
+                  transition: "all 0.15s",
+                  position: "relative",
+                  animationDelay: `${i * 40}ms`,
+                }}
+                className="animate-slide-in"
+                onMouseEnter={e => {
+                  if (!active) {
+                    (e.currentTarget as HTMLElement).style.background = "rgba(201,168,76,0.05)";
+                    (e.currentTarget as HTMLElement).style.color = "var(--text-primary)";
+                  }
+                }}
+                onMouseLeave={e => {
+                  if (!active) {
+                    (e.currentTarget as HTMLElement).style.background = "transparent";
+                    (e.currentTarget as HTMLElement).style.color = "var(--text-secondary)";
+                  }
+                }}
+              >
+                <item.icon size={18} style={{ flexShrink: 0, color: active ? "var(--gold)" : "var(--text-muted)" }} />
+                {!collapsed && (
+                  <span style={{ fontSize: "14px", fontWeight: active ? 600 : 500, flex: 1 }}>{item.label}</span>
+                )}
+                {!collapsed && item.highlight && !active && (
+                  <span style={{
+                    width: 6, height: 6, borderRadius: "50%",
+                    background: "var(--gold)", animation: "glowPulse 2s infinite",
+                  }} />
+                )}
+                {active && (
+                  <span style={{
+                    position: "absolute", left: 0, top: "50%", transform: "translateY(-50%)",
+                    width: "3px", height: "60%", borderRadius: "0 2px 2px 0",
+                    background: "var(--gold)",
+                  }} />
+                )}
+              </Link>
+            );
+          })}
         </nav>
 
-        <div className="p-3" style={{ borderTop: "1px solid var(--bg-border)" }}>
-          <div className={cn("flex items-center gap-3 px-2 py-2", collapsed && "justify-center")}>
-            <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: "rgba(201,168,76,0.15)", border: "1px solid rgba(201,168,76,0.25)" }}>
-              <span className="text-xs font-bold" style={{ color: "var(--gold)" }}>관</span>
-            </div>
+        {/* 유저 */}
+        <div style={{ padding: "12px", borderTop: "1px solid var(--bg-border)" }}>
+          <div style={{
+            display: "flex", alignItems: "center",
+            gap: collapsed ? 0 : "10px",
+            justifyContent: collapsed ? "center" : "flex-start",
+            padding: "8px",
+          }}>
+            <div style={{
+              width: 34, height: 34, borderRadius: "50%", flexShrink: 0,
+              background: "rgba(201,168,76,0.15)", border: "2px solid rgba(201,168,76,0.3)",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              fontSize: "13px", fontWeight: 700, color: "var(--gold)",
+            }}>관</div>
             {!collapsed && (
               <>
-                <div className="flex-1 min-w-0">
-                  <p className="text-xs font-medium truncate" style={{ color: "var(--text-primary)" }}>관리자</p>
-                  <p className="text-xs truncate" style={{ color: "var(--text-muted)" }}>admin@company.com</p>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <p style={{ fontSize: "13px", fontWeight: 600, color: "var(--text-primary)" }}>관리자</p>
+                  <p style={{ fontSize: "11px", color: "var(--text-muted)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>admin@company.com</p>
                 </div>
-                <button className="transition-colors" style={{ color: "var(--text-muted)" }}>
-                  <LogOut className="w-4 h-4" />
+                <button style={{ background: "none", border: "none", cursor: "pointer", color: "var(--text-muted)", padding: "4px" }}>
+                  <LogOut size={15} />
                 </button>
               </>
             )}
@@ -106,23 +201,66 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </div>
       </aside>
 
-      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-        <header className="h-16 flex items-center justify-between px-6 flex-shrink-0" style={{ background: "var(--bg-surface)", borderBottom: "1px solid var(--bg-border)" }}>
-          <button className="md:hidden transition-colors" style={{ color: "var(--text-muted)" }} onClick={() => setMobileOpen(true)}>
-            <Menu className="w-5 h-5" />
+      {/* 메인 */}
+      <div style={{
+        flex: 1, display: "flex", flexDirection: "column", minWidth: 0,
+        marginLeft: "240px", transition: "margin-left 0.3s",
+      }}
+        className={`${collapsed ? "md:ml-[68px]" : "md:ml-[240px]"} ml-0`}
+      >
+        {/* 헤더 */}
+        <header style={{
+          height: "60px", display: "flex", alignItems: "center",
+          justifyContent: "space-between", padding: "0 24px",
+          background: "var(--bg-surface)", borderBottom: "1px solid var(--bg-border)",
+          flexShrink: 0, position: "sticky", top: 0, zIndex: 30,
+        }}>
+          <button
+            className="md:hidden"
+            onClick={() => setMobileOpen(true)}
+            style={{
+              background: "none", border: "none", cursor: "pointer",
+              color: "var(--text-muted)", padding: "4px",
+            }}
+          >
+            <Menu size={22} />
           </button>
-          <div className="flex items-center gap-3 ml-auto">
-            <ThemeToggle />
-            <button className="relative w-8 h-8 flex items-center justify-center transition-colors" style={{ color: "var(--text-muted)" }}>
-              <Bell style={{ width: 18, height: 18 }} />
-              <span className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full" style={{ background: "var(--gold)" }} />
+
+          {/* 페이지 타이틀 */}
+          <div className="hidden md:block">
+            <p style={{ fontSize: "13px", color: "var(--text-muted)" }}>
+              {NAV.find(n => pathname.startsWith(n.href))?.label ?? "BangpanPRO"}
+            </p>
+          </div>
+
+          <div style={{ display: "flex", alignItems: "center", gap: "10px", marginLeft: "auto" }}>
+            <ThemeToggle size="sm" />
+            <button style={{
+              position: "relative", width: 36, height: 36,
+              borderRadius: "10px", background: "var(--bg-elevated)",
+              border: "1px solid var(--bg-border)", cursor: "pointer",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              color: "var(--text-muted)",
+            }}>
+              <Bell size={16} />
+              <span style={{
+                position: "absolute", top: 6, right: 6,
+                width: 7, height: 7, borderRadius: "50%",
+                background: "var(--gold)", border: "2px solid var(--bg-surface)",
+              }} />
             </button>
-            <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ background: "rgba(201,168,76,0.15)", border: "1px solid rgba(201,168,76,0.25)" }}>
-              <span className="text-xs font-bold" style={{ color: "var(--gold)" }}>관</span>
-            </div>
+            <div style={{
+              width: 36, height: 36, borderRadius: "50%",
+              background: "rgba(201,168,76,0.15)", border: "2px solid rgba(201,168,76,0.3)",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              fontSize: "13px", fontWeight: 700, color: "var(--gold)",
+            }}>관</div>
           </div>
         </header>
-        <main className="flex-1 overflow-y-auto">{children}</main>
+
+        <main style={{ flex: 1, overflowY: "auto" }}>
+          {children}
+        </main>
       </div>
     </div>
   );
