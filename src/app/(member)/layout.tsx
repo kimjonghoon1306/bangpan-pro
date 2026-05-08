@@ -2,80 +2,132 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, GitBranch, Wallet, ShoppingBag, User, TrendingUp, LogOut } from "lucide-react";
-import { cn } from "@/lib/utils";
+import {
+  LayoutDashboard, GitBranch, Wallet,
+  ShoppingBag, User, TrendingUp, LogOut,
+} from "lucide-react";
 import ThemeToggle from "@/components/ui/ThemeToggle";
 
 const NAV = [
-  { label: "내 현황", href: "/portal", icon: LayoutDashboard },
-  { label: "내 조직", href: "/network", icon: GitBranch },
-  { label: "수당 내역", href: "/earnings", icon: Wallet },
-  { label: "쇼핑몰", href: "/shop", icon: ShoppingBag },
-  { label: "내 정보", href: "/profile", icon: User },
+  { label: "현황", href: "/portal", icon: LayoutDashboard },
+  { label: "조직", href: "/network", icon: GitBranch },
+  { label: "수당", href: "/earnings", icon: Wallet },
+  { label: "쇼핑", href: "/shop", icon: ShoppingBag },
+  { label: "내정보", href: "/profile", icon: User },
 ];
 
 export default function MemberLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
 
   return (
-    <div className="min-h-screen" style={{ background: "var(--bg)" }}>
-      <header className="sticky top-0 z-50 h-14" style={{ background: "var(--bg-surface)", borderBottom: "1px solid var(--bg-border)" }}>
-        <div className="max-w-5xl mx-auto h-full flex items-center justify-between px-4">
-          <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: "rgba(201,168,76,0.15)", border: "1px solid rgba(201,168,76,0.25)" }}>
-              <TrendingUp className="w-3.5 h-3.5" style={{ color: "var(--gold)" }} />
+    <div style={{ minHeight: "100vh", background: "var(--bg)" }}>
+      {/* PC 상단 헤더 */}
+      <header style={{
+        position: "sticky", top: 0, zIndex: 50,
+        height: "60px", background: "var(--bg-surface)",
+        borderBottom: "1px solid var(--bg-border)",
+        backdropFilter: "blur(12px)",
+      }}>
+        <div style={{
+          maxWidth: "1280px", margin: "0 auto", height: "100%",
+          display: "flex", alignItems: "center",
+          justifyContent: "space-between", padding: "0 24px",
+        }}>
+          {/* 로고 */}
+          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+            <div style={{
+              width: 32, height: 32, borderRadius: "9px",
+              background: "rgba(201,168,76,0.1)", border: "1px solid rgba(201,168,76,0.25)",
+              display: "flex", alignItems: "center", justifyContent: "center",
+            }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                <polyline points="22,7 13.5,15.5 8.5,10.5 2,17" stroke="var(--gold)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+                <polyline points="16,7 22,7 22,13" stroke="var(--gold)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
             </div>
-            <span className="font-bold text-sm" style={{ color: "var(--text-primary)", fontFamily: "Syne, sans-serif" }}>BangpanPRO</span>
+            <span style={{ fontFamily: "Syne, sans-serif", fontWeight: 800, fontSize: "15px", color: "var(--text-primary)" }}>BangpanPRO</span>
           </div>
 
-          <nav className="hidden md:flex items-center gap-1">
+          {/* PC 네비 */}
+          <nav className="hidden md:flex" style={{ alignItems: "center", gap: "4px" }}>
             {NAV.map((item) => {
               const active = pathname === item.href;
               return (
-                <Link key={item.href} href={item.href}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm transition-all"
-                  style={{
-                    background: active ? "rgba(201,168,76,0.1)" : "transparent",
-                    color: active ? "var(--gold)" : "var(--text-secondary)",
-                  }}
-                >
-                  <item.icon className="w-3.5 h-3.5" />
+                <Link key={item.href} href={item.href} style={{
+                  display: "flex", alignItems: "center", gap: "6px",
+                  padding: "7px 14px", borderRadius: "9px",
+                  fontSize: "14px", fontWeight: active ? 600 : 500,
+                  textDecoration: "none",
+                  background: active ? "rgba(201,168,76,0.1)" : "transparent",
+                  color: active ? "var(--gold)" : "var(--text-secondary)",
+                  transition: "all 0.15s",
+                  border: active ? "1px solid rgba(201,168,76,0.2)" : "1px solid transparent",
+                }}>
+                  <item.icon size={15} />
                   {item.label}
                 </Link>
               );
             })}
           </nav>
 
-          <div className="flex items-center gap-2">
-            <ThemeToggle />
-            <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ background: "rgba(201,168,76,0.15)", border: "1px solid rgba(201,168,76,0.25)" }}>
-              <span className="text-xs font-bold" style={{ color: "var(--gold)" }}>김</span>
-            </div>
-            <button style={{ color: "var(--text-muted)" }}>
-              <LogOut className="w-4 h-4" />
+          {/* 우측 */}
+          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+            <ThemeToggle size="sm" />
+            <div style={{
+              width: 34, height: 34, borderRadius: "50%",
+              background: "rgba(201,168,76,0.15)", border: "2px solid rgba(201,168,76,0.3)",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              fontSize: "13px", fontWeight: 700, color: "var(--gold)",
+            }}>김</div>
+            <button style={{ background: "none", border: "none", cursor: "pointer", color: "var(--text-muted)" }}
+              className="hidden md:block">
+              <LogOut size={16} />
             </button>
           </div>
         </div>
       </header>
 
-      <div className="fixed bottom-0 inset-x-0 z-50 md:hidden" style={{ background: "var(--bg-surface)", borderTop: "1px solid var(--bg-border)" }}>
-        <div className="grid grid-cols-5">
+      {/* 콘텐츠 */}
+      <main style={{
+        maxWidth: "1280px", margin: "0 auto",
+        padding: "24px 24px 100px",
+      }}
+        className="md:pb-6"
+      >
+        {children}
+      </main>
+
+      {/* 모바일 하단 탭 */}
+      <div className="md:hidden" style={{
+        position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 50,
+        background: "var(--bg-surface)", borderTop: "1px solid var(--bg-border)",
+        paddingBottom: "env(safe-area-inset-bottom)",
+      }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)" }}>
           {NAV.map((item) => {
             const active = pathname === item.href;
             return (
-              <Link key={item.href} href={item.href}
-                className="flex flex-col items-center gap-1 py-2 text-[10px] transition-colors"
-                style={{ color: active ? "var(--gold)" : "var(--text-muted)" }}
-              >
-                <item.icon style={{ width: 18, height: 18 }} />
+              <Link key={item.href} href={item.href} style={{
+                display: "flex", flexDirection: "column", alignItems: "center",
+                gap: "3px", padding: "10px 0 8px",
+                color: active ? "var(--gold)" : "var(--text-muted)",
+                textDecoration: "none", fontSize: "10px", fontWeight: active ? 600 : 500,
+                position: "relative", transition: "color 0.15s",
+              }}>
+                {active && (
+                  <span style={{
+                    position: "absolute", top: 0, left: "50%", transform: "translateX(-50%)",
+                    width: "24px", height: "2px", borderRadius: "0 0 3px 3px",
+                    background: "var(--gold)",
+                  }} />
+                )}
+                <item.icon size={22} />
                 {item.label}
               </Link>
             );
           })}
         </div>
       </div>
-
-      <main className="max-w-5xl mx-auto px-4 py-6 pb-24 md:pb-6">{children}</main>
     </div>
   );
 }
