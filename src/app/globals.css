@@ -1,0 +1,125 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --font-syne: 'Syne', sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: #08080E;
+  color: #F0F0F8;
+  font-family: 'Pretendard Variable', 'Pretendard', -apple-system, sans-serif;
+}
+
+/* 스크롤바 */
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: #08080E; }
+::-webkit-scrollbar-thumb { background: #1E1E30; border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: #C9A84C; }
+
+/* 선택 */
+::selection { background: rgba(201, 168, 76, 0.25); color: #F0F0F8; }
+
+/* 골드 글로우 텍스트 */
+.text-gold-glow {
+  color: #C9A84C;
+  text-shadow: 0 0 20px rgba(201, 168, 76, 0.4);
+}
+
+/* 카드 기본 */
+.card {
+  @apply bg-bg-surface border border-bg-border rounded-xl p-6;
+}
+
+.card-elevated {
+  @apply bg-bg-elevated border border-bg-border rounded-xl p-6 shadow-elevated;
+}
+
+/* 입력 기본 */
+.input-base {
+  @apply w-full bg-bg border border-bg-border rounded-lg px-4 py-2.5
+    text-text-primary placeholder:text-text-muted
+    focus:outline-none focus:border-gold/50 focus:ring-1 focus:ring-gold/20
+    transition-all duration-200;
+}
+
+/* 버튼 */
+.btn-gold {
+  @apply bg-gold text-bg font-semibold px-5 py-2.5 rounded-lg
+    hover:bg-gold-light active:scale-95
+    transition-all duration-150 shadow-gold-sm;
+}
+
+.btn-outline {
+  @apply border border-bg-border text-text-secondary px-5 py-2.5 rounded-lg
+    hover:border-gold/40 hover:text-text-primary
+    transition-all duration-150;
+}
+
+/* 배지 */
+.badge {
+  @apply inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium;
+}
+.badge-gold { @apply badge bg-gold/15 text-gold-light; }
+.badge-green { @apply badge bg-emerald-soft/15 text-emerald-soft; }
+.badge-red { @apply badge bg-red-500/15 text-red-400; }
+.badge-gray { @apply badge bg-bg-border text-text-secondary; }
+
+/* 노이즈 텍스처 오버레이 */
+.noise-overlay {
+  position: relative;
+}
+.noise-overlay::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+  opacity: 0.03;
+  pointer-events: none;
+  z-index: 0;
+  border-radius: inherit;
+}
+
+/* 애니메이션 딜레이 유틸 */
+.delay-100 { animation-delay: 100ms; }
+.delay-200 { animation-delay: 200ms; }
+.delay-300 { animation-delay: 300ms; }
+.delay-400 { animation-delay: 400ms; }
+.delay-500 { animation-delay: 500ms; }
+
+/* 슬라이드업 애니메이션 */
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-slide-up {
+  animation: slideUp 0.5s ease forwards;
+  opacity: 0;
+}
+
+/* 테이블 */
+.table-base {
+  @apply w-full text-sm;
+}
+.table-base thead tr {
+  @apply border-b border-bg-border;
+}
+.table-base thead th {
+  @apply text-left py-3 px-4 text-text-muted font-medium text-xs uppercase tracking-wider;
+}
+.table-base tbody tr {
+  @apply border-b border-bg-border/50 hover:bg-bg-elevated/50 transition-colors;
+}
+.table-base tbody td {
+  @apply py-3.5 px-4 text-text-primary;
+}
