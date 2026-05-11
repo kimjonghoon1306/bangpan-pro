@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Eye, EyeOff, Lock, Mail, TrendingUp } from "lucide-react";
+import { Eye, EyeOff, Lock, Mail, TrendingUp, Settings } from "lucide-react";
 import Link from "next/link";
 import ThemeToggle from "@/components/ui/ThemeToggle";
 import { createBrowserSupabaseClient } from "@/lib/supabase";
@@ -43,7 +43,50 @@ export default function LoginPage() {
         }} />
       </div>
 
-      <div className="absolute top-4 right-4"><ThemeToggle /></div>
+      {/* 우상단 테마토글 */}
+      <div style={{ position: "fixed", top: 16, right: 16 }}>
+        <ThemeToggle />
+      </div>
+
+      {/* 우하단 관리자 톱니바퀴 */}
+      <button
+        onClick={() => router.push("/admin-login")}
+        title="관리자 로그인"
+        style={{
+          position: "fixed",
+          bottom: 24,
+          right: 24,
+          width: 48,
+          height: 48,
+          borderRadius: "50%",
+          background: "var(--bg-elevated)",
+          border: "1px solid var(--bg-border)",
+          cursor: "pointer",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          color: "var(--text-muted)",
+          boxShadow: "0 4px 16px rgba(0,0,0,0.3)",
+          transition: "all 0.25s",
+          zIndex: 100,
+        }}
+        onMouseEnter={e => {
+          const el = e.currentTarget as HTMLElement;
+          el.style.borderColor = "rgba(201,168,76,0.5)";
+          el.style.color = "var(--gold)";
+          el.style.transform = "rotate(45deg) scale(1.1)";
+          el.style.boxShadow = "0 4px 20px rgba(201,168,76,0.2)";
+        }}
+        onMouseLeave={e => {
+          const el = e.currentTarget as HTMLElement;
+          el.style.borderColor = "var(--bg-border)";
+          el.style.color = "var(--text-muted)";
+          el.style.transform = "rotate(0deg) scale(1)";
+          el.style.boxShadow = "0 4px 16px rgba(0,0,0,0.3)";
+        }}
+      >
+        <Settings size={20} />
+      </button>
 
       <div className="relative w-full max-w-md px-6">
         <div className="text-center mb-10 animate-slide-up">
