@@ -14,6 +14,7 @@ const NAV = [
   { label: "대시보드", href: "/dashboard", icon: LayoutDashboard },
   { label: "회원 관리", href: "/members", icon: Users },
   { label: "조직도", href: "/org", icon: GitBranch },
+  { label: "매출 관리", href: "/sales", icon: TrendingUp },
   { label: "주문 관리", href: "/orders", icon: ShoppingBag },
   { label: "상품 관리", href: "/products", icon: Package },
   { label: "수당 플랜", href: "/plan", icon: Calculator, highlight: true },
