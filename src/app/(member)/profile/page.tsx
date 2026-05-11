@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { Save, User, CreditCard, Lock, Check } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { Save, User, CreditCard, Lock, Check, Eye, EyeOff } from "lucide-react";
+import { createBrowserSupabaseClient } from "@/lib/supabase";
 
 const TABS = [
   { id: "info", label: "기본 정보", icon: User },
@@ -19,13 +19,41 @@ const MEMBER = {
 export default function ProfilePage() {
   const [tab, setTab] = useState("info");
   const [saved, setSaved] = useState(false);
+  const [error, setError] = useState("");
   const [form, setForm] = useState(MEMBER);
+
+  const [pw, setPw] = useState({ current: "", next: "", confirm: "" });
+  const [showPw, setShowPw] = useState({ current: false, next: false, confirm: false });
+  const [pwLoading, setPwLoading] = useState(false);
 
   function update(key: string, val: string) {
     setForm(f => ({ ...f, [key]: val }));
   }
 
   function handleSave() {
+    setSaved(true);
+    setTimeout(() => setSaved(false), 2000);
+  }
+
+  async function handlePasswordChange() {
+    setError("");
+    if (!pw.current || !pw.next || !pw.confirm) {
+      setError("모든 항목을 입력해주세요."); return;
+    }
+    if (pw.next !== pw.confirm) {
+      setError("새 비밀번호가 일치하지 않습니다."); return;
+    }
+    if (pw.next.length < 8) {
+      setError("비밀번호는 8자 이상이어야 합니다."); return;
+    }
+    setPwLoading(true);
+    const supabase = createBrowserSupabaseClient();
+    const { error: err } = await supabase.auth.updateUser({ password: pw.next });
+    setPwLoading(false);
+    if (err) {
+      setError(err.message); return;
+    }
+    setPw({ current: "", next: "", confirm: "" });
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
   }
@@ -52,16 +80,16 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      {saved && (
-        <div style={{ marginBottom: "14px", padding: "12px 16px", borderRadius: "10px", background: "rgba(16,185,129,0.1)", border: "1px solid rgba(16,185,129,0.2)", color: "var(--emerald)", display: "flex", alignItems: "center", gap: "8px", fontSize: "13px" }}>
-          <Check size={14} /> 저장되었습니다.
+      {(saved || error) && (
+        <div style={{ marginBottom: "14px", padding: "12px 16px", borderRadius: "10px", background: saved ? "rgba(16,185,129,0.1)" : "rgba(239,68,68,0.1)", border: `1px solid ${saved ? "rgba(16,185,129,0.2)" : "rgba(239,68,68,0.2)"}`, color: saved ? "var(--emerald)" : "#F87171", display: "flex", alignItems: "center", gap: "8px", fontSize: "13px" }}>
+          {saved ? <><Check size={14} /> 저장되었습니다.</> : error}
         </div>
       )}
 
       {/* 탭 */}
       <div style={{ display: "flex", gap: "4px", background: "var(--bg-elevated)", border: "1px solid var(--bg-border)", borderRadius: "12px", padding: "4px", marginBottom: "16px" }}>
         {TABS.map((t) => (
-          <button key={t.id} onClick={() => setTab(t.id)} style={{
+          <button key={t.id} onClick={() => { setTab(t.id); setError(""); setSaved(false); }} style={{
             flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: "6px",
             padding: "10px", borderRadius: "9px", fontSize: "13px", fontWeight: tab === t.id ? 700 : 500, cursor: "pointer", transition: "all 0.15s",
             background: tab === t.id ? "rgba(201,168,76,0.1)" : "transparent",
@@ -74,7 +102,6 @@ export default function ProfilePage() {
         ))}
       </div>
 
-      {/* 탭 콘텐츠 */}
       <div style={{ background: "var(--bg-elevated)", border: "1px solid var(--bg-border)", borderRadius: "16px", padding: "24px" }}>
 
         {tab === "info" && (
@@ -125,17 +152,32 @@ export default function ProfilePage() {
         {tab === "password" && (
           <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
             {[
-              { label: "현재 비밀번호", placeholder: "••••••••" },
-              { label: "새 비밀번호", placeholder: "8자 이상" },
-              { label: "새 비밀번호 확인", placeholder: "••••••••" },
+              { label: "현재 비밀번호", key: "current", placeholder: "현재 비밀번호 입력" },
+              { label: "새 비밀번호", key: "next", placeholder: "8자 이상 입력" },
+              { label: "새 비밀번호 확인", key: "confirm", placeholder: "새 비밀번호 재입력" },
             ].map((f) => (
-              <div key={f.label}>
+              <div key={f.key}>
                 <label style={{ display: "block", fontSize: "12px", color: "var(--text-muted)", marginBottom: "6px", fontWeight: 600 }}>{f.label}</label>
-                <input type="password" placeholder={f.placeholder} className="input-base" style={{ fontSize: "14px" }} />
+                <div style={{ position: "relative" }}>
+                  <input
+                    type={(showPw as any)[f.key] ? "text" : "password"}
+                    value={(pw as any)[f.key]}
+                    onChange={(e) => setPw(p => ({ ...p, [f.key]: e.target.value }))}
+                    placeholder={f.placeholder}
+                    className="input-base"
+                    style={{ fontSize: "14px", paddingRight: "40px" }}
+                  />
+                  <button type="button" onClick={() => setShowPw(s => ({ ...s, [f.key]: !(s as any)[f.key] }))} style={{ position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: "var(--text-muted)" }}>
+                    {(showPw as any)[f.key] ? <EyeOff size={15} /> : <Eye size={15} />}
+                  </button>
+                </div>
               </div>
             ))}
-            <button onClick={handleSave} className="btn-gold" style={{ width: "100%", marginTop: "8px" }}>
-              <Lock size={15} /> 비밀번호 변경
+            <button onClick={handlePasswordChange} disabled={pwLoading} className="btn-gold" style={{ width: "100%", marginTop: "8px" }}>
+              {pwLoading
+                ? <><span style={{ width: 15, height: 15, border: "2px solid rgba(0,0,0,0.2)", borderTop: "2px solid #08080E", borderRadius: "50%", animation: "spin 1s linear infinite" }} />변경 중...</>
+                : <><Lock size={15} /> 비밀번호 변경</>
+              }
             </button>
           </div>
         )}
