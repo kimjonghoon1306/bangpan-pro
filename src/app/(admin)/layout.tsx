@@ -110,7 +110,16 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                   <p style={{ fontSize: "12px", fontWeight: 600, color: "var(--text-primary)" }}>관리자</p>
                   <p style={{ fontSize: "10px", color: "var(--text-muted)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>admin@company.com</p>
                 </div>
-                <button style={{ background: "none", border: "none", cursor: "pointer", color: "var(--text-muted)", padding: "4px" }}>
+                <button
+                  onClick={async () => {
+                    const { createBrowserSupabaseClient } = await import("@/lib/supabase");
+                    const supabase = createBrowserSupabaseClient();
+                    await supabase.auth.signOut();
+                    window.location.href = "/admin-login";
+                  }}
+                  title="로그아웃"
+                  style={{ background: "none", border: "none", cursor: "pointer", color: "var(--text-muted)", padding: "4px" }}
+                >
                   <LogOut size={14} />
                 </button>
               </>
