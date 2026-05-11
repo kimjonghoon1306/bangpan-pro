@@ -56,7 +56,7 @@ export default function PlanPage() {
   }
 
   return (
-    <div style={{ padding: "24px", height: "100%", display: "flex", flexDirection: "column", gap: "20px" }}>
+    <div style={{ padding: "24px", minHeight: "100%", display: "flex", flexDirection: "column", gap: "20px" }}>
 
       {/* 헤더 */}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "12px" }}>
@@ -79,10 +79,10 @@ export default function PlanPage() {
         </div>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 380px", gap: "20px", flex: 1, minHeight: 0 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 380px", gap: "20px" }}>
 
         {/* 좌측 — 플랜 설정 */}
-        <div style={{ display: "flex", flexDirection: "column", gap: "16px", overflowY: "auto" }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
 
           {/* 플랜 기본 정보 */}
           <div style={{ background: "var(--bg-elevated)", border: "1px solid var(--bg-border)", borderRadius: "16px", padding: "20px" }}>
@@ -235,7 +235,7 @@ export default function PlanPage() {
         </div>
 
         {/* 우측 — 요약 */}
-        <div style={{ display: "flex", flexDirection: "column", gap: "14px", overflowY: "auto" }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
           <div style={{ background: "var(--bg-elevated)", border: "1px solid var(--bg-border)", borderRadius: "16px", padding: "20px" }}>
             <h3 style={{ fontSize: "14px", fontWeight: 700, color: "var(--text-primary)", marginBottom: "14px" }}>수당 구조 요약</h3>
             <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
