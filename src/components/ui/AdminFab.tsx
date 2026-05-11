@@ -8,25 +8,31 @@ import { createBrowserSupabaseClient } from "@/lib/supabase";
 export default function AdminFab() {
   const router = useRouter();
   const [isAdmin, setIsAdmin] = useState(false);
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    setMounted(true);
     async function checkAdmin() {
-      const supabase = createBrowserSupabaseClient();
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+      try {
+        const supabase = createBrowserSupabaseClient();
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session?.user) return;
 
-      const { data: member } = await supabase
-        .from("members")
-        .select("is_admin")
-        .eq("id", user.id)
-        .single();
+        const { data: member } = await supabase
+          .from("members")
+          .select("is_admin")
+          .eq("id", session.user.id)
+          .single();
 
-      if (member?.is_admin) setIsAdmin(true);
+        if (member?.is_admin) setIsAdmin(true);
+      } catch (e) {
+        console.error(e);
+      }
     }
     checkAdmin();
   }, []);
 
-  if (!isAdmin) return null;
+  if (!mounted || !isAdmin) return null;
 
   return (
     <button
@@ -41,28 +47,24 @@ export default function AdminFab() {
         height: 48,
         borderRadius: "50%",
         background: "var(--bg-elevated)",
-        border: "1px solid var(--bg-border)",
+        border: "1px solid rgba(201,168,76,0.3)",
         cursor: "pointer",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        boxShadow: "0 4px 20px rgba(0,0,0,0.3)",
-        transition: "all 0.2s",
-        color: "var(--text-muted)",
+        boxShadow: "0 4px 20px rgba(0,0,0,0.3), 0 0 12px rgba(201,168,76,0.15)",
+        transition: "all 0.25s",
+        color: "var(--gold)",
       }}
       onMouseEnter={e => {
         const el = e.currentTarget as HTMLElement;
-        el.style.background = "rgba(201,168,76,0.15)";
-        el.style.borderColor = "rgba(201,168,76,0.4)";
-        el.style.color = "var(--gold)";
-        el.style.transform = "scale(1.08) rotate(30deg)";
+        el.style.transform = "scale(1.1) rotate(45deg)";
+        el.style.boxShadow = "0 6px 24px rgba(0,0,0,0.4), 0 0 20px rgba(201,168,76,0.3)";
       }}
       onMouseLeave={e => {
         const el = e.currentTarget as HTMLElement;
-        el.style.background = "var(--bg-elevated)";
-        el.style.borderColor = "var(--bg-border)";
-        el.style.color = "var(--text-muted)";
         el.style.transform = "scale(1) rotate(0deg)";
+        el.style.boxShadow = "0 4px 20px rgba(0,0,0,0.3), 0 0 12px rgba(201,168,76,0.15)";
       }}
     >
       <Settings size={20} />
