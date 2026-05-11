@@ -69,7 +69,7 @@ export default function SettingsPage() {
   const labelStyle = { display: "block", fontSize: "11px", color: "var(--text-muted)", marginBottom: "5px", fontWeight: 600 } as React.CSSProperties;
 
   return (
-    <div style={{ padding: "20px", height: "100%", display: "flex", flexDirection: "column" }}>
+    <div style={{ padding: "20px", minHeight: "100%", display: "flex", flexDirection: "column" }}>
 
       {/* 헤더 */}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "16px", flexWrap: "wrap", gap: "10px" }}>
@@ -102,7 +102,7 @@ export default function SettingsPage() {
       </div>
 
       {/* 콘텐츠 */}
-      <div style={{ flex: 1, overflowY: "auto" }}>
+      <div style={{ flex: 1 }}>
 
         {/* 회사정보 */}
         {tab === "company" && (
