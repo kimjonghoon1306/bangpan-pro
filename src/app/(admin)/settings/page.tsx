@@ -85,11 +85,11 @@ export default function SettingsPage() {
       </div>
 
       {/* 탭 — 모바일 스크롤 */}
-      <div style={{ display: "flex", gap: "4px", background: "var(--bg-elevated)", border: "1px solid var(--bg-border)", borderRadius: "12px", padding: "4px", marginBottom: "16px", flexShrink: 0, overflowX: "auto" }}>
+      <div style={{ display: "flex", gap: "4px", background: "var(--bg-elevated)", border: "1px solid var(--bg-border)", borderRadius: "12px", padding: "4px", marginBottom: "16px", flexShrink: 0 }}>
         {TABS.map((t) => (
           <button key={t.id} onClick={() => { setTab(t.id); setError(""); setSaved(false); }} style={{
-            flex: "0 0 auto", display: "flex", alignItems: "center", justifyContent: "center", gap: "6px",
-            padding: "9px 14px", borderRadius: "9px", fontSize: "13px", fontWeight: tab === t.id ? 700 : 500,
+            flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: "6px",
+            padding: "9px 8px", borderRadius: "9px", fontSize: "13px", fontWeight: tab === t.id ? 700 : 500,
             cursor: "pointer", transition: "all 0.15s", whiteSpace: "nowrap",
             background: tab === t.id ? "rgba(201,168,76,0.1)" : "transparent",
             border: tab === t.id ? "1px solid rgba(201,168,76,0.2)" : "1px solid transparent",
