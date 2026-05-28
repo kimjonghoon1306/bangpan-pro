@@ -77,7 +77,11 @@ export default function PlanPage() {
   function updateSimDraft(key: string, val: number) {
     setSimDraft(d => ({ ...d, [key]: isNaN(val) ? 0 : val }));
   }
-  function applySim() { setSimApplied({ ...simDraft }); setSimRun(true); }
+  function applySim(e?: React.MouseEvent) {
+    if (e) { e.preventDefault(); e.stopPropagation(); }
+    setSimApplied({ ...simDraft });
+    setSimRun(true);
+  }
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -462,7 +466,7 @@ export default function PlanPage() {
             </div>
 
             {/* 적용하기 버튼 */}
-            <button onClick={applySim} style={{ marginTop: "14px", width: "100%", padding: "14px", borderRadius: "14px", background: "linear-gradient(135deg, #7C3AED, #A78BFA)", border: "none", color: "#fff", fontSize: "15px", fontWeight: 800, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", transition: "opacity 0.15s", letterSpacing: "0.03em" }}
+            <button type="button" onClick={(e) => applySim(e)} style={{ marginTop: "14px", width: "100%", padding: "14px", borderRadius: "14px", background: "linear-gradient(135deg, #7C3AED, #A78BFA)", border: "none", color: "#fff", fontSize: "15px", fontWeight: 800, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", transition: "opacity 0.15s", letterSpacing: "0.03em" }}
               onMouseEnter={e => (e.currentTarget as HTMLElement).style.opacity = "0.9"}
               onMouseLeave={e => (e.currentTarget as HTMLElement).style.opacity = "1"}
             >
