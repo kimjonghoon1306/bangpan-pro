@@ -7,7 +7,6 @@ import {
   LayoutDashboard, Users, ShoppingBag, Calculator,
   Settings, TrendingUp, LogOut, GitBranch,
   Wallet, Package, Bell, Menu, X, ChevronLeft, ExternalLink,
-  Beaker,
 } from "lucide-react";
 import ThemeToggle from "@/components/ui/ThemeToggle";
 
@@ -19,7 +18,6 @@ const NAV = [
   { label: "주문 관리",  href: "/orders",       icon: ShoppingBag },
   { label: "상품 관리",  href: "/products",     icon: Package },
   { label: "수당 플랜",  href: "/plan",         icon: Calculator, highlight: true },
-  { label: "수당 시뮬레이션", href: "/simulation", icon: Beaker, highlight: true },
   { label: "정산 관리",  href: "/settlement",   icon: Wallet },
   { label: "시스템 설정",href: "/settings",     icon: Settings },
 ];
