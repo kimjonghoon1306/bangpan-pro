@@ -6,8 +6,165 @@ import { formatKRW } from "@/lib/utils";
 import {
   CheckCircle, Clock, TrendingUp, Users, Wallet,
   Award, AlertTriangle, ChevronDown, ChevronRight,
-  Calendar, Download, Play, RefreshCw, Star
+  Calendar, Download, Play, RefreshCw, Star,
+  HelpCircle, BookOpen, X, AlertCircle, BarChart2, CreditCard,
 } from "lucide-react";
+
+// ─── 마감·정산 사용 가이드 ────────────────────────────
+const GUIDE_ITEMS = [
+  {
+    icon: Play,
+    color: "#6C47FF",
+    bg: "rgba(108,71,255,0.10)",
+    title: "일일 마감",
+    desc: "매일 저녁 영업 종료 후 실행합니다. 버튼 하나로 모든 데이터가 최신화됩니다.",
+    steps: [
+      "STEP 1 '일일 마감' 클릭해 패널 펼침",
+      "'오늘 마감하기' 버튼 클릭 → 자동 처리 시작",
+      "오늘 모든 주문이 집계되고 회원별 수당이 누적됩니다",
+      "승급 조건을 충족한 회원은 직급이 자동으로 변경됩니다",
+      "마감 완료 → 모든 회원이 포털에서 본인 현황 즉시 확인 가능",
+      "이미 마감했으면 당일은 다시 마감하지 않아도 됩니다",
+    ],
+  },
+  {
+    icon: Calendar,
+    color: "#00C896",
+    bg: "rgba(0,200,150,0.10)",
+    title: "주간 정산",
+    desc: "매주 금요일, 2주 전 매출 기준으로 수당을 지급합니다.",
+    steps: [
+      "STEP 2 '주간 정산' 클릭해 패널 펼침",
+      "정산 대상 기간(2주 전)과 지급 예정일(금요일)이 자동 표시됩니다",
+      "회원번호·전화번호·이메일로 특정 회원 검색 가능",
+      "'주간 수당 계산' 버튼 클릭 → 해당 기간 모든 회원 수당 계산",
+      "판매수당·추천수당·오버라이딩·세전·세후·계좌 한눈에 확인",
+      "'정산 확정 및 지급 처리' 클릭 → 지급 완료 처리",
+    ],
+  },
+  {
+    icon: BarChart2,
+    color: "#FF9500",
+    bg: "rgba(255,149,0,0.10)",
+    title: "월간 공유수당",
+    desc: "매월 말, 이번 달 전체 매출에서 5%를 공유수당 풀로 배분합니다.",
+    steps: [
+      "STEP 3 '월간 공유수당' 클릭해 패널 펼침",
+      "'이번달 공유수당 계산' 버튼 클릭",
+      "매니저 풀 2% ÷ 매니저 수 = 1인당 금액 자동 계산",
+      "디렉터 풀 2% ÷ 디렉터 수 = 1인당 금액 자동 계산",
+      "관리자 재량 1% — '+ 추가' 버튼으로 대상자·금액·사유 직접 입력",
+      "'월간 공유수당 확정 및 지급' 클릭 → 처리 완료",
+    ],
+  },
+  {
+    icon: Clock,
+    color: "#4FA3E8",
+    bg: "rgba(79,163,232,0.10)",
+    title: "마감 이력",
+    desc: "날짜별 일일 마감 기록을 조회합니다.",
+    steps: [
+      "하단 '마감 이력' 클릭해 패널 펼침",
+      "최근 30일 마감 기록 자동 조회",
+      "날짜 · 주문 수 · 총 매출 · 발생 수당 · 직급 변경 수 확인",
+      "특정 날 마감이 안 되어있으면 해당 날짜 데이터 누락 가능성 있음",
+    ],
+  },
+  {
+    icon: AlertCircle,
+    color: "#E8599A",
+    bg: "rgba(232,89,154,0.10)",
+    title: "운영 가이드",
+    desc: "올바른 순서로 사용하면 수당이 정확하게 계산됩니다.",
+    steps: [
+      "권장 순서: 일일 마감(매일) → 주간 정산(매주 금요일) → 월간 공유수당(매월 말)",
+      "주간 정산은 일일 마감이 누적된 후 실행해야 정확합니다",
+      "반품 주문은 주문 상태를 '취소'로 먼저 변경하세요 — 수당 계산에서 제외됩니다",
+      "공유수당 지급 후에는 되돌릴 수 없으니 금액 확인 후 처리하세요",
+      "회원 계좌 정보가 없으면 회원 관리 페이지에서 먼저 등록하세요",
+    ],
+  },
+];
+
+function ClosingGuideModal({ onClose }: { onClose: () => void }) {
+  const [active, setActive] = useState(0);
+  return (
+    <div style={{
+      position: "fixed", inset: 0, zIndex: 9999,
+      background: "rgba(0,0,0,0.7)", backdropFilter: "blur(10px)",
+      display: "flex", alignItems: "center", justifyContent: "center",
+      padding: "20px", animation: "fadeIn 0.2s ease",
+    }} onClick={onClose}>
+      <style>{`
+        @keyframes fadeIn { from{opacity:0;transform:scale(0.97)} to{opacity:1;transform:scale(1)} }
+        @keyframes slideUp { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} }
+      `}</style>
+      <div onClick={e => e.stopPropagation()} style={{
+        width: "100%", maxWidth: "740px", maxHeight: "90vh", overflowY: "auto",
+        background: "var(--bg-elevated)", borderRadius: "24px",
+        border: "1px solid var(--bg-border)",
+        boxShadow: "0 24px 80px rgba(0,0,0,0.4)",
+        animation: "slideUp 0.25s ease",
+      }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "22px 24px", borderBottom: "1px solid var(--bg-border)" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+            <div style={{ width: 36, height: 36, borderRadius: "10px", background: "rgba(108,71,255,0.12)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <BookOpen size={18} color="#6C47FF" />
+            </div>
+            <div>
+              <p style={{ fontSize: "16px", fontWeight: 800, color: "var(--text-primary)", margin: 0 }}>마감 · 정산 사용 가이드</p>
+              <p style={{ fontSize: "11px", color: "var(--text-muted)", margin: 0 }}>각 기능을 클릭해 사용법을 확인하세요</p>
+            </div>
+          </div>
+          <button onClick={onClose} style={{ width: 34, height: 34, borderRadius: "50%", background: "var(--bg)", border: "1px solid var(--bg-border)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "var(--text-muted)" }}>
+            <X size={15} />
+          </button>
+        </div>
+
+        <div style={{ display: "flex", gap: "6px", padding: "16px 24px 0", overflowX: "auto", flexWrap: "wrap" }}>
+          {GUIDE_ITEMS.map((g, i) => (
+            <button key={i} onClick={() => setActive(i)} style={{
+              display: "flex", alignItems: "center", gap: "6px",
+              padding: "8px 14px", borderRadius: "10px", whiteSpace: "nowrap",
+              background: active === i ? g.bg : "transparent",
+              border: `1.5px solid ${active === i ? g.color : "var(--bg-border)"}`,
+              color: active === i ? g.color : "var(--text-muted)",
+              cursor: "pointer", fontSize: "12px", fontWeight: 600,
+              transition: "all 0.15s",
+            }}>
+              <g.icon size={13} />
+              {g.title}
+            </button>
+          ))}
+        </div>
+
+        <div style={{ padding: "20px 24px 24px" }}>
+          {GUIDE_ITEMS.map((g, i) => active !== i ? null : (
+            <div key={i} style={{ animation: "slideUp 0.2s ease" }}>
+              <div style={{ display: "flex", alignItems: "flex-start", gap: "14px", padding: "18px", borderRadius: "16px", background: g.bg, border: `1px solid ${g.color}33`, marginBottom: "18px" }}>
+                <div style={{ width: 44, height: 44, borderRadius: "12px", background: g.color, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                  <g.icon size={22} color="#fff" />
+                </div>
+                <div>
+                  <p style={{ fontSize: "15px", fontWeight: 700, color: g.color, margin: "0 0 4px" }}>{g.title}</p>
+                  <p style={{ fontSize: "13px", color: "var(--text-secondary)", margin: 0, lineHeight: 1.6 }}>{g.desc}</p>
+                </div>
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                {g.steps.map((step, si) => (
+                  <div key={si} style={{ display: "flex", alignItems: "flex-start", gap: "12px", padding: "12px 16px", borderRadius: "12px", background: "var(--bg)", border: "1px solid var(--bg-border)" }}>
+                    <div style={{ width: 24, height: 24, borderRadius: "50%", background: g.color, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "11px", fontWeight: 800, color: "#fff", flexShrink: 0, marginTop: "1px" }}>{si + 1}</div>
+                    <p style={{ fontSize: "13px", color: "var(--text-primary)", margin: 0, lineHeight: 1.6 }}>{step}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 // ─── 기본 수당률 (DB 없어도 동작) ─────────────────────
 const DEFAULT_RATES: Record<number,{sales:number,ref:number,over:number}> = {
@@ -376,6 +533,7 @@ export default function ClosingPage() {
     setMonthlyDone(true);
   }
 
+  const [showGuide, setShowGuide] = useState(false);
   const todayStr = new Date().toLocaleDateString("ko-KR",{year:"numeric",month:"long",day:"numeric"});
   const alreadyClosed = !!todayClosing;
 
@@ -384,9 +542,32 @@ export default function ClosingPage() {
 
       {/* ── 헤더 ── */}
       <div style={{display:"flex",alignItems:"flex-start",justifyContent:"space-between",flexWrap:"wrap",gap:"12px"}}>
-        <div>
-          <h1 style={{fontFamily:"Syne,sans-serif",fontSize:"24px",fontWeight:800,color:"var(--text-primary)",margin:0}}>마감 · 정산</h1>
-          <p style={{fontSize:"12px",color:"var(--text-muted)",marginTop:"4px"}}>{todayStr} · 일일 마감 및 주간/월간 정산 처리</p>
+        <div style={{display:"flex",alignItems:"center",gap:"12px",flexWrap:"wrap"}}>
+          <div>
+            <h1 style={{fontFamily:"Syne,sans-serif",fontSize:"24px",fontWeight:800,color:"var(--text-primary)",margin:0}}>마감 · 정산</h1>
+            <p style={{fontSize:"12px",color:"var(--text-muted)",marginTop:"4px"}}>{todayStr} · 일일 마감 및 주간/월간 정산 처리</p>
+          </div>
+          <button onClick={() => setShowGuide(true)} style={{
+            display:"flex", alignItems:"center", gap:"6px",
+            padding:"8px 14px", borderRadius:"999px",
+            background:"linear-gradient(135deg, rgba(108,71,255,0.15), rgba(108,71,255,0.08))",
+            border:"1.5px solid rgba(108,71,255,0.35)",
+            color:"#6C47FF", cursor:"pointer", fontSize:"12px", fontWeight:700,
+            animation:"closingGuidePulse 2s infinite", transition:"all 0.2s",
+          }}
+            onMouseEnter={e=>{(e.currentTarget as HTMLElement).style.background="rgba(108,71,255,0.2)";(e.currentTarget as HTMLElement).style.animation="none";}}
+            onMouseLeave={e=>{(e.currentTarget as HTMLElement).style.background="linear-gradient(135deg, rgba(108,71,255,0.15), rgba(108,71,255,0.08))";(e.currentTarget as HTMLElement).style.animation="closingGuidePulse 2s infinite";}}
+          >
+            <HelpCircle size={14} />
+            사용 가이드
+          </button>
+          <style>{`
+            @keyframes closingGuidePulse {
+              0%   { box-shadow: 0 0 0 0 rgba(108,71,255,0.4); }
+              60%  { box-shadow: 0 0 0 8px rgba(108,71,255,0); }
+              100% { box-shadow: 0 0 0 0 rgba(108,71,255,0); }
+            }
+          `}</style>
         </div>
         {alreadyClosed && (
           <div style={{display:"flex",alignItems:"center",gap:"8px",padding:"8px 16px",borderRadius:"999px",background:"rgba(0,200,150,0.1)",border:"1px solid rgba(0,200,150,0.25)"}}>
@@ -395,6 +576,8 @@ export default function ClosingPage() {
           </div>
         )}
       </div>
+
+      {showGuide && <ClosingGuideModal onClose={() => setShowGuide(false)} />}
 
       {/* ── STEP 1: 일일 마감 ── */}
       <div style={{background:"var(--bg-elevated)",border:`1.5px solid ${activeStep==="daily" ? STEP_COLORS[0] : "var(--bg-border)"}`,borderRadius:"18px",overflow:"hidden",transition:"border-color 0.2s"}}>
@@ -658,4 +841,3 @@ export default function ClosingPage() {
     </div>
   );
 }
-
