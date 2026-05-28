@@ -1,269 +1,186 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft, Save, User, Phone, Mail, CreditCard, TrendingUp, Users, Wallet, ShoppingBag, Edit3, X, Check, Shield, Ban, RotateCcw, ExternalLink, RefreshCw } from "lucide-react";
+import { ArrowLeft, Save, User, CreditCard, TrendingUp, Users, Wallet, ShoppingBag, Check, Shield, Ban, RotateCcw, RefreshCw } from "lucide-react";
 import { useMember } from "@/hooks/useMembers";
 import { useOrders } from "@/hooks/useOrders";
 import { formatKRW } from "@/lib/utils";
+import { createBrowserSupabaseClient } from "@/lib/supabase";
 
-const RANKS = ["일반회원","실버","골드","플래티넘","다이아"];
 const STATUS_OPTIONS = [
-  { value: "ACTIVE", label: "활성", color: "var(--emerald)" },
-  { value: "INACTIVE", label: "비활성", color: "var(--text-muted)" },
-  { value: "SUSPENDED", label: "정지", color: "#F87171" },
+  { value: "ACTIVE",    label: "활성",   color: "var(--emerald)" },
+  { value: "INACTIVE",  label: "비활성", color: "var(--text-muted)" },
+  { value: "SUSPENDED", label: "정지",   color: "#F87171" },
 ];
 
-const RANK_COLOR: Record<string, string> = {
-  다이아: "#38BDF8", 플래티넘: "#A78BFA", 골드: "#C9A84C", 실버: "#94A3B8", 일반회원: "#444466",
-};
+const BANKS = ["국민은행","신한은행","우리은행","하나은행","농협","기업은행","카카오뱅크","토스뱅크"];
 
 export default function MemberDetailPage() {
-  const { id } = useParams();
+  const params = useParams();
   const router = useRouter();
-  const { member, loading, error, updateMember } = useMember(id as string);
-  const { orders, loading: ordersLoading } = useOrders({ member_id: id as string });
-
-  const [form, setForm] = useState<any>(null);
+  const id = params?.id as string;
+  const { member, loading, error, updateMember } = useMember(id);
+  const { orders, loading: ordersLoading } = useOrders({ member_id: id });
+  const [ranks, setRanks] = useState<any[]>([]);
   const [editing, setEditing] = useState(false);
-  const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
-  const [activeTab, setActiveTab] = useState<"info"|"bank"|"orders"|"history">("info");
+  const [form, setForm] = useState({ name: "", phone: "", bank_name: "", bank_account: "", bank_holder: "", rank_id: "", status: "ACTIVE" });
 
-  // form 초기화
-  if (member && !form) setForm({ ...member });
+  useEffect(() => {
+    async function loadRanks() {
+      const supabase = createBrowserSupabaseClient();
+      const { data } = await supabase.from("ranks").select("id, name, color").order("level");
+      setRanks(data ?? []);
+    }
+    loadRanks();
+  }, []);
 
-  function update(key: string, val: string) {
-    setForm((f: any) => ({ ...f, [key]: val }));
-  }
+  useEffect(() => {
+    if (member) {
+      setForm({ name: member.name, phone: member.phone ?? "", bank_name: member.bank_name ?? "", bank_account: member.bank_account ?? "", bank_holder: member.bank_holder ?? "", rank_id: member.rank_id ?? "", status: member.status });
+    }
+  }, [member]);
 
   async function handleSave() {
-    setSaving(true);
-    try {
-      await updateMember({
-        name: form.name, phone: form.phone,
-        bank_name: form.bank_name, bank_account: form.bank_account, bank_holder: form.bank_holder,
-        status: form.status,
-      });
-      setSaved(true);
-      setEditing(false);
-      setTimeout(() => setSaved(false), 2000);
-    } catch (e: any) {
-      alert(e.message);
-    } finally {
-      setSaving(false);
-    }
+    await updateMember({ name: form.name, phone: form.phone || null, bank_name: form.bank_name || null, bank_account: form.bank_account || null, bank_holder: form.bank_holder || null, rank_id: form.rank_id || null, status: form.status } as any);
+    setSaved(true); setTimeout(() => { setSaved(false); setEditing(false); }, 1500);
   }
 
-  async function handleStatusChange(status: string) {
-    try {
-      await updateMember({ status });
-    } catch (e: any) {
-      alert(e.message);
-    }
-  }
+  if (loading) return <div style={{ padding: "40px", textAlign: "center", color: "var(--text-muted)" }}>불러오는 중...</div>;
+  if (error || !member) return <div style={{ padding: "40px", textAlign: "center", color: "#F87171" }}>회원을 찾을 수 없습니다</div>;
 
-  if (loading) return (
-    <div style={{ padding: "40px", textAlign: "center" }}>
-      <RefreshCw size={24} color="var(--text-muted)" style={{ animation: "spin 1s linear infinite", display: "inline-block" }} />
-    </div>
-  );
-
-  if (error || !member) return (
-    <div style={{ padding: "20px" }}>
-      <p style={{ color: "#F87171" }}>{error || "회원을 찾을 수 없습니다."}</p>
-    </div>
-  );
-
-  const rankColor = RANK_COLOR[member.rank?.name ?? "일반회원"] || "#444466";
-  const currentForm = form || member;
+  const rankColor = member.rank?.color ?? "#444466";
+  const totalRevenue = orders.filter(o => o.status !== "CANCELLED").reduce((s, o) => s + o.total_price, 0);
+  const labelStyle = { display: "block" as const, fontSize: "11px", color: "var(--text-muted)", marginBottom: "5px", fontWeight: 600 as const };
 
   return (
-    <div style={{ padding: "20px", maxWidth: "1000px" }}>
-      {/* 헤더 */}
-      <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "18px", flexWrap: "wrap" }}>
-        <button onClick={() => router.back()} style={{ width: 36, height: 36, borderRadius: "10px", background: "var(--bg-elevated)", border: "1px solid var(--bg-border)", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--text-muted)", flexShrink: 0 }}>
-          <ArrowLeft size={16} />
-        </button>
-        <div style={{ flex: 1 }}>
-          <h1 style={{ fontFamily: "Syne,sans-serif", fontSize: "20px", fontWeight: 800, color: "var(--text-primary)" }}>{member.name}</h1>
-          <p style={{ fontSize: "12px", color: "var(--text-muted)", fontFamily: "monospace" }}>{member.member_code}</p>
+    <div style={{ padding: "20px", maxWidth: "900px" }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "20px", flexWrap: "wrap", gap: "10px" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+          <button onClick={() => router.back()} style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 34, height: 34, borderRadius: "9px", background: "var(--bg-elevated)", border: "1px solid var(--bg-border)", color: "var(--text-secondary)", cursor: "pointer" }}><ArrowLeft size={16} /></button>
+          <div>
+            <h1 style={{ fontFamily: "Syne,sans-serif", fontSize: "22px", fontWeight: 800, color: "var(--text-primary)" }}>회원 상세</h1>
+            <p style={{ fontSize: "12px", color: "var(--text-muted)", fontFamily: "monospace" }}>{member.member_code}</p>
+          </div>
         </div>
-        <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
-          <button onClick={() => router.push("/portal")} style={{ display: "flex", alignItems: "center", gap: "5px", padding: "8px 12px", borderRadius: "9px", background: "rgba(79,142,247,0.1)", border: "1px solid rgba(79,142,247,0.2)", color: "var(--accent)", cursor: "pointer", fontSize: "12px", fontWeight: 600 }}>
-            <ExternalLink size={13} /> 포털보기
-          </button>
-          {!editing ? (
-            <button onClick={() => { setForm({...member}); setEditing(true); }} style={{ display: "flex", alignItems: "center", gap: "5px", padding: "8px 14px", borderRadius: "9px", background: "var(--bg-elevated)", border: "1px solid var(--bg-border)", color: "var(--text-secondary)", cursor: "pointer", fontSize: "12px", fontWeight: 600 }}>
-              <Edit3 size={13} /> 수정
-            </button>
-          ) : (
+        <div style={{ display: "flex", gap: "8px" }}>
+          {editing ? (
             <>
-              <button onClick={() => setEditing(false)} style={{ display: "flex", alignItems: "center", gap: "5px", padding: "8px 12px", borderRadius: "9px", background: "var(--bg-elevated)", border: "1px solid var(--bg-border)", color: "var(--text-secondary)", cursor: "pointer", fontSize: "12px" }}>
-                <X size={13} /> 취소
-              </button>
-              <button onClick={handleSave} disabled={saving} className="btn-gold" style={{ display: "flex", alignItems: "center", gap: "5px", padding: "8px 14px", fontSize: "12px" }}>
-                {saving ? <span style={{ width: 13, height: 13, border: "2px solid rgba(0,0,0,0.2)", borderTop: "2px solid #08080E", borderRadius: "50%", animation: "spin 1s linear infinite" }} /> : <Save size={13} />}
-                저장
+              <button onClick={() => setEditing(false)} style={{ padding: "8px 14px", borderRadius: "9px", background: "var(--bg-elevated)", border: "1px solid var(--bg-border)", color: "var(--text-secondary)", cursor: "pointer", fontSize: "13px" }}>취소</button>
+              <button onClick={handleSave} style={{ display: "flex", alignItems: "center", gap: "6px", padding: "8px 16px", borderRadius: "9px", background: "rgba(16,185,129,0.1)", border: "1px solid rgba(16,185,129,0.25)", color: "var(--emerald)", cursor: "pointer", fontSize: "13px", fontWeight: 600 }}>
+                {saved ? <><Check size={14} />저장완료</> : <><Save size={14} />저장</>}
               </button>
             </>
+          ) : (
+            <button onClick={() => setEditing(true)} style={{ display: "flex", alignItems: "center", gap: "6px", padding: "8px 16px", borderRadius: "9px", background: "rgba(201,168,76,0.1)", border: "1px solid rgba(201,168,76,0.25)", color: "var(--gold)", cursor: "pointer", fontSize: "13px", fontWeight: 600 }}>수정</button>
           )}
         </div>
       </div>
 
-      {saved && (
-        <div style={{ marginBottom: "14px", padding: "10px 14px", borderRadius: "10px", background: "rgba(16,185,129,0.1)", border: "1px solid rgba(16,185,129,0.2)", color: "var(--emerald)", display: "flex", alignItems: "center", gap: "8px", fontSize: "13px" }}>
-          <Check size={14} /> 저장완료
-        </div>
-      )}
-
-      {/* 프로필 카드 */}
-      <div style={{ background: "var(--bg-elevated)", border: `1px solid ${rankColor}33`, borderRadius: "16px", padding: "18px", marginBottom: "14px", display: "flex", alignItems: "center", gap: "14px", flexWrap: "wrap", position: "relative", overflow: "hidden" }}>
-        <svg style={{ position: "absolute", right: -20, top: -20, opacity: 0.05 }} width="120" height="120" viewBox="0 0 120 120"><circle cx="90" cy="30" r="60" fill={rankColor} /></svg>
-        <div style={{ width: 54, height: 54, borderRadius: "50%", background: `${rankColor}22`, border: `2px solid ${rankColor}55`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "20px", fontWeight: 800, color: rankColor, flexShrink: 0 }}>
-          {member.name[0]}
-        </div>
-        <div style={{ flex: 1 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "4px", flexWrap: "wrap" }}>
-            <span style={{ padding: "2px 10px", borderRadius: "999px", fontSize: "11px", fontWeight: 700, background: `${rankColor}22`, color: rankColor, border: `1px solid ${rankColor}44` }}>{member.rank?.name ?? "일반"}</span>
-            <span style={{ padding: "2px 10px", borderRadius: "999px", fontSize: "11px", fontWeight: 600, background: member.status === "ACTIVE" ? "rgba(16,185,129,0.12)" : "rgba(239,68,68,0.12)", color: member.status === "ACTIVE" ? "var(--emerald)" : "#F87171" }}>
-              {member.status === "ACTIVE" ? "활성" : member.status === "INACTIVE" ? "비활성" : "정지"}
-            </span>
-          </div>
-          <p style={{ fontSize: "12px", color: "var(--text-muted)" }}>추천인: {member.sponsor?.name ?? "—"} · 가입: {member.joined_at?.slice(0,10)}</p>
-        </div>
-        <div style={{ display: "flex", gap: "6px" }}>
-          {member.status !== "ACTIVE" && (
-            <button onClick={() => handleStatusChange("ACTIVE")} style={{ display: "flex", alignItems: "center", gap: "5px", padding: "7px 12px", borderRadius: "8px", background: "rgba(16,185,129,0.1)", border: "1px solid rgba(16,185,129,0.2)", color: "var(--emerald)", cursor: "pointer", fontSize: "12px", fontWeight: 600 }}>
-              <RotateCcw size={12} /> 활성화
-            </button>
-          )}
-          {member.status !== "SUSPENDED" && (
-            <button onClick={() => handleStatusChange("SUSPENDED")} style={{ display: "flex", alignItems: "center", gap: "5px", padding: "7px 12px", borderRadius: "8px", background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.2)", color: "#F87171", cursor: "pointer", fontSize: "12px", fontWeight: 600 }}>
-              <Ban size={12} /> 정지
-            </button>
-          )}
-        </div>
-      </div>
-
-      {/* 실적 요약 */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(2,1fr)", gap: "10px", marginBottom: "14px" }} className="md:grid-cols-4">
-        {[
-          { label: "개인 PV", value: member.personal_pv.toLocaleString(), icon: TrendingUp, color: "var(--gold)" },
-          { label: "그룹 GV", value: member.group_gv.toLocaleString(), icon: Users, color: "#4F8EF7" },
-          { label: "주문 건수", value: `${orders.length}건`, icon: ShoppingBag, color: "var(--emerald)" },
-          { label: "총 주문액", value: formatKRW(orders.reduce((s,o) => s + o.total_price, 0)), icon: Wallet, color: "#A78BFA" },
-        ].map((s) => (
-          <div key={s.label} style={{ background: "var(--bg-elevated)", border: "1px solid var(--bg-border)", borderRadius: "12px", padding: "12px", display: "flex", alignItems: "center", gap: "8px" }}>
-            <s.icon size={15} color={s.color} />
-            <div>
-              <p style={{ fontSize: "11px", color: "var(--text-muted)" }}>{s.label}</p>
-              <p style={{ fontSize: "15px", fontWeight: 800, color: "var(--text-primary)", fontFamily: "Syne,sans-serif" }}>{s.value}</p>
+      <div style={{ display: "grid", gridTemplateColumns: "280px 1fr", gap: "16px", alignItems: "start" }} className="max-lg:block max-lg:space-y-4">
+        {/* 좌측 프로필 */}
+        <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+          <div style={{ background: "var(--bg-elevated)", border: `1px solid ${rankColor}33`, borderRadius: "16px", padding: "20px", textAlign: "center" }}>
+            <div style={{ width: 64, height: 64, borderRadius: "50%", background: `${rankColor}22`, border: `3px solid ${rankColor}55`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "24px", fontWeight: 800, color: rankColor, margin: "0 auto 12px" }}>{member.name[0]}</div>
+            <p style={{ fontFamily: "Syne,sans-serif", fontSize: "18px", fontWeight: 800, color: "var(--text-primary)", marginBottom: "4px" }}>{member.name}</p>
+            <p style={{ fontSize: "11px", color: "var(--text-muted)", fontFamily: "monospace", marginBottom: "10px" }}>{member.member_code}</p>
+            <span style={{ padding: "4px 12px", borderRadius: "999px", fontSize: "12px", fontWeight: 700, background: `${rankColor}22`, color: rankColor, border: `1px solid ${rankColor}44` }}>{member.rank?.name ?? "파트너"}</span>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px", marginTop: "14px" }}>
+              {[
+                { label: "개인 PV", value: member.personal_pv },
+                { label: "그룹 GV", value: member.group_gv.toLocaleString() },
+              ].map((s) => (
+                <div key={s.label} style={{ background: "var(--bg)", borderRadius: "10px", padding: "10px" }}>
+                  <p style={{ fontSize: "10px", color: "var(--text-muted)", marginBottom: "2px" }}>{s.label}</p>
+                  <p style={{ fontSize: "14px", fontWeight: 700, color: "var(--text-primary)" }}>{s.value}</p>
+                </div>
+              ))}
             </div>
           </div>
-        ))}
-      </div>
 
-      {/* 탭 */}
-      <div style={{ display: "flex", gap: "4px", background: "var(--bg-elevated)", border: "1px solid var(--bg-border)", borderRadius: "12px", padding: "4px", marginBottom: "12px", overflowX: "auto" }}>
-        {[{key:"info",label:"기본정보"},{key:"bank",label:"계좌정보"},{key:"orders",label:"주문내역"},{key:"history",label:"볼륨"}].map((t) => (
-          <button key={t.key} onClick={() => setActiveTab(t.key as any)} style={{ flex: "0 0 auto", padding: "8px 16px", borderRadius: "9px", fontSize: "13px", fontWeight: activeTab === t.key ? 700 : 500, cursor: "pointer", transition: "all 0.15s", background: activeTab === t.key ? "rgba(201,168,76,0.1)" : "transparent", border: activeTab === t.key ? "1px solid rgba(201,168,76,0.2)" : "1px solid transparent", color: activeTab === t.key ? "var(--gold)" : "var(--text-secondary)", whiteSpace: "nowrap" }}>
-            {t.label}
-          </button>
-        ))}
-      </div>
+          <div style={{ background: "var(--bg-elevated)", border: "1px solid var(--bg-border)", borderRadius: "14px", padding: "16px" }}>
+            <h4 style={{ fontSize: "13px", fontWeight: 700, color: "var(--text-primary)", marginBottom: "10px" }}>상태 관리</h4>
+            <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+              {STATUS_OPTIONS.map((s) => (
+                <button key={s.value} onClick={() => editing && setForm(f => ({ ...f, status: s.value }))} style={{ display: "flex", alignItems: "center", gap: "8px", padding: "9px 12px", borderRadius: "9px", background: form.status === s.value ? `${s.color}15` : "transparent", border: `1px solid ${form.status === s.value ? s.color + "44" : "var(--bg-border)"}`, cursor: editing ? "pointer" : "default", transition: "all 0.15s" }}>
+                  <span style={{ width: 7, height: 7, borderRadius: "50%", background: s.color, flexShrink: 0 }} />
+                  <span style={{ fontSize: "13px", fontWeight: form.status === s.value ? 600 : 400, color: form.status === s.value ? s.color : "var(--text-secondary)" }}>{s.label}</span>
+                  {form.status === s.value && <Check size={12} color={s.color} style={{ marginLeft: "auto" }} />}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
 
-      <div style={{ background: "var(--bg-elevated)", border: "1px solid var(--bg-border)", borderRadius: "16px", padding: "20px" }}>
-
-        {activeTab === "info" && (
-          <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
-            {[{label:"이름",key:"name",type:"text",icon:User},{label:"이메일",key:"email",type:"email",icon:Mail},{label:"전화번호",key:"phone",type:"tel",icon:Phone}].map((f) => (
-              <div key={f.key}>
-                <label style={{ display: "block", fontSize: "11px", color: "var(--text-muted)", marginBottom: "5px", fontWeight: 600, textTransform: "uppercase" }}>{f.label}</label>
-                {editing ? (
-                  <div style={{ position: "relative" }}>
-                    <f.icon size={14} style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", color: "var(--text-muted)", pointerEvents: "none" }} />
-                    <input type={f.type} value={currentForm[f.key] || ""} onChange={(e) => update(f.key, e.target.value)} className="input-base" style={{ paddingLeft: "34px", fontSize: "14px" }} />
-                  </div>
-                ) : (
-                  <p style={{ fontSize: "15px", color: "var(--text-primary)", fontWeight: 500 }}>{member[f.key as keyof typeof member] as string || "—"}</p>
-                )}
+        {/* 우측 상세 */}
+        <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
+          {/* 실적 요약 */}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: "10px" }}>
+            {[
+              { label: "총 주문액", value: formatKRW(totalRevenue), icon: ShoppingBag, color: "#4F8EF7" },
+              { label: "직접 추천", value: "—", icon: Users, color: "var(--gold)" },
+              { label: "가입일", value: member.joined_at, icon: TrendingUp, color: "var(--emerald)" },
+            ].map((s) => (
+              <div key={s.label} style={{ background: "var(--bg-elevated)", border: "1px solid var(--bg-border)", borderRadius: "12px", padding: "14px", display: "flex", alignItems: "center", gap: "10px" }}>
+                <s.icon size={16} color={s.color} />
+                <div><p style={{ fontSize: "10px", color: "var(--text-muted)" }}>{s.label}</p><p style={{ fontSize: "14px", fontWeight: 700, color: "var(--text-primary)" }}>{s.value}</p></div>
               </div>
             ))}
-            <div>
-              <label style={{ display: "block", fontSize: "11px", color: "var(--text-muted)", marginBottom: "5px", fontWeight: 600, textTransform: "uppercase" }}>상태</label>
-              {editing ? (
-                <select value={currentForm.status} onChange={(e) => update("status", e.target.value)} className="input-base" style={{ fontSize: "14px" }}>
-                  {STATUS_OPTIONS.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
+          </div>
+
+          {/* 정보 편집 */}
+          <div style={{ background: "var(--bg-elevated)", border: "1px solid var(--bg-border)", borderRadius: "16px", padding: "18px" }}>
+            <h3 style={{ fontSize: "14px", fontWeight: 700, color: "var(--text-primary)", marginBottom: "14px" }}>기본 정보</h3>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "12px" }}>
+              <div><label style={labelStyle}>이름</label><input className="input-base" value={form.name} onChange={(e) => setForm(f => ({ ...f, name: e.target.value }))} disabled={!editing} style={{ fontSize: "13px" }} /></div>
+              <div><label style={labelStyle}>이메일</label><input className="input-base" value={member.email} disabled style={{ fontSize: "13px", opacity: 0.5 }} /></div>
+              <div><label style={labelStyle}>전화번호</label><input className="input-base" value={form.phone} onChange={(e) => setForm(f => ({ ...f, phone: e.target.value }))} disabled={!editing} style={{ fontSize: "13px" }} /></div>
+              <div>
+                <label style={labelStyle}>직급</label>
+                <select className="input-base" value={form.rank_id} onChange={(e) => setForm(f => ({ ...f, rank_id: e.target.value }))} disabled={!editing} style={{ fontSize: "13px" }}>
+                  {ranks.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
                 </select>
-              ) : (
-                <span style={{ padding: "3px 10px", borderRadius: "999px", fontSize: "12px", fontWeight: 600, background: member.status === "ACTIVE" ? "rgba(16,185,129,0.12)" : "rgba(239,68,68,0.12)", color: member.status === "ACTIVE" ? "var(--emerald)" : "#F87171" }}>
-                  {STATUS_OPTIONS.find(s => s.value === member.status)?.label}
-                </span>
-              )}
+              </div>
+              <div><label style={labelStyle}>추천인</label><input className="input-base" value={member.sponsor?.name ?? "없음"} disabled style={{ fontSize: "13px", opacity: 0.5 }} /></div>
             </div>
           </div>
-        )}
 
-        {activeTab === "bank" && (
-          <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
-            {[{label:"은행명",key:"bank_name"},{label:"계좌번호",key:"bank_account"},{label:"예금주",key:"bank_holder"}].map((f) => (
-              <div key={f.key}>
-                <label style={{ display: "block", fontSize: "11px", color: "var(--text-muted)", marginBottom: "5px", fontWeight: 600, textTransform: "uppercase" }}>{f.label}</label>
+          <div style={{ background: "var(--bg-elevated)", border: "1px solid var(--bg-border)", borderRadius: "16px", padding: "18px" }}>
+            <h3 style={{ fontSize: "14px", fontWeight: 700, color: "var(--text-primary)", marginBottom: "14px" }}>계좌 정보</h3>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: "12px" }}>
+              <div>
+                <label style={labelStyle}>은행</label>
                 {editing ? (
-                  <input type="text" value={currentForm[f.key] || ""} onChange={(e) => update(f.key, e.target.value)} className="input-base" style={{ fontSize: "14px" }} />
-                ) : (
-                  <p style={{ fontSize: "15px", color: "var(--text-primary)", fontWeight: 500 }}>{member[f.key as keyof typeof member] as string || "—"}</p>
-                )}
+                  <select className="input-base" value={form.bank_name} onChange={(e) => setForm(f => ({ ...f, bank_name: e.target.value }))} style={{ fontSize: "13px" }}>
+                    <option value="">선택</option>
+                    {BANKS.map(b => <option key={b} value={b}>{b}</option>)}
+                  </select>
+                ) : <input className="input-base" value={form.bank_name} disabled style={{ fontSize: "13px", opacity: 0.5 }} />}
               </div>
-            ))}
-          </div>
-        )}
-
-        {activeTab === "orders" && (
-          <div>
-            {ordersLoading ? (
-              <div style={{ textAlign: "center", padding: "20px" }}><RefreshCw size={18} color="var(--text-muted)" style={{ animation: "spin 1s linear infinite", display: "inline-block" }} /></div>
-            ) : orders.length === 0 ? (
-              <p style={{ color: "var(--text-muted)", fontSize: "14px", textAlign: "center", padding: "20px" }}>주문 내역이 없습니다.</p>
-            ) : orders.map((o, i) => (
-              <div key={o.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 0", borderBottom: i < orders.length-1 ? "1px solid var(--bg-border)" : "none" }}>
-                <div>
-                  <p style={{ fontSize: "13px", fontWeight: 600, color: "var(--text-primary)", fontFamily: "monospace" }}>{o.order_code}</p>
-                  <p style={{ fontSize: "11px", color: "var(--text-muted)" }}>{o.created_at?.slice(0,10)} · PV {o.total_pv}</p>
-                </div>
-                <div style={{ textAlign: "right" }}>
-                  <p style={{ fontSize: "14px", fontWeight: 700, color: "var(--gold)" }}>{formatKRW(o.total_price)}</p>
-                  <span style={{ fontSize: "10px", fontWeight: 600, padding: "1px 7px", borderRadius: "999px", background: o.status === "DELIVERED" ? "rgba(16,185,129,0.12)" : "var(--bg-border)", color: o.status === "DELIVERED" ? "var(--emerald)" : "var(--text-muted)" }}>
-                    {o.status}
-                  </span>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {activeTab === "history" && (
-          <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-            {[{side:"좌측 볼륨",vol:member.left_volume,color:"var(--gold)"},{side:"우측 볼륨",vol:member.right_volume,color:"#4F8EF7"}].map((s) => (
-              <div key={s.side}>
-                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "5px" }}>
-                  <span style={{ fontSize: "12px", color: "var(--text-muted)" }}>{s.side}</span>
-                  <span style={{ fontSize: "13px", fontWeight: 700, color: "var(--text-primary)" }}>{s.vol.toLocaleString()} GV</span>
-                </div>
-                <div style={{ height: "7px", background: "var(--bg)", borderRadius: "4px", overflow: "hidden" }}>
-                  <div style={{ height: "100%", width: `${Math.max(member.left_volume, member.right_volume) > 0 ? (s.vol / Math.max(member.left_volume, member.right_volume)) * 100 : 0}%`, background: s.color, borderRadius: "4px", transition: "width 1s ease" }} />
-                </div>
-              </div>
-            ))}
-            <div style={{ marginTop: "8px", padding: "12px", borderRadius: "10px", background: "rgba(201,168,76,0.05)", border: "1px solid rgba(201,168,76,0.15)", textAlign: "center" }}>
-              <p style={{ fontSize: "11px", color: "var(--text-muted)" }}>매칭 볼륨</p>
-              <p style={{ fontSize: "20px", fontWeight: 800, color: "var(--gold)", fontFamily: "Syne,sans-serif" }}>
-                {Math.min(member.left_volume, member.right_volume).toLocaleString()} GV
-              </p>
+              <div><label style={labelStyle}>계좌번호</label><input className="input-base" value={form.bank_account} onChange={(e) => setForm(f => ({ ...f, bank_account: e.target.value }))} disabled={!editing} style={{ fontSize: "13px" }} /></div>
+              <div><label style={labelStyle}>예금주</label><input className="input-base" value={form.bank_holder} onChange={(e) => setForm(f => ({ ...f, bank_holder: e.target.value }))} disabled={!editing} style={{ fontSize: "13px" }} /></div>
             </div>
           </div>
-        )}
+
+          {/* 주문 내역 */}
+          <div style={{ background: "var(--bg-elevated)", border: "1px solid var(--bg-border)", borderRadius: "16px", overflow: "hidden" }}>
+            <div style={{ padding: "14px 16px", borderBottom: "1px solid var(--bg-border)" }}>
+              <h3 style={{ fontSize: "14px", fontWeight: 700, color: "var(--text-primary)" }}>주문 내역</h3>
+            </div>
+            {ordersLoading ? <div style={{ padding: "20px", textAlign: "center", color: "var(--text-muted)", fontSize: "13px" }}>불러오는 중...</div>
+              : orders.length === 0 ? <div style={{ padding: "20px", textAlign: "center", color: "var(--text-muted)", fontSize: "13px" }}>주문 내역 없음</div>
+              : orders.slice(0, 5).map((o, i) => (
+                <div key={o.id} style={{ display: "flex", alignItems: "center", gap: "12px", padding: "11px 14px", borderBottom: i < orders.length - 1 ? "1px solid var(--bg-border)" : "none" }}>
+                  <div style={{ flex: 1 }}>
+                    <p style={{ fontSize: "12px", fontFamily: "monospace", color: "var(--text-muted)" }}>{o.order_code}</p>
+                    <p style={{ fontSize: "11px", color: "var(--text-muted)" }}>{new Date(o.created_at).toLocaleDateString("ko-KR")}</p>
+                  </div>
+                  <span style={{ fontSize: "13px", fontWeight: 700, color: "var(--gold)" }}>{formatKRW(o.total_price)}</span>
+                </div>
+              ))}
+          </div>
+        </div>
       </div>
     </div>
   );
