@@ -99,16 +99,29 @@ export default function PlanPage() {
     const refRule   = ruleList.find(r => r.rule_type === "REFERRAL" && r.target_depth_from === 1 && !r.is_volume_only);
     const overRule  = ruleList.find(r => r.rule_type === "TEAM" && !r.is_volume_only);
 
-    const result: RankPlan[] = (ranks ?? []).map((r: any) => {
+    // PDF 기본값 (DB 없어도 무조건 동작)
+    const DEFAULT_RATES: Record<number, {s:number,r:number,o:number}> = {
+      1: { s: 25, r: 5, o: 0 },
+      2: { s: 28, r: 7, o: 3 },
+      3: { s: 32, r: 10, o: 8 },
+    };
+    // ranks DB 없으면 PDF 기본 직급 사용
+    const rankList = (ranks && ranks.length > 0) ? ranks : [
+      { id: "default-1", code: "PARTNER",  name: "파트너", level: 1, color: "#378ADD", min_gv: 50000,     min_direct_referral: 0 },
+      { id: "default-2", code: "MANAGER",  name: "매니저", level: 2, color: "#EF9F27", min_gv: 5000000,   min_direct_referral: 5 },
+      { id: "default-3", code: "DIRECTOR", name: "디렉터", level: 3, color: "#D4537E", min_gv: 50000000,  min_direct_referral: 3 },
+    ];
+    const result: RankPlan[] = rankList.map((r: any) => {
+      const def = DEFAULT_RATES[r.level] ?? { s: 0, r: 0, o: 0 };
       const sTier = salesRule?.tiers?.find((t: any) => t.rank_level === r.level);
       const rTier = refRule?.tiers?.find((t: any)   => t.rank_level === r.level);
       const oTier = overRule?.tiers?.find((t: any)  => t.rank_level === r.level);
       return {
         rankId: r.id, rankCode: r.code, rankName: r.name,
         rankLevel: r.level, rankColor: r.color,
-        salesRate: sTier?.rate ?? 0,
-        refRate:   rTier?.rate ?? 0,
-        overRate:  r.level >= 2 ? (oTier?.rate ?? 0) : 0,
+        salesRate: sTier?.rate ?? def.s,
+        refRate:   rTier?.rate ?? def.r,
+        overRate:  r.level >= 2 ? (oTier?.rate ?? def.o) : 0,
         minGv:     r.min_gv ?? 0,
         minDirect: r.min_direct_referral ?? 0,
         salesRuleId: salesRule?.id ?? "", refRuleId: refRule?.id ?? "", overRuleId: overRule?.id ?? "",
