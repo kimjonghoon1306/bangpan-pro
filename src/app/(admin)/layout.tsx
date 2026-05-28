@@ -7,19 +7,21 @@ import {
   LayoutDashboard, Users, ShoppingBag, Calculator,
   Settings, TrendingUp, LogOut, GitBranch,
   Wallet, Package, Bell, Menu, X, ChevronLeft, ExternalLink,
+  FlaskConical,
 } from "lucide-react";
 import ThemeToggle from "@/components/ui/ThemeToggle";
 
 const NAV = [
-  { label: "대시보드", href: "/dashboard", icon: LayoutDashboard },
-  { label: "회원 관리", href: "/members", icon: Users },
-  { label: "조직도", href: "/org", icon: GitBranch },
-  { label: "매출 관리", href: "/sales", icon: TrendingUp },
-  { label: "주문 관리", href: "/orders", icon: ShoppingBag },
-  { label: "상품 관리", href: "/products", icon: Package },
-  { label: "수당 플랜", href: "/plan", icon: Calculator, highlight: true },
-  { label: "정산 관리", href: "/settlement", icon: Wallet },
-  { label: "시스템 설정", href: "/settings", icon: Settings },
+  { label: "대시보드",   href: "/dashboard",   icon: LayoutDashboard },
+  { label: "회원 관리",  href: "/members",      icon: Users },
+  { label: "조직도",     href: "/org",          icon: GitBranch },
+  { label: "매출 관리",  href: "/sales",        icon: TrendingUp },
+  { label: "주문 관리",  href: "/orders",       icon: ShoppingBag },
+  { label: "상품 관리",  href: "/products",     icon: Package },
+  { label: "수당 플랜",  href: "/plan",         icon: Calculator, highlight: true },
+  { label: "수당 시뮬레이션", href: "/simulation", icon: FlaskConical, highlight: true },
+  { label: "정산 관리",  href: "/settlement",   icon: Wallet },
+  { label: "시스템 설정",href: "/settings",     icon: Settings },
 ];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -34,7 +36,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         <div onClick={() => setMobileOpen(false)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", zIndex: 40, backdropFilter: "blur(4px)" }} />
       )}
 
-      {/* 사이드바 */}
       <aside style={{
         position: "fixed", top: 0, left: 0, height: "100%", zIndex: 50,
         width: collapsed ? "68px" : "240px",
@@ -75,8 +76,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
         {/* 네비 */}
         <nav style={{ flex: 1, padding: "10px 8px", overflowY: "auto" }}>
-          {NAV.map((item, i) => {
+          {NAV.map((item) => {
             const active = pathname === item.href || pathname.startsWith(item.href + "/");
+            const isSimulation = item.href === "/simulation";
             return (
               <Link key={item.href} href={item.href} onClick={() => setMobileOpen(false)}
                 style={{
@@ -84,18 +86,26 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                   justifyContent: collapsed ? "center" : "flex-start",
                   padding: collapsed ? "11px 0" : "9px 10px",
                   borderRadius: "10px", marginBottom: "2px",
-                  background: active ? "rgba(201,168,76,0.1)" : "transparent",
-                  border: active ? "1px solid rgba(201,168,76,0.2)" : "1px solid transparent",
-                  color: active ? "var(--gold)" : "var(--text-secondary)",
+                  background: active
+                    ? isSimulation ? "rgba(167,139,250,0.12)" : "rgba(201,168,76,0.1)"
+                    : "transparent",
+                  border: active
+                    ? isSimulation ? "1px solid rgba(167,139,250,0.3)" : "1px solid rgba(201,168,76,0.2)"
+                    : "1px solid transparent",
+                  color: active
+                    ? isSimulation ? "#A78BFA" : "var(--gold)"
+                    : "var(--text-secondary)",
                   textDecoration: "none", transition: "all 0.15s", position: "relative",
                 }}
-                onMouseEnter={e => { if (!active) { (e.currentTarget as HTMLElement).style.background = "rgba(201,168,76,0.05)"; (e.currentTarget as HTMLElement).style.color = "var(--text-primary)"; }}}
+                onMouseEnter={e => { if (!active) { (e.currentTarget as HTMLElement).style.background = isSimulation ? "rgba(167,139,250,0.06)" : "rgba(201,168,76,0.05)"; (e.currentTarget as HTMLElement).style.color = "var(--text-primary)"; }}}
                 onMouseLeave={e => { if (!active) { (e.currentTarget as HTMLElement).style.background = "transparent"; (e.currentTarget as HTMLElement).style.color = "var(--text-secondary)"; }}}
               >
-                {active && <span style={{ position: "absolute", left: 0, top: "50%", transform: "translateY(-50%)", width: "3px", height: "60%", borderRadius: "0 2px 2px 0", background: "var(--gold)" }} />}
-                <item.icon size={17} style={{ flexShrink: 0, color: active ? "var(--gold)" : "var(--text-muted)" }} />
+                {active && <span style={{ position: "absolute", left: 0, top: "50%", transform: "translateY(-50%)", width: "3px", height: "60%", borderRadius: "0 2px 2px 0", background: isSimulation ? "#A78BFA" : "var(--gold)" }} />}
+                <item.icon size={17} style={{ flexShrink: 0, color: active ? (isSimulation ? "#A78BFA" : "var(--gold)") : "var(--text-muted)" }} />
                 {!collapsed && <span style={{ fontSize: "13px", fontWeight: active ? 600 : 500 }}>{item.label}</span>}
-                {!collapsed && item.highlight && !active && <span style={{ marginLeft: "auto", width: 6, height: 6, borderRadius: "50%", background: "var(--gold)", animation: "glowPulse 2s infinite" }} />}
+                {!collapsed && item.highlight && !active && (
+                  <span style={{ marginLeft: "auto", width: 6, height: 6, borderRadius: "50%", background: isSimulation ? "#A78BFA" : "var(--gold)", animation: "glowPulse 2s infinite" }} />
+                )}
               </Link>
             );
           })}
@@ -131,29 +141,19 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
       {/* 메인 */}
       <div style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0, marginLeft: collapsed ? "68px" : "240px", transition: "margin-left 0.3s" }} className="max-md:ml-0">
-        {/* 헤더 */}
         <header style={{ height: "60px", display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 20px", background: "var(--bg-surface)", borderBottom: "1px solid var(--bg-border)", flexShrink: 0, position: "sticky", top: 0, zIndex: 30 }}>
           <button className="md:hidden" onClick={() => setMobileOpen(true)} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--text-muted)" }}>
             <Menu size={22} />
           </button>
-
           <div style={{ display: "flex", alignItems: "center", gap: "8px", marginLeft: "auto" }}>
-            {/* 회원 포털 전환 버튼 */}
             <button
               onClick={() => router.push("/portal")}
-              style={{
-                display: "flex", alignItems: "center", gap: "6px",
-                padding: "7px 14px", borderRadius: "9px",
-                background: "rgba(79,142,247,0.08)", border: "1px solid rgba(79,142,247,0.2)",
-                color: "var(--accent)", cursor: "pointer", fontSize: "12px", fontWeight: 600,
-                transition: "all 0.15s",
-              }}
+              style={{ display: "flex", alignItems: "center", gap: "6px", padding: "7px 14px", borderRadius: "9px", background: "rgba(79,142,247,0.08)", border: "1px solid rgba(79,142,247,0.2)", color: "var(--accent)", cursor: "pointer", fontSize: "12px", fontWeight: 600, transition: "all 0.15s" }}
               onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "rgba(79,142,247,0.15)"; }}
               onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "rgba(79,142,247,0.08)"; }}
             >
               <ExternalLink size={13} /> 회원 포털
             </button>
-
             <ThemeToggle />
             <button style={{ position: "relative", width: 34, height: 34, borderRadius: "9px", background: "var(--bg-elevated)", border: "1px solid var(--bg-border)", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--text-muted)" }}>
               <Bell size={15} />
@@ -162,7 +162,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             <div style={{ width: 34, height: 34, borderRadius: "50%", background: "rgba(201,168,76,0.15)", border: "2px solid rgba(201,168,76,0.3)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "12px", fontWeight: 700, color: "var(--gold)" }}>관</div>
           </div>
         </header>
-
         <main style={{ flex: 1, overflowY: "auto" }}>{children}</main>
       </div>
     </div>
