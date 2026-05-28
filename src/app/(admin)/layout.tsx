@@ -31,7 +31,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const [showPlan, setShowPlan] = useState(false);
 
   return (
-    <div style={{ display: "flex", height: "100vh", overflow: "hidden", background: "var(--bg)" }}>
+    <div style={{ display: "flex", height: "100vh", background: "var(--bg)" }}>
       {mobileOpen && (
         <div onClick={() => setMobileOpen(false)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", zIndex: 40, backdropFilter: "blur(4px)" }} />
       )}
