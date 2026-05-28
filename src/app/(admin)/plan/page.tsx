@@ -68,12 +68,16 @@ export default function PlanPage() {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState<number | null>(null);
 
-  // 시뮬레이션
-  const [simSales, setSimSales] = useState(1000000);
-  const [simDirect, setSimDirect] = useState(3);
-  const [simDirectSales, setSimDirectSales] = useState(500000);
-  const [simTeam, setSimTeam] = useState(3000000);
+  // 시뮬레이션 입력 (draft: 입력중 / applied: 적용된 값)
+  const [simDraft, setSimDraft] = useState({ mySales: 1000000, directCount: 3, directSales: 500000, teamSales: 3000000, totalMonthSales: 10000000 });
+  const [simApplied, setSimApplied] = useState({ mySales: 1000000, directCount: 3, directSales: 500000, teamSales: 3000000, totalMonthSales: 10000000 });
   const [showSim, setShowSim] = useState(false);
+  const [simRun, setSimRun] = useState(false);
+
+  function updateSimDraft(key: string, val: number) {
+    setSimDraft(d => ({ ...d, [key]: isNaN(val) ? 0 : val }));
+  }
+  function applySim() { setSimApplied({ ...simDraft }); setSimRun(true); }
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -149,14 +153,32 @@ export default function PlanPage() {
     load();
   }
 
-  // 시뮬레이션 계산
+  // 시뮬레이션 계산 (적용된 값 기준)
+  const { mySales, directCount, directSales, teamSales, totalMonthSales } = simApplied;
   const simResults = plans.map(p => {
-    const salesComm = Math.floor(simSales * p.salesRate / 100);
-    const refComm   = Math.floor(simDirect * simDirectSales * p.refRate / 100);
-    const overComm  = Math.floor(simTeam * p.overRate / 100);
+    const salesComm = Math.floor(mySales * p.salesRate / 100);
+    const refComm   = Math.floor(directCount * directSales * p.refRate / 100);
+    const overComm  = Math.floor(teamSales * p.overRate / 100);
     const total     = salesComm + refComm + overComm;
-    return { ...p, salesComm, refComm, overComm, total, net: Math.floor(total * 0.967) };
+    // 마케팅 지원비 (전체 월매출 기준)
+    const mktMgr  = Math.floor(totalMonthSales * 0.02); // 2% 매니저 풀
+    const mktDir  = Math.floor(totalMonthSales * 0.02); // 2% 디렉터 풀
+    const mktRand = Math.floor(totalMonthSales * 0.01); // 1% 관리자 재량
+    // 내 직급 판단: 승급 조건 충족 여부
+    const myDirectTotal = directCount * directSales;
+    return { ...p, salesComm, refComm, overComm, total, net: Math.floor(total * 0.967), mktMgr, mktDir, mktRand };
   });
+
+  // 내 현재 직급 판정 (입력 조건 기준)
+  const myDirectTotal = directCount * directSales;
+  const myRank = [...plans].reverse().find(p =>
+    directCount >= p.minDirect && (teamSales + mySales) >= p.minGv
+  ) ?? plans[0];
+
+  // 마케팅 지원비 (전체 월매출 기준)
+  const mktPool = { mgr: Math.floor(totalMonthSales * 0.02), dir: Math.floor(totalMonthSales * 0.02), rand: Math.floor(totalMonthSales * 0.01) };
+  const mgrCount = plans.filter(p => p.rankLevel === 2).length || 1;
+  const dirCount = plans.filter(p => p.rankLevel === 3).length || 1;
 
   const totalBudget = plans.length > 0 ? (plans[plans.length - 1].salesRate + plans[plans.length - 1].refRate + plans[plans.length - 1].overRate) : 0;
 
@@ -379,68 +401,175 @@ export default function PlanPage() {
           </div>
           <div style={{ textAlign: "left" }}>
             <p style={{ fontSize: "14px", fontWeight: 700, color: showSim ? "#A78BFA" : "var(--text-primary)" }}>수당 시뮬레이션</p>
-            <p style={{ fontSize: "11px", color: "var(--text-muted)" }}>매출 조건 입력 → 직급별 예상 수당 비교</p>
+            <p style={{ fontSize: "11px", color: "var(--text-muted)" }}>조건 입력 후 적용하기 → 내 직급 + 수당 자동 계산</p>
           </div>
         </div>
         <ChevronRight size={18} color="var(--text-muted)" style={{ transform: showSim ? "rotate(90deg)" : "none", transition: "transform 0.2s" }} />
       </button>
 
-      {/* ── 시뮬레이션 패널 ── */}
       {showSim && (
-        <div style={{ background: "var(--bg-elevated)", border: "1.5px solid rgba(167,139,250,0.25)", borderRadius: "18px", padding: "22px", display: "flex", flexDirection: "column", gap: "18px" }}>
-          {/* 입력 4칸 */}
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "12px" }}>
-            {[
-              { label: "내 직접 판매 매출",     state: simSales,       setState: setSimSales,       step: 100000, max: 10000000, color: "#378ADD" },
-              { label: "직접 추천 인원",         state: simDirect,      setState: setSimDirect,      step: 1,      max: 30,       color: "#EF9F27", unit: "명" },
-              { label: "추천인 인당 평균 매출",  state: simDirectSales, setState: setSimDirectSales, step: 100000, max: 3000000,  color: "#EF9F27" },
-              { label: "산하 팀 전체 매출",      state: simTeam,        setState: setSimTeam,        step: 500000, max: 20000000, color: "#D4537E" },
-            ].map(({ label, state, setState, step, max, color, unit }) => (
-              <div key={label} style={{ background: "var(--bg)", border: "1px solid var(--bg-border)", borderRadius: "12px", padding: "14px" }}>
-                <p style={{ fontSize: "11px", color: "var(--text-muted)", fontWeight: 600, marginBottom: "6px" }}>{label}</p>
-                <p style={{ fontFamily: "Syne,sans-serif", fontSize: "18px", fontWeight: 800, color, marginBottom: "8px" }}>
-                  {unit ? `${state.toLocaleString()}${unit}` : formatKRW(state)}
-                </p>
-                <input type="range" min={0} max={max} step={step} value={state}
-                  onChange={(e) => setState(Number(e.target.value))}
-                  style={{ width: "100%", accentColor: color }} />
-              </div>
-            ))}
+        <div style={{ background: "var(--bg-elevated)", border: "1.5px solid rgba(167,139,250,0.25)", borderRadius: "18px", padding: "22px", display: "flex", flexDirection: "column", gap: "20px" }}>
+
+          {/* ── 입력 영역 ── */}
+          <div>
+            <p style={{ fontSize: "12px", fontWeight: 700, color: "var(--text-muted)", marginBottom: "12px", textTransform: "uppercase", letterSpacing: "0.06em" }}>조건 입력</p>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "12px" }}>
+
+              {/* 내 매출 */}
+              {[
+                { label: "내 직접 판매 매출", key: "mySales",      max: 10000000, step: 100000, color: "#378ADD", unit: "원" },
+                { label: "직접 추천 인원",    key: "directCount",  max: 50,       step: 1,      color: "#EF9F27", unit: "명" },
+                { label: "추천인 인당 매출",  key: "directSales",  max: 5000000,  step: 100000, color: "#EF9F27", unit: "원" },
+                { label: "산하 팀 전체 매출", key: "teamSales",    max: 30000000, step: 500000, color: "#D4537E", unit: "원" },
+                { label: "전체 회사 월 매출", key: "totalMonthSales", max: 100000000, step: 1000000, color: "#A78BFA", unit: "원", desc: "마케팅 지원비 5% 계산 기준" },
+              ].map(({ label, key, max, step, color, unit, desc }) => {
+                const val = simDraft[key as keyof typeof simDraft];
+                return (
+                  <div key={key} style={{ background: "var(--bg)", border: `1px solid ${color}22`, borderRadius: "14px", padding: "14px" }}>
+                    <p style={{ fontSize: "11px", color, fontWeight: 700, marginBottom: "2px" }}>{label}</p>
+                    {desc && <p style={{ fontSize: "10px", color: "var(--text-muted)", marginBottom: "6px" }}>{desc}</p>}
+
+                    {/* 숫자 직접 입력 */}
+                    <div style={{ display: "flex", alignItems: "center", gap: "4px", marginBottom: "10px", marginTop: desc ? 0 : "6px" }}>
+                      <input
+                        type="number" min={0} max={max} step={step}
+                        value={val === 0 ? "" : val}
+                        placeholder="직접 입력"
+                        onChange={(e) => updateSimDraft(key, Number(e.target.value.replace(/,/g, "")))}
+                        style={{
+                          flex: 1, padding: "8px 10px", borderRadius: "9px",
+                          fontSize: "16px", fontWeight: 800, fontFamily: "Syne, sans-serif",
+                          background: "var(--bg-elevated)", border: `1.5px solid ${color}`,
+                          color, outline: "none", width: "100%",
+                        }}
+                      />
+                      <span style={{ fontSize: "13px", fontWeight: 600, color, flexShrink: 0 }}>{unit}</span>
+                    </div>
+
+                    {/* 슬라이더 */}
+                    <input
+                      type="range" min={0} max={max} step={step} value={val}
+                      onChange={(e) => updateSimDraft(key, Number(e.target.value))}
+                      style={{ width: "100%", accentColor: color, cursor: "pointer" }}
+                    />
+                    <div style={{ display: "flex", justifyContent: "space-between", marginTop: "2px" }}>
+                      <span style={{ fontSize: "10px", color: "var(--text-muted)" }}>0</span>
+                      <span style={{ fontSize: "10px", color: "var(--text-muted)" }}>{unit === "명" ? `${max}명` : `${(max/10000).toFixed(0)}만원`}</span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* 적용하기 버튼 */}
+            <button onClick={applySim} style={{ marginTop: "14px", width: "100%", padding: "14px", borderRadius: "14px", background: "linear-gradient(135deg, #7C3AED, #A78BFA)", border: "none", color: "#fff", fontSize: "15px", fontWeight: 800, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", transition: "opacity 0.15s", letterSpacing: "0.03em" }}
+              onMouseEnter={e => (e.currentTarget as HTMLElement).style.opacity = "0.9"}
+              onMouseLeave={e => (e.currentTarget as HTMLElement).style.opacity = "1"}
+            >
+              <TrendingUp size={18} /> 적용하기 — 수당 계산
+            </button>
           </div>
 
-          {/* 직급별 결과 */}
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "12px" }}>
-            {simResults.map(r => {
-              const rs = RANK_STYLE[r.rankLevel] ?? RANK_STYLE[1];
-              return (
-                <div key={r.rankId} style={{ background: rs.bg, border: `1.5px solid ${rs.border}`, borderRadius: "16px", padding: "18px" }}>
-                  <p style={{ fontSize: "13px", fontWeight: 700, color: rs.main, marginBottom: "12px" }}>{r.rankName}</p>
-                  <div style={{ display: "flex", flexDirection: "column", gap: "6px", marginBottom: "12px" }}>
-                    {[
-                      { label: "① 판매수당", val: r.salesComm, color: "#378ADD" },
-                      { label: "② 추천수당", val: r.refComm,   color: "#EF9F27" },
-                      { label: "③ 오버라이딩", val: r.overComm, color: "#D4537E" },
-                    ].map(({ label, val, color }) => (
-                      <div key={label} style={{ display: "flex", justifyContent: "space-between", fontSize: "12px" }}>
-                        <span style={{ color: "var(--text-muted)" }}>{label}</span>
-                        <span style={{ fontWeight: 600, color }}>{formatKRW(val)}</span>
-                      </div>
-                    ))}
+          {/* ── 결과 영역 (적용 후) ── */}
+          {simRun && (
+            <>
+              {/* 내 직급 판정 */}
+              {myRank && (
+                <div style={{ background: `${RANK_STYLE[myRank.rankLevel]?.main ?? "#C9A84C"}14`, border: `2px solid ${RANK_STYLE[myRank.rankLevel]?.main ?? "#C9A84C"}`, borderRadius: "16px", padding: "18px", display: "flex", alignItems: "center", gap: "16px", flexWrap: "wrap" }}>
+                  <div style={{ width: 56, height: 56, borderRadius: "50%", background: RANK_STYLE[myRank.rankLevel]?.main, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                    <Award size={26} color="#fff" />
                   </div>
-                  <div style={{ borderTop: `1px solid ${rs.border}`, paddingTop: "10px" }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
-                      <span style={{ fontSize: "11px", color: "var(--text-muted)" }}>월 합계</span>
-                      <span style={{ fontFamily: "Syne,sans-serif", fontSize: "20px", fontWeight: 800, color: rs.main }}>{formatKRW(r.total)}</span>
-                    </div>
-                    <div style={{ display: "flex", justifyContent: "space-between", marginTop: "3px" }}>
-                      <span style={{ fontSize: "11px", color: "var(--text-muted)" }}>실수령 (3.3%↓)</span>
-                      <span style={{ fontSize: "13px", fontWeight: 600, color: "var(--emerald)" }}>{formatKRW(r.net)}</span>
-                    </div>
+                  <div>
+                    <p style={{ fontSize: "12px", color: "var(--text-muted)", marginBottom: "2px" }}>입력 조건 기준 현재 직급</p>
+                    <p style={{ fontFamily: "Syne,sans-serif", fontSize: "24px", fontWeight: 800, color: RANK_STYLE[myRank.rankLevel]?.main }}>{myRank.rankName}</p>
+                    <p style={{ fontSize: "12px", color: "var(--text-muted)", marginTop: "2px" }}>
+                      직추천 {directCount}명 · 팀매출 {formatKRW(teamSales + mySales)} · 수당률 합계 {myRank.salesRate + myRank.refRate + myRank.overRate}%
+                    </p>
+                  </div>
+                  <div style={{ marginLeft: "auto", textAlign: "right" }}>
+                    <p style={{ fontSize: "11px", color: "var(--text-muted)" }}>예상 월 수당</p>
+                    <p style={{ fontFamily: "Syne,sans-serif", fontSize: "28px", fontWeight: 800, color: RANK_STYLE[myRank.rankLevel]?.main }}>
+                      {formatKRW(simResults.find(r => r.rankLevel === myRank.rankLevel)?.total ?? 0)}
+                    </p>
+                    <p style={{ fontSize: "12px", color: "var(--emerald)" }}>
+                      실수령 {formatKRW(simResults.find(r => r.rankLevel === myRank.rankLevel)?.net ?? 0)}
+                    </p>
                   </div>
                 </div>
-              );
-            })}
-          </div>
+              )}
+
+              {/* 직급별 수당 카드 */}
+              <div>
+                <p style={{ fontSize: "12px", fontWeight: 700, color: "var(--text-muted)", marginBottom: "12px", textTransform: "uppercase", letterSpacing: "0.06em" }}>직급별 수당 상세</p>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "12px" }}>
+                  {simResults.map(r => {
+                    const rs = RANK_STYLE[r.rankLevel] ?? RANK_STYLE[1];
+                    const isMe = myRank?.rankLevel === r.rankLevel;
+                    return (
+                      <div key={r.rankId} style={{ background: rs.bg, border: `${isMe ? "2px" : "1px"} solid ${isMe ? rs.main : rs.border}`, borderRadius: "16px", padding: "18px", position: "relative" }}>
+                        {isMe && <span style={{ position: "absolute", top: -10, right: 14, padding: "2px 10px", borderRadius: "999px", fontSize: "10px", fontWeight: 800, background: rs.main, color: "#fff" }}>현재 내 직급</span>}
+                        <p style={{ fontSize: "14px", fontWeight: 800, color: rs.main, marginBottom: "12px" }}>{r.rankName}</p>
+                        <div style={{ display: "flex", flexDirection: "column", gap: "7px", marginBottom: "12px" }}>
+                          {[
+                            { label: "① 판매수당",   val: r.salesComm, color: "#378ADD", sub: `${formatKRW(mySales)} × ${r.salesRate}%` },
+                            { label: "② 추천수당",   val: r.refComm,   color: "#EF9F27", sub: `${directCount}명 × ${formatKRW(directSales)} × ${r.refRate}%` },
+                            { label: "③ 오버라이딩", val: r.overComm,  color: "#D4537E", sub: r.rankLevel >= 2 ? `${formatKRW(teamSales)} × ${r.overRate}%` : "해당없음" },
+                          ].map(({ label, val, color, sub }) => (
+                            <div key={label} style={{ background: "rgba(0,0,0,0.06)", borderRadius: "9px", padding: "8px 10px" }}>
+                              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "2px" }}>
+                                <span style={{ fontSize: "12px", color: "var(--text-secondary)", fontWeight: 600 }}>{label}</span>
+                                <span style={{ fontSize: "13px", fontWeight: 800, color }}>{formatKRW(val)}</span>
+                              </div>
+                              <p style={{ fontSize: "10px", color: "var(--text-muted)" }}>{sub}</p>
+                            </div>
+                          ))}
+                        </div>
+                        <div style={{ borderTop: `1px solid ${rs.border}`, paddingTop: "10px", display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
+                          <div>
+                            <p style={{ fontSize: "10px", color: "var(--text-muted)" }}>월 합계 (세전)</p>
+                            <p style={{ fontFamily: "Syne,sans-serif", fontSize: "20px", fontWeight: 800, color: rs.main }}>{formatKRW(r.total)}</p>
+                          </div>
+                          <div style={{ textAlign: "right" }}>
+                            <p style={{ fontSize: "10px", color: "var(--text-muted)" }}>실수령</p>
+                            <p style={{ fontSize: "16px", fontWeight: 700, color: "var(--emerald)" }}>{formatKRW(r.net)}</p>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* 마케팅 지원비 5% 풀 */}
+              <div style={{ background: "rgba(167,139,250,0.06)", border: "1.5px solid rgba(167,139,250,0.25)", borderRadius: "18px", padding: "20px" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "16px" }}>
+                  <Zap size={18} color="#A78BFA" />
+                  <p style={{ fontSize: "14px", fontWeight: 700, color: "#A78BFA" }}>마케팅 지원비 5% 풀</p>
+                  <span style={{ fontSize: "11px", color: "var(--text-muted)" }}>전체 월매출 {formatKRW(simApplied.totalMonthSales)} 기준</span>
+                </div>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: "12px" }}>
+                  {[
+                    { label: "매니저 풀 2%",    color: "#EF9F27", amount: mktPool.mgr,  sub: `매니저 인원으로 N분의1 균등 배분`,         icon: "👔" },
+                    { label: "디렉터 풀 2%",    color: "#D4537E", amount: mktPool.dir,  sub: `디렉터 인원으로 N분의1 균등 배분`,         icon: "👑" },
+                    { label: "관리자 재량 1%",  color: "#A78BFA", amount: mktPool.rand, sub: "관리자가 대상 직접 지정·지급",              icon: "🎯" },
+                  ].map(({ label, color, amount, sub, icon }) => (
+                    <div key={label} style={{ background: "var(--bg-elevated)", border: `1px solid ${color}33`, borderRadius: "14px", padding: "16px" }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "8px" }}>
+                        <span style={{ fontSize: "18px" }}>{icon}</span>
+                        <span style={{ fontSize: "12px", fontWeight: 700, color }}>{label}</span>
+                      </div>
+                      <p style={{ fontFamily: "Syne,sans-serif", fontSize: "22px", fontWeight: 800, color, marginBottom: "4px" }}>{formatKRW(amount)}</p>
+                      <p style={{ fontSize: "11px", color: "var(--text-muted)" }}>{sub}</p>
+                    </div>
+                  ))}
+                </div>
+                <div style={{ marginTop: "12px", padding: "12px 14px", borderRadius: "10px", background: "rgba(167,139,250,0.08)", border: "1px solid rgba(167,139,250,0.2)", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "8px" }}>
+                  <span style={{ fontSize: "13px", color: "var(--text-secondary)" }}>마케팅 지원비 합계 (5%)</span>
+                  <span style={{ fontFamily: "Syne,sans-serif", fontSize: "20px", fontWeight: 800, color: "#A78BFA" }}>{formatKRW(mktPool.mgr + mktPool.dir + mktPool.rand)}</span>
+                </div>
+              </div>
+            </>
+          )}
         </div>
       )}
     </div>
