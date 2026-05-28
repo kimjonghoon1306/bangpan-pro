@@ -64,33 +64,60 @@ export default function SettlementPage() {
 
     const totalBv = orders?.reduce((s: number, o: any) => s + o.total_bv, 0) ?? 0;
 
-    // 수당 규칙 로드
+    // 수당 규칙 로드 (없으면 PDF 기본값 사용)
     const { data: rules } = await supabase.from("commission_rules").select("*, tiers:commission_tiers(rank_level, rate)").eq("is_active", true);
+    
+    // PDF 기본 수당률 (DB 없어도 무조건 동작)
+    const DEFAULT_RATES: Record<number,{sales:number,ref:number,over:number}> = {
+      1: { sales: 25, ref: 5,  over: 0 },
+      2: { sales: 28, ref: 7,  over: 3 },
+      3: { sales: 32, ref: 10, over: 8 },
+    };
 
-    // 회원별 수당 계산 (REFERRAL/TEAM 규칙)
+    function getSalesRate(level: number, ruleList: any[]) {
+      const rule = ruleList?.find((r: any) => r.rule_type === "REFERRAL" && r.target_depth_from === 0 && !r.is_volume_only);
+      const tier = rule?.tiers?.find((t: any) => t.rank_level === level);
+      return { rate: tier?.rate ?? DEFAULT_RATES[level]?.sales ?? 25, ruleId: rule?.id ?? null };
+    }
+    function getRefRate(level: number, ruleList: any[]) {
+      const rule = ruleList?.find((r: any) => r.rule_type === "REFERRAL" && r.target_depth_from === 1 && !r.is_volume_only);
+      const tier = rule?.tiers?.find((t: any) => t.rank_level === level);
+      return { rate: tier?.rate ?? DEFAULT_RATES[level]?.ref ?? 5, ruleId: rule?.id ?? null };
+    }
+    function getOverRate(level: number, ruleList: any[]) {
+      const rule = ruleList?.find((r: any) => r.rule_type === "TEAM" && !r.is_volume_only);
+      const tier = rule?.tiers?.find((t: any) => t.rank_level === level);
+      return { rate: tier?.rate ?? DEFAULT_RATES[level]?.over ?? 0, ruleId: rule?.id ?? null };
+    }
+
+    // 회원별 수당 계산
     const commInserts: any[] = [];
     for (const order of orders ?? []) {
-      // 해당 회원 직급
-      const { data: member } = await supabase.from("members").select("id, rank:ranks(level)").eq("id", order.member_id).single();
+      const { data: member } = await supabase.from("members").select("id, sponsor_id, rank:ranks(level)").eq("id", order.member_id).single();
       const memberLevel = (member as any)?.rank?.level ?? 1;
 
-      for (const rule of rules ?? []) {
-        if (rule.rule_type === "REFERRAL" && rule.target_depth_from === 0) {
-          // 내 판매 수당
-          const tier = (rule.tiers as any[])?.find((t: any) => t.rank_level === memberLevel);
-          if (tier) {
-            commInserts.push({ period_id: selected.id, member_id: order.member_id, rule_id: rule.id, source_member_id: order.member_id, depth: 0, base_amount: order.total_bv, rate: tier.rate, amount: Math.floor(order.total_bv * tier.rate / 100), status: "CALCULATED" });
-          }
-        }
-        if (rule.rule_type === "REFERRAL" && rule.target_depth_from === 1) {
-          // 추천 수당 — 추천인 찾기
-          const { data: sponsorMember } = await supabase.from("members").select("id, rank:ranks(level)").eq("id", order.member_id).single();
-          const { data: sponsor } = await supabase.from("members").select("id, sponsor_id, rank:ranks(level)").eq("sponsor_id", order.member_id).single();
-          if (sponsor) {
-            const sponsorLevel = (sponsor as any)?.rank?.level ?? 1;
-            const tier = (rule.tiers as any[])?.find((t: any) => t.rank_level === sponsorLevel);
-            if (tier) {
-              commInserts.push({ period_id: selected.id, member_id: (sponsor as any).id, rule_id: rule.id, source_member_id: order.member_id, depth: 1, base_amount: order.total_bv, rate: tier.rate, amount: Math.floor(order.total_bv * tier.rate / 100), status: "CALCULATED" });
+      // ① 내 판매 수당 (무조건 발생)
+      const { rate: sRate, ruleId: sRuleId } = getSalesRate(memberLevel, rules ?? []);
+      commInserts.push({ period_id: selected.id, member_id: order.member_id, rule_id: sRuleId, source_member_id: order.member_id, depth: 0, base_amount: order.total_bv, rate: sRate, amount: Math.floor(order.total_bv * sRate / 100), status: "CALCULATED" });
+
+      // ② 추천 수당 (직접 추천인에게)
+      const sponsorId = (member as any)?.sponsor_id;
+      if (sponsorId) {
+        const { data: sponsor } = await supabase.from("members").select("id, rank:ranks(level)").eq("id", sponsorId).single();
+        const sponsorLevel = (sponsor as any)?.rank?.level ?? 1;
+        const { rate: rRate, ruleId: rRuleId } = getRefRate(sponsorLevel, rules ?? []);
+        commInserts.push({ period_id: selected.id, member_id: sponsorId, rule_id: rRuleId, source_member_id: order.member_id, depth: 1, base_amount: order.total_bv, rate: rRate, amount: Math.floor(order.total_bv * rRate / 100), status: "CALCULATED" });
+
+        // ③ 오버라이딩 (추천인의 추천인에게 — 매니저/디렉터만)
+        const { data: sponsor2 } = await supabase.from("members").select("id, rank:ranks(level)").eq("id", sponsorId).single();
+        const sponsor2Id = (sponsor2 as any)?.sponsor_id;
+        if (sponsor2Id) {
+          const { data: grandSponsor } = await supabase.from("members").select("id, rank:ranks(level)").eq("id", sponsor2Id).single();
+          const gsLevel = (grandSponsor as any)?.rank?.level ?? 1;
+          if (gsLevel >= 2) {
+            const { rate: oRate, ruleId: oRuleId } = getOverRate(gsLevel, rules ?? []);
+            if (oRate > 0) {
+              commInserts.push({ period_id: selected.id, member_id: sponsor2Id, rule_id: oRuleId, source_member_id: order.member_id, depth: 2, base_amount: order.total_bv, rate: oRate, amount: Math.floor(order.total_bv * oRate / 100), status: "CALCULATED" });
             }
           }
         }
