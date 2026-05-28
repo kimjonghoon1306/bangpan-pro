@@ -9,6 +9,7 @@ import {
   Wallet, Package, Bell, Menu, X, ChevronLeft, ExternalLink,
 } from "lucide-react";
 import ThemeToggle from "@/components/ui/ThemeToggle";
+import CommissionPlanModal from "@/components/ui/CommissionPlanModal";
 
 const NAV = [
   { label: "대시보드",   href: "/dashboard",   icon: LayoutDashboard },
@@ -27,6 +28,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const router = useRouter();
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [showPlan, setShowPlan] = useState(false);
 
   return (
     <div style={{ display: "flex", height: "100vh", overflow: "hidden", background: "var(--bg)" }}>
@@ -162,6 +164,30 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </header>
         <main style={{ flex: 1, overflowY: "auto" }}>{children}</main>
       </div>
+
+      {/* 수당 플랜 고정 FAB */}
+      <button
+        onClick={() => setShowPlan(true)}
+        style={{
+          position: "fixed", bottom: "28px", right: "28px", zIndex: 60,
+          display: "flex", alignItems: "center", gap: "8px",
+          padding: "12px 20px", borderRadius: "999px",
+          background: "linear-gradient(135deg, #C9A84C, #E8C97A)",
+          border: "none", cursor: "pointer",
+          boxShadow: "0 4px 24px rgba(201,168,76,0.5), 0 0 0 1px rgba(201,168,76,0.3)",
+          transition: "all 0.2s",
+          color: "#1a1400", fontSize: "13px", fontWeight: 800,
+        }}
+        onMouseEnter={e => { (e.currentTarget as HTMLElement).style.transform = "translateY(-2px)"; (e.currentTarget as HTMLElement).style.boxShadow = "0 8px 32px rgba(201,168,76,0.6), 0 0 0 1px rgba(201,168,76,0.4)"; }}
+        onMouseLeave={e => { (e.currentTarget as HTMLElement).style.transform = "translateY(0)"; (e.currentTarget as HTMLElement).style.boxShadow = "0 4px 24px rgba(201,168,76,0.5), 0 0 0 1px rgba(201,168,76,0.3)"; }}
+      >
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+          <polyline points="22,7 13.5,15.5 8.5,10.5 2,17" /><polyline points="16,7 22,7 22,13" />
+        </svg>
+        수당 플랜 보기
+      </button>
+
+      {showPlan && <CommissionPlanModal onClose={() => setShowPlan(false)} />}
     </div>
   );
 }
