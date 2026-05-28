@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { Play, CheckCircle, Download, Wallet, TrendingUp, Users, AlertCircle, Check, Clock } from "lucide-react";
+import { Play, CheckCircle, Download, Wallet, TrendingUp, Users, AlertCircle, Check, Clock, HelpCircle, BookOpen, X, Calendar, FileText, CreditCard } from "lucide-react";
 import { formatKRW } from "@/lib/utils";
 import { createBrowserSupabaseClient } from "@/lib/supabase";
 
@@ -11,6 +11,160 @@ const STATUS_MAP: Record<string, { label: string; color: string; bg: string }> =
   CLOSED:      { label: "확정",     color: "var(--emerald)", bg: "rgba(16,185,129,0.12)" },
   PAID:        { label: "지급완료", color: "var(--text-muted)", bg: "var(--bg-border)" },
 };
+
+// ─── 정산 관리 사용 가이드 ────────────────────────────
+const GUIDE_ITEMS = [
+  {
+    icon: Calendar,
+    color: "#C9A84C",
+    bg: "rgba(201,168,76,0.10)",
+    title: "정산 기간 선택",
+    desc: "월별 정산 기간을 선택합니다. 매달 자동으로 새 기간이 생성됩니다.",
+    steps: [
+      "상단 기간 카드(예: 2025.06)를 클릭해 해당 월 선택",
+      "상태가 진행중이면 아직 수당 계산 전 / 확정이면 계산 완료",
+      "기간이 없으면 자동으로 이번 달 기간이 생성됩니다",
+      "여러 달을 비교하려면 다른 기간 카드를 클릭하면 됩니다",
+    ],
+  },
+  {
+    icon: Play,
+    color: "#6C47FF",
+    bg: "rgba(108,71,255,0.10)",
+    title: "수당 계산 실행",
+    desc: "선택한 기간의 모든 주문을 집계해 회원별 수당을 자동 계산합니다.",
+    steps: [
+      "정산할 기간을 먼저 선택합니다",
+      "우측 상단 '수당 계산 실행' 버튼 클릭",
+      "판매수당 · 추천수당 · 오버라이딩이 회원별로 자동 계산됩니다",
+      "계산 완료 후 '수당 내역' 탭에서 회원별 상세 확인 가능",
+      "재계산이 필요하면 다시 버튼을 클릭하면 덮어씁니다",
+    ],
+  },
+  {
+    icon: FileText,
+    color: "#00C896",
+    bg: "rgba(0,200,150,0.10)",
+    title: "수당 내역 확인",
+    desc: "계산된 수당을 회원별로 상세하게 확인합니다.",
+    steps: [
+      "수당 계산 실행 후 '수당 내역' 탭 클릭",
+      "회원명 · 적용 규칙 · 기준금액 · 비율 · 수당액 · 세후금액 확인",
+      "오버라이딩은 0단계(본인) / 1단계(직추천) / 2단계(추천인의추천인) 구분",
+      "이상한 금액이 있으면 수당 플랜 페이지에서 비율을 확인하세요",
+    ],
+  },
+  {
+    icon: CreditCard,
+    color: "#E8599A",
+    bg: "rgba(232,89,154,0.10)",
+    title: "지급 내역 & 지급 처리",
+    desc: "회원별 최종 지급액을 확인하고 지급을 확정합니다.",
+    steps: [
+      "'지급 내역' 탭에서 회원별 세전 · 세후 · 계좌 확인",
+      "원천징수 3.3%가 자동으로 공제됩니다",
+      "계좌 정보가 비어있는 회원은 회원관리에서 먼저 등록해주세요",
+      "하단 '정산 확정 및 지급 처리' 버튼 클릭 → 상태가 지급완료로 변경",
+      "지급명세서 버튼으로 엑셀 다운로드 가능",
+    ],
+  },
+  {
+    icon: AlertCircle,
+    color: "#FF9500",
+    bg: "rgba(255,149,0,0.10)",
+    title: "주의 사항",
+    desc: "정산 처리 전 반드시 확인하세요.",
+    steps: [
+      "지급완료 상태로 변경되면 되돌릴 수 없습니다",
+      "수당 계산은 마감·정산 페이지의 일일 마감 후 실행하는 것을 권장합니다",
+      "공유수당(매니저 풀 2% / 디렉터 풀 2% / 재량 1%)은 마감·정산 페이지에서 별도 처리합니다",
+      "반품이 있는 주문은 주문 상태를 취소로 먼저 변경하세요 — 취소 주문은 수당 계산에서 제외됩니다",
+    ],
+  },
+];
+
+function SettlementGuideModal({ onClose }: { onClose: () => void }) {
+  const [active, setActive] = useState(0);
+  return (
+    <div style={{
+      position: "fixed", inset: 0, zIndex: 9999,
+      background: "rgba(0,0,0,0.7)", backdropFilter: "blur(10px)",
+      display: "flex", alignItems: "center", justifyContent: "center",
+      padding: "20px", animation: "fadeIn 0.2s ease",
+    }} onClick={onClose}>
+      <style>{`
+        @keyframes fadeIn { from{opacity:0;transform:scale(0.97)} to{opacity:1;transform:scale(1)} }
+        @keyframes slideUp { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} }
+      `}</style>
+      <div onClick={e => e.stopPropagation()} style={{
+        width: "100%", maxWidth: "740px", maxHeight: "90vh", overflowY: "auto",
+        background: "var(--bg-elevated)", borderRadius: "24px",
+        border: "1px solid var(--bg-border)",
+        boxShadow: "0 24px 80px rgba(0,0,0,0.4)",
+        animation: "slideUp 0.25s ease",
+      }}>
+        {/* 헤더 */}
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "22px 24px", borderBottom: "1px solid var(--bg-border)" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+            <div style={{ width: 36, height: 36, borderRadius: "10px", background: "rgba(0,200,150,0.12)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <BookOpen size={18} color="#00C896" />
+            </div>
+            <div>
+              <p style={{ fontSize: "16px", fontWeight: 800, color: "var(--text-primary)", margin: 0 }}>정산 관리 사용 가이드</p>
+              <p style={{ fontSize: "11px", color: "var(--text-muted)", margin: 0 }}>각 기능을 클릭해 사용법을 확인하세요</p>
+            </div>
+          </div>
+          <button onClick={onClose} style={{ width: 34, height: 34, borderRadius: "50%", background: "var(--bg)", border: "1px solid var(--bg-border)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "var(--text-muted)" }}>
+            <X size={15} />
+          </button>
+        </div>
+
+        {/* 탭 */}
+        <div style={{ display: "flex", gap: "6px", padding: "16px 24px 0", overflowX: "auto", flexWrap: "wrap" }}>
+          {GUIDE_ITEMS.map((g, i) => (
+            <button key={i} onClick={() => setActive(i)} style={{
+              display: "flex", alignItems: "center", gap: "6px",
+              padding: "8px 14px", borderRadius: "10px", whiteSpace: "nowrap",
+              background: active === i ? g.bg : "transparent",
+              border: `1.5px solid ${active === i ? g.color : "var(--bg-border)"}`,
+              color: active === i ? g.color : "var(--text-muted)",
+              cursor: "pointer", fontSize: "12px", fontWeight: 600,
+              transition: "all 0.15s",
+            }}>
+              <g.icon size={13} />
+              {g.title}
+            </button>
+          ))}
+        </div>
+
+        {/* 콘텐츠 */}
+        <div style={{ padding: "20px 24px 24px" }}>
+          {GUIDE_ITEMS.map((g, i) => active !== i ? null : (
+            <div key={i} style={{ animation: "slideUp 0.2s ease" }}>
+              <div style={{ display: "flex", alignItems: "flex-start", gap: "14px", padding: "18px", borderRadius: "16px", background: g.bg, border: `1px solid ${g.color}33`, marginBottom: "18px" }}>
+                <div style={{ width: 44, height: 44, borderRadius: "12px", background: g.color, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                  <g.icon size={22} color="#fff" />
+                </div>
+                <div>
+                  <p style={{ fontSize: "15px", fontWeight: 700, color: g.color, margin: "0 0 4px" }}>{g.title}</p>
+                  <p style={{ fontSize: "13px", color: "var(--text-secondary)", margin: 0, lineHeight: 1.6 }}>{g.desc}</p>
+                </div>
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                {g.steps.map((step, si) => (
+                  <div key={si} style={{ display: "flex", alignItems: "flex-start", gap: "12px", padding: "12px 16px", borderRadius: "12px", background: "var(--bg)", border: "1px solid var(--bg-border)" }}>
+                    <div style={{ width: 24, height: 24, borderRadius: "50%", background: g.color, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "11px", fontWeight: 800, color: "#fff", flexShrink: 0, marginTop: "1px" }}>{si + 1}</div>
+                    <p style={{ fontSize: "13px", color: "var(--text-primary)", margin: 0, lineHeight: 1.6 }}>{step}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default function SettlementPage() {
   const [periods, setPeriods] = useState<any[]>([]);
@@ -160,12 +314,37 @@ export default function SettlementPage() {
   const totalTax = payouts.reduce((s, p) => s + p.tax_amount, 0);
   const totalNet = payouts.reduce((s, p) => s + p.net_amount, 0);
 
+  const [showGuide, setShowGuide] = useState(false);
+
   return (
     <div style={{ padding: "20px", display: "flex", flexDirection: "column", gap: "16px" }}>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "10px" }}>
-        <div>
-          <h1 style={{ fontFamily: "Syne,sans-serif", fontSize: "22px", fontWeight: 800, color: "var(--text-primary)" }}>정산 관리</h1>
-          <p style={{ fontSize: "12px", color: "var(--text-muted)", marginTop: "2px" }}>수당 계산 및 지급 처리</p>
+        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+          <div>
+            <h1 style={{ fontFamily: "Syne,sans-serif", fontSize: "22px", fontWeight: 800, color: "var(--text-primary)" }}>정산 관리</h1>
+            <p style={{ fontSize: "12px", color: "var(--text-muted)", marginTop: "2px" }}>수당 계산 및 지급 처리</p>
+          </div>
+          <button onClick={() => setShowGuide(true)} style={{
+            display: "flex", alignItems: "center", gap: "6px",
+            padding: "8px 14px", borderRadius: "999px",
+            background: "linear-gradient(135deg, rgba(0,200,150,0.15), rgba(0,200,150,0.08))",
+            border: "1.5px solid rgba(0,200,150,0.35)",
+            color: "#00C896", cursor: "pointer", fontSize: "12px", fontWeight: 700,
+            animation: "guidePulse2 2s infinite", transition: "all 0.2s",
+          }}
+            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "rgba(0,200,150,0.2)"; (e.currentTarget as HTMLElement).style.animation = "none"; }}
+            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "linear-gradient(135deg, rgba(0,200,150,0.15), rgba(0,200,150,0.08))"; (e.currentTarget as HTMLElement).style.animation = "guidePulse2 2s infinite"; }}
+          >
+            <HelpCircle size={14} />
+            사용 가이드
+          </button>
+          <style>{`
+            @keyframes guidePulse2 {
+              0%   { box-shadow: 0 0 0 0 rgba(0,200,150,0.4); }
+              60%  { box-shadow: 0 0 0 8px rgba(0,200,150,0); }
+              100% { box-shadow: 0 0 0 0 rgba(0,200,150,0); }
+            }
+          `}</style>
         </div>
         <div style={{ display: "flex", gap: "8px" }}>
           <button className="btn-outline" style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "13px", padding: "9px 14px" }}><Download size={14} /> 지급명세서</button>
@@ -174,6 +353,8 @@ export default function SettlementPage() {
           </button>
         </div>
       </div>
+
+      {showGuide && <SettlementGuideModal onClose={() => setShowGuide(false)} />}
 
       {calculated && <div style={{ padding: "12px 16px", borderRadius: "10px", background: "rgba(16,185,129,0.1)", border: "1px solid rgba(16,185,129,0.2)", color: "var(--emerald)", display: "flex", alignItems: "center", gap: "8px", fontSize: "13px" }}><Check size={14} /> 수당 계산 완료. 내역 확인 후 지급 처리하세요.</div>}
 
