@@ -69,12 +69,14 @@ export default function CommissionPlanModal({ onClose }: { onClose: () => void }
     <div style={{
       position: "fixed", inset: 0, zIndex: 9999,
       background: "rgba(0,0,0,0.85)", backdropFilter: "blur(12px)",
-      display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
-      padding: "16px", overflowY: "auto",
+      overflowY: "auto",
+      padding: "20px",
     }} onClick={onClose}>
       <div onClick={e => e.stopPropagation()} style={{
         width: "100%", maxWidth: "960px",
+        margin: "0 auto",
         display: "flex", flexDirection: "column", gap: "20px",
+        paddingBottom: "20px",
       }}>
         {/* 헤더 */}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
