@@ -3,7 +3,149 @@
 import { useState, useEffect, useCallback } from "react";
 import { createBrowserSupabaseClient } from "@/lib/supabase";
 import { formatKRW } from "@/lib/utils";
-import { Save, Check, Edit3, X, Users, TrendingUp, Zap, Award, ChevronRight, BarChart2 } from "lucide-react";
+import { Save, Check, Edit3, X, Users, TrendingUp, Zap, Award, ChevronRight, BarChart2, HelpCircle, BookOpen, Settings2, Calculator, Shield } from "lucide-react";
+
+// ─── 사용 가이드 팝업 ─────────────────────────────────
+const GUIDE_ITEMS = [
+  {
+    icon: Shield,
+    color: "#378ADD",
+    bg: "rgba(55,138,221,0.10)",
+    title: "직급별 수당 카드",
+    desc: "파트너·매니저·디렉터 3개 카드에서 각 직급의 수당 비율을 한눈에 확인합니다.",
+    steps: [
+      "수정하기 버튼 클릭 → 해당 카드가 활성화됩니다",
+      "① 내 판매 수당 / ② 추천 수당 / ③ 오버라이딩 % 숫자를 직접 수정",
+      "승급 조건(직추천 수, 누적 매출)도 같은 화면에서 수정 가능",
+      "저장 버튼 클릭 → DB에 즉시 반영",
+    ],
+  },
+  {
+    icon: BarChart2,
+    color: "#EF9F27",
+    bg: "rgba(239,159,39,0.10)",
+    title: "수당 구조 한눈에 보기",
+    desc: "모든 직급의 수당 항목과 승급 조건을 표 형태로 비교합니다.",
+    steps: [
+      "직급별 판매수당·추천수당·오버라이딩 비율 한 번에 확인",
+      "합계 % 와 승급 조건(직추천·누적매출)도 표시",
+      "총 수당 재원이 55%를 초과하면 경고 표시",
+    ],
+  },
+  {
+    icon: Calculator,
+    color: "#A78BFA",
+    bg: "rgba(167,139,250,0.10)",
+    title: "수당 시뮬레이션",
+    desc: "실제 매출 조건을 입력해 예상 수당과 현재 직급을 즉시 계산합니다.",
+    steps: [
+      "하단 '수당 시뮬레이션' 버튼 클릭 → 패널 펼침",
+      "내 직접 판매 매출 / 직접 추천 인원 / 추천인 인당 매출 / 팀 전체 매출 입력",
+      "숫자 직접 입력 또는 슬라이더 조작 — 둘 다 동기화됩니다",
+      "전체 회사 월 매출 입력 → 마케팅 지원비 5% 자동 계산",
+      "적용하기 버튼 클릭 → 직급 자동 판정 + 수당 상세 계산",
+    ],
+  },
+  {
+    icon: Zap,
+    color: "#D4537E",
+    bg: "rgba(212,83,126,0.10)",
+    title: "마케팅 지원비 5%",
+    desc: "전체 월 매출에서 별도로 떼는 공유 재원입니다.",
+    steps: [
+      "매니저 풀 2% — 전체 매니저 인원으로 N분의1 균등 배분",
+      "디렉터 풀 2% — 전체 디렉터 인원으로 N분의1 균등 배분",
+      "관리자 재량 1% — 마감·정산 페이지에서 직접 대상자 지정",
+      "월 매출 금액 입력칸에서 실시간 금액 확인 가능",
+    ],
+  },
+];
+
+function PlanGuideModal({ onClose }: { onClose: () => void }) {
+  const [active, setActive] = useState(0);
+  return (
+    <div style={{
+      position: "fixed", inset: 0, zIndex: 9999,
+      background: "rgba(0,0,0,0.7)", backdropFilter: "blur(10px)",
+      display: "flex", alignItems: "center", justifyContent: "center",
+      padding: "20px", animation: "fadeIn 0.2s ease",
+    }} onClick={onClose}>
+      <style>{`
+        @keyframes fadeIn { from{opacity:0;transform:scale(0.97)} to{opacity:1;transform:scale(1)} }
+        @keyframes slideUp { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} }
+      `}</style>
+      <div onClick={e => e.stopPropagation()} style={{
+        width: "100%", maxWidth: "740px", maxHeight: "90vh", overflowY: "auto",
+        background: "var(--bg-elevated)", borderRadius: "24px",
+        border: "1px solid var(--bg-border)",
+        boxShadow: "0 24px 80px rgba(0,0,0,0.4)",
+        animation: "slideUp 0.25s ease",
+      }}>
+        {/* 헤더 */}
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "22px 24px", borderBottom: "1px solid var(--bg-border)" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+            <div style={{ width: 36, height: 36, borderRadius: "10px", background: "rgba(108,71,255,0.12)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <BookOpen size={18} color="#6C47FF" />
+            </div>
+            <div>
+              <p style={{ fontSize: "16px", fontWeight: 800, color: "var(--text-primary)", margin: 0 }}>수당 플랜 사용 가이드</p>
+              <p style={{ fontSize: "11px", color: "var(--text-muted)", margin: 0 }}>각 기능을 클릭해 사용법을 확인하세요</p>
+            </div>
+          </div>
+          <button onClick={onClose} style={{ width: 34, height: 34, borderRadius: "50%", background: "var(--bg)", border: "1px solid var(--bg-border)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "var(--text-muted)" }}>
+            <X size={15} />
+          </button>
+        </div>
+
+        {/* 탭 */}
+        <div style={{ display: "flex", gap: "6px", padding: "16px 24px 0", overflowX: "auto" }}>
+          {GUIDE_ITEMS.map((g, i) => (
+            <button key={i} onClick={() => setActive(i)} style={{
+              display: "flex", alignItems: "center", gap: "6px",
+              padding: "8px 14px", borderRadius: "10px", whiteSpace: "nowrap",
+              background: active === i ? g.bg : "transparent",
+              border: `1.5px solid ${active === i ? g.color : "var(--bg-border)"}`,
+              color: active === i ? g.color : "var(--text-muted)",
+              cursor: "pointer", fontSize: "12px", fontWeight: 600,
+              transition: "all 0.15s",
+            }}>
+              <g.icon size={13} />
+              {g.title}
+            </button>
+          ))}
+        </div>
+
+        {/* 콘텐츠 */}
+        <div style={{ padding: "20px 24px 24px" }}>
+          {GUIDE_ITEMS.map((g, i) => active !== i ? null : (
+            <div key={i} style={{ animation: "slideUp 0.2s ease" }}>
+              {/* 설명 */}
+              <div style={{ display: "flex", alignItems: "flex-start", gap: "14px", padding: "18px", borderRadius: "16px", background: g.bg, border: `1px solid ${g.color}33`, marginBottom: "18px" }}>
+                <div style={{ width: 44, height: 44, borderRadius: "12px", background: g.color, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                  <g.icon size={22} color="#fff" />
+                </div>
+                <div>
+                  <p style={{ fontSize: "15px", fontWeight: 700, color: g.color, margin: "0 0 4px" }}>{g.title}</p>
+                  <p style={{ fontSize: "13px", color: "var(--text-secondary)", margin: 0, lineHeight: 1.6 }}>{g.desc}</p>
+                </div>
+              </div>
+
+              {/* 스텝 */}
+              <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                {g.steps.map((step, si) => (
+                  <div key={si} style={{ display: "flex", alignItems: "flex-start", gap: "12px", padding: "12px 16px", borderRadius: "12px", background: "var(--bg)", border: "1px solid var(--bg-border)" }}>
+                    <div style={{ width: 24, height: 24, borderRadius: "50%", background: g.color, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "11px", fontWeight: 800, color: "#fff", flexShrink: 0, marginTop: "1px" }}>{si + 1}</div>
+                    <p style={{ fontSize: "13px", color: "var(--text-primary)", margin: 0, lineHeight: 1.6 }}>{step}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 // ─── 타입 ───────────────────────────────────────────────
 interface RankPlan {
@@ -197,6 +339,7 @@ export default function PlanPage() {
   const mgrCount = plans.filter(p => p.rankLevel === 2).length || 1;
   const dirCount = plans.filter(p => p.rankLevel === 3).length || 1;
 
+  const [showGuide, setShowGuide] = useState(false);
   const totalBudget = plans.length > 0 ? (plans[plans.length - 1].salesRate + plans[plans.length - 1].refRate + plans[plans.length - 1].overRate) : 0;
 
   if (loading) return (
@@ -211,9 +354,35 @@ export default function PlanPage() {
 
       {/* ── 헤더 ── */}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "10px" }}>
-        <div>
-          <h1 style={{ fontFamily: "Syne,sans-serif", fontSize: "22px", fontWeight: 800, color: "var(--text-primary)" }}>수당 플랜</h1>
-          <p style={{ fontSize: "12px", color: "var(--text-muted)", marginTop: "2px" }}>직급별 수당 비율과 승급 조건을 관리합니다</p>
+        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+          <div>
+            <h1 style={{ fontFamily: "Syne,sans-serif", fontSize: "22px", fontWeight: 800, color: "var(--text-primary)" }}>수당 플랜</h1>
+            <p style={{ fontSize: "12px", color: "var(--text-muted)", marginTop: "2px" }}>직급별 수당 비율과 승급 조건을 관리합니다</p>
+          </div>
+          {/* 가이드 버튼 — 애니메이션 펄스 */}
+          <button onClick={() => setShowGuide(true)} style={{
+            display: "flex", alignItems: "center", gap: "6px",
+            padding: "8px 14px", borderRadius: "999px",
+            background: "linear-gradient(135deg, rgba(108,71,255,0.15), rgba(167,139,250,0.1))",
+            border: "1.5px solid rgba(108,71,255,0.35)",
+            color: "#6C47FF", cursor: "pointer", fontSize: "12px", fontWeight: 700,
+            boxShadow: "0 0 0 0 rgba(108,71,255,0.4)",
+            animation: "guidePulse 2s infinite",
+            transition: "all 0.2s",
+          }}
+            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "rgba(108,71,255,0.2)"; (e.currentTarget as HTMLElement).style.animation = "none"; }}
+            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "linear-gradient(135deg, rgba(108,71,255,0.15), rgba(167,139,250,0.1))"; (e.currentTarget as HTMLElement).style.animation = "guidePulse 2s infinite"; }}
+          >
+            <HelpCircle size={14} />
+            사용 가이드
+          </button>
+          <style>{`
+            @keyframes guidePulse {
+              0%   { box-shadow: 0 0 0 0 rgba(108,71,255,0.4); }
+              60%  { box-shadow: 0 0 0 8px rgba(108,71,255,0); }
+              100% { box-shadow: 0 0 0 0 rgba(108,71,255,0); }
+            }
+          `}</style>
         </div>
         {/* 총 재원 뱃지 */}
         <div style={{ display: "flex", alignItems: "center", gap: "8px", padding: "8px 16px", borderRadius: "12px", background: "rgba(201,168,76,0.08)", border: "1px solid rgba(201,168,76,0.25)" }}>
@@ -225,6 +394,8 @@ export default function PlanPage() {
           </div>
         </div>
       </div>
+
+      {showGuide && <PlanGuideModal onClose={() => setShowGuide(false)} />}
 
       {/* ── 직급별 수당 카드 ── */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "16px" }}>
