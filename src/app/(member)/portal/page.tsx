@@ -5,6 +5,7 @@ import { Users, Wallet, ShoppingBag, ChevronRight, ArrowUpRight, Package } from 
 import { formatKRW } from "@/lib/utils";
 import Link from "next/link";
 import { createBrowserSupabaseClient } from "@/lib/supabase";
+import CommissionPlanModal from "@/components/ui/CommissionPlanModal";
 
 const QUICK_MENU = [
   { label: "내 조직", href: "/network", icon: Users, color: "#C9A84C", bg: "rgba(201,168,76,0.10)" },
@@ -40,6 +41,7 @@ export default function PortalPage() {
   const [totalCommission, setTotalCommission] = useState(0);
   const [recentComm, setRecentComm] = useState<Commission[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showPlan, setShowPlan] = useState(false);
 
   useEffect(() => {
     async function load() {
@@ -211,6 +213,34 @@ export default function PortalPage() {
           </Link>
         ))}
       </div>
+
+      {/* 수당 플랜 보기 버튼 */}
+      <button
+        onClick={() => setShowPlan(true)}
+        style={{
+          width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between",
+          padding: "14px 18px", borderRadius: "14px",
+          background: "linear-gradient(135deg, rgba(201,168,76,0.12), rgba(232,201,122,0.08))",
+          border: "1px solid rgba(201,168,76,0.3)", cursor: "pointer", transition: "all 0.2s",
+        }}
+        onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = "linear-gradient(135deg, rgba(201,168,76,0.2), rgba(232,201,122,0.12))"}
+        onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = "linear-gradient(135deg, rgba(201,168,76,0.12), rgba(232,201,122,0.08))"}
+      >
+        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+          <div style={{ width: 36, height: 36, borderRadius: "10px", background: "rgba(201,168,76,0.15)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#C9A84C" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="22,7 13.5,15.5 8.5,10.5 2,17" /><polyline points="16,7 22,7 22,13" />
+            </svg>
+          </div>
+          <div style={{ textAlign: "left" }}>
+            <p style={{ fontSize: "14px", fontWeight: 700, color: "var(--gold)", margin: 0 }}>수당 플랜 보기</p>
+            <p style={{ fontSize: "11px", color: "var(--text-muted)", margin: 0 }}>파트너 · 매니저 · 디렉터 수당 체계</p>
+          </div>
+        </div>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9,18 15,12 9,6"/></svg>
+      </button>
+
+      {showPlan && <CommissionPlanModal onClose={() => setShowPlan(false)} />}
 
       {/* PC: 조직볼륨 + 최근수당 나란히 / 모바일: 스택 */}
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px" }} className="max-md:block max-md:space-y-3">
