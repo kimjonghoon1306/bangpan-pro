@@ -40,13 +40,24 @@ export default function CommissionPlanModal({ onClose }: { onClose: () => void }
       const sRule = rList.find(r => r.rule_type === "REFERRAL" && r.target_depth_from === 0 && !r.is_volume_only);
       const rRule = rList.find(r => r.rule_type === "REFERRAL" && r.target_depth_from === 1 && !r.is_volume_only);
       const oRule = rList.find(r => r.rule_type === "TEAM" && !r.is_volume_only);
-      setPlans((ranks ?? []).map((r: any) => ({
-        name: r.name, level: r.level, color: r.color,
-        salesRate: sRule?.tiers?.find((t: any) => t.rank_level === r.level)?.rate ?? 0,
-        refRate:   rRule?.tiers?.find((t: any) => t.rank_level === r.level)?.rate ?? 0,
-        overRate:  r.level >= 2 ? (oRule?.tiers?.find((t: any) => t.rank_level === r.level)?.rate ?? 0) : 0,
-        minGv: r.min_gv ?? 0, minDirect: r.min_direct_referral ?? 0,
-      })));
+      const DEF: Record<number,{s:number,r:number,o:number}> = {
+        1:{s:25,r:5,o:0}, 2:{s:28,r:7,o:3}, 3:{s:32,r:10,o:8}
+      };
+      const rankList = (ranks && ranks.length > 0) ? ranks : [
+        {name:"파트너",level:1,color:"#378ADD",min_gv:50000,     min_direct_referral:0},
+        {name:"매니저",level:2,color:"#EF9F27",min_gv:5000000,   min_direct_referral:5},
+        {name:"디렉터",level:3,color:"#D4537E",min_gv:50000000,  min_direct_referral:3},
+      ];
+      setPlans(rankList.map((r: any) => {
+        const d = DEF[r.level] ?? {s:0,r:0,o:0};
+        return {
+          name: r.name, level: r.level, color: r.color,
+          salesRate: sRule?.tiers?.find((t: any) => t.rank_level === r.level)?.rate ?? d.s,
+          refRate:   rRule?.tiers?.find((t: any) => t.rank_level === r.level)?.rate ?? d.r,
+          overRate:  r.level >= 2 ? (oRule?.tiers?.find((t: any) => t.rank_level === r.level)?.rate ?? d.o) : 0,
+          minGv: r.min_gv ?? 0, minDirect: r.min_direct_referral ?? 0,
+        };
+      }));
       setLoading(false);
     }
     load();
