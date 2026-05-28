@@ -292,10 +292,13 @@ export default function PlanPage() {
                   <div>
                     <p style={{ fontSize: "10px", color: "var(--text-muted)", marginBottom: "3px" }}>누적 매출</p>
                     {isEditing ? (
-                      <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-                        <input type="number" min={0} step={1000000} value={cur.minGv} onChange={(e) => updateDraft("minGv", Number(e.target.value))}
-                          style={{ width: "80px", padding: "5px 7px", borderRadius: "7px", fontSize: "12px", fontWeight: 700, background: "var(--bg)", border: `1.5px solid ${rs.main}`, color: rs.main, outline: "none" }} />
-                        <span style={{ fontSize: "12px", color: rs.main, fontWeight: 600 }}>원</span>
+                      <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                          <input type="number" min={0} step={1000000} value={cur.minGv} onChange={(e) => updateDraft("minGv", Number(e.target.value))}
+                            style={{ width: "100px", padding: "5px 7px", borderRadius: "7px", fontSize: "12px", fontWeight: 700, background: "var(--bg)", border: `1.5px solid ${rs.main}`, color: rs.main, outline: "none" }} />
+                          <span style={{ fontSize: "12px", color: rs.main, fontWeight: 600 }}>원</span>
+                        </div>
+                        {cur.minGv > 0 && <span style={{ fontSize: "11px", fontWeight: 700, color: rs.main, padding: "2px 8px", background: `${rs.main}15`, borderRadius: "6px", display: "inline-block" }}>{cur.minGv.toLocaleString("ko-KR")}원</span>}
                       </div>
                     ) : (
                       <p style={{ fontSize: "15px", fontWeight: 800, color: rs.main, fontFamily: "Syne,sans-serif" }}>
@@ -447,20 +450,30 @@ export default function PlanPage() {
                     {desc && <p style={{ fontSize: "10px", color: "var(--text-muted)", marginBottom: "6px" }}>{desc}</p>}
 
                     {/* 숫자 직접 입력 */}
-                    <div style={{ display: "flex", alignItems: "center", gap: "4px", marginBottom: "10px", marginTop: desc ? 0 : "6px" }}>
-                      <input
-                        type="number" min={0} max={max} step={step}
-                        value={val === 0 ? "" : val}
-                        placeholder="직접 입력"
-                        onChange={(e) => updateSimDraft(key, Number(e.target.value.replace(/,/g, "")))}
-                        style={{
-                          flex: 1, padding: "8px 10px", borderRadius: "9px",
-                          fontSize: "16px", fontWeight: 800, fontFamily: "Syne, sans-serif",
-                          background: "var(--bg-elevated)", border: `1.5px solid ${color}`,
-                          color, outline: "none", width: "100%",
-                        }}
-                      />
-                      <span style={{ fontSize: "13px", fontWeight: 600, color, flexShrink: 0 }}>{unit}</span>
+                    <div style={{ marginBottom: "6px", marginTop: desc ? 0 : "6px" }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: "4px", marginBottom: "4px" }}>
+                        <input
+                          type="number" min={0} max={max} step={step}
+                          value={val === 0 ? "" : val}
+                          placeholder="직접 입력"
+                          onChange={(e) => updateSimDraft(key, Number(e.target.value.replace(/,/g, "")))}
+                          style={{
+                            flex: 1, padding: "8px 10px", borderRadius: "9px",
+                            fontSize: "16px", fontWeight: 800, fontFamily: "Syne, sans-serif",
+                            background: "var(--bg-elevated)", border: `1.5px solid ${color}`,
+                            color, outline: "none", width: "100%",
+                          }}
+                        />
+                        <span style={{ fontSize: "13px", fontWeight: 600, color, flexShrink: 0 }}>{unit}</span>
+                      </div>
+                      {/* 콤마 포맷 미리보기 */}
+                      {val > 0 && (
+                        <div style={{ padding: "5px 10px", borderRadius: "7px", background: `${color}12`, border: `1px solid ${color}22`, display: "inline-block" }}>
+                          <span style={{ fontSize: "13px", fontWeight: 700, color, letterSpacing: "0.02em" }}>
+                            {unit === "명" ? `${val.toLocaleString("ko-KR")}명` : `${val.toLocaleString("ko-KR")}원`}
+                          </span>
+                        </div>
+                      )}
                     </div>
 
                     {/* 슬라이더 */}
