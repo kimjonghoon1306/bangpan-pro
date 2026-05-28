@@ -429,11 +429,11 @@ export default function ClosingPage() {
     const mMap: Record<string,any> = {};
     (members??[]).forEach((m:any)=>{ mMap[m.id]=m; });
 
-    const memberCalc: Record<string,{name:string,code:string,rank:any,sales:number,ref:number,over:number}> = {};
+    const memberCalc: Record<string,{name:string,code:string,phone:string,email:string,rank:any,sales:number,ref:number,over:number}> = {};
     for (const order of orders??[]) {
       const m = mMap[order.member_id]; if(!m) continue;
       const level = m.rank?.level??1;
-      if (!memberCalc[order.member_id]) memberCalc[order.member_id]={name:m.name,code:m.member_code,rank:m.rank,sales:0,ref:0,over:0};
+      if (!memberCalc[order.member_id]) memberCalc[order.member_id]={name:m.name,code:m.member_code,phone:m.phone??"",email:m.email??"",rank:m.rank,sales:0,ref:0,over:0};
 
       const sRate = rList.find((r:any)=>r.rule_type==="REFERRAL"&&r.target_depth_from===0&&!r.is_volume_only)?.tiers?.find((t:any)=>t.rank_level===level)?.rate??DEFAULT_RATES[level]?.sales??25;
       memberCalc[order.member_id].sales += Math.floor(order.total_bv*sRate/100);
@@ -441,7 +441,7 @@ export default function ClosingPage() {
       const sid = m.sponsor_id;
       if (sid && mMap[sid]) {
         const sl = mMap[sid].rank?.level??1;
-        if (!memberCalc[sid]) memberCalc[sid]={name:mMap[sid].name,code:mMap[sid].member_code,rank:mMap[sid].rank,sales:0,ref:0,over:0};
+        if (!memberCalc[sid]) memberCalc[sid]={name:mMap[sid].name,code:mMap[sid].member_code,phone:mMap[sid].phone??"",email:mMap[sid].email??"",rank:mMap[sid].rank,sales:0,ref:0,over:0};
         const rRate = rList.find((r:any)=>r.rule_type==="REFERRAL"&&r.target_depth_from===1&&!r.is_volume_only)?.tiers?.find((t:any)=>t.rank_level===sl)?.rate??DEFAULT_RATES[sl]?.ref??5;
         memberCalc[sid].ref += Math.floor(order.total_bv*rRate/100);
 
@@ -449,7 +449,7 @@ export default function ClosingPage() {
         if (gid && mMap[gid]) {
           const gl = mMap[gid].rank?.level??1;
           if (gl>=2) {
-            if (!memberCalc[gid]) memberCalc[gid]={name:mMap[gid].name,code:mMap[gid].member_code,rank:mMap[gid].rank,sales:0,ref:0,over:0};
+            if (!memberCalc[gid]) memberCalc[gid]={name:mMap[gid].name,code:mMap[gid].member_code,phone:mMap[gid].phone??"",email:mMap[gid].email??"",rank:mMap[gid].rank,sales:0,ref:0,over:0};
             const oRate = rList.find((r:any)=>r.rule_type==="TEAM"&&!r.is_volume_only)?.tiers?.find((t:any)=>t.rank_level===gl)?.rate??DEFAULT_RATES[gl]?.over??0;
             memberCalc[gid].over += Math.floor(order.total_bv*oRate/100);
           }
@@ -501,16 +501,33 @@ export default function ClosingPage() {
     const { data: orders } = await supabase.from("orders").select("total_price").eq("status","PAID").gte("paid_at",monthStart).lt("paid_at",monthEnd);
     const totalRev = orders?.reduce((s:number,o:any)=>s+o.total_price,0)??0;
 
-    const { count: mgrCount } = await supabase.from("members").select("*",{count:"exact",head:true}).eq("is_admin",false).eq("rank_id",(await supabase.from("ranks").select("id").eq("level",2).single()).data?.id);
-    const { count: dirCount } = await supabase.from("members").select("*",{count:"exact",head:true}).eq("is_admin",false).eq("rank_id",(await supabase.from("ranks").select("id").eq("level",3).single()).data?.id);
+    // 매니저/디렉터 rank id 조회
+    const { data: mgrRank } = await supabase.from("ranks").select("id").eq("level",2).single();
+    const { data: dirRank } = await supabase.from("ranks").select("id").eq("level",3).single();
 
+    // 매니저/디렉터 명단 조회
+    const [{ data: mgrList }, { data: dirList }] = await Promise.all([
+      supabase.from("members").select("id, name, phone, email, bank_name, bank_account, bank_holder").eq("is_admin",false).eq("rank_id", mgrRank?.id ?? ""),
+      supabase.from("members").select("id, name, phone, email, bank_name, bank_account, bank_holder").eq("is_admin",false).eq("rank_id", dirRank?.id ?? ""),
+    ]);
+
+    const mgrCount = mgrList?.length ?? 0;
+    const dirCount = dirList?.length ?? 0;
     const mPool = Math.floor(totalRev*0.02);
     const dPool = Math.floor(totalRev*0.02);
     const aPool = Math.floor(totalRev*0.01);
-    const perMgr = mgrCount && mgrCount>0 ? Math.floor(mPool/mgrCount) : 0;
-    const perDir = dirCount && dirCount>0 ? Math.floor(dPool/dirCount) : 0;
+    const perMgr = mgrCount > 0 ? Math.floor(mPool/mgrCount) : 0;
+    const perDir = dirCount > 0 ? Math.floor(dPool/dirCount) : 0;
 
-    setMonthlyData({ year:now.getFullYear(), month:now.getMonth()+1, total_monthly_revenue:totalRev, manager_pool:mPool, director_pool:dPool, admin_discretion:aPool, manager_count:mgrCount??0, director_count:dirCount??0, per_manager:perMgr, per_director:perDir });
+    setMonthlyData({
+      year:now.getFullYear(), month:now.getMonth()+1,
+      total_monthly_revenue:totalRev,
+      manager_pool:mPool, director_pool:dPool, admin_discretion:aPool,
+      manager_count:mgrCount, director_count:dirCount,
+      per_manager:perMgr, per_director:perDir,
+      managerList: mgrList ?? [],
+      directorList: dirList ?? [],
+    });
     setMonthlyCalc(false);
   }
 
@@ -681,33 +698,50 @@ export default function ClosingPage() {
               {weeklyResult.length>0 && (
                 <>
                   <div style={{background:"var(--bg)",borderRadius:"14px",overflow:"hidden",border:"1px solid var(--bg-border)"}}>
-                    <div style={{padding:"12px 16px",borderBottom:"1px solid var(--bg-border)",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-                      <span style={{fontSize:"13px",fontWeight:700,color:"var(--text-primary)"}}>지급 대상 {weeklyResult.filter(r=>!weeklySearch||(r.name.includes(weeklySearch)||r.code.includes(weeklySearch))).length}명</span>
-                      <span style={{fontSize:"13px",fontWeight:700,color:STEP_COLORS[1]}}>{formatKRW(weeklyResult.reduce((s,r)=>s+r.net,0))} 지급 예정</span>
+                    <div style={{padding:"12px 16px",borderBottom:"1px solid var(--bg-border)",display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:"8px"}}>
+                      <div>
+                        <span style={{fontSize:"13px",fontWeight:700,color:"var(--text-primary)"}}>지급 대상 {weeklyResult.filter(r=>!weeklySearch||(r.name.includes(weeklySearch)||r.code.includes(weeklySearch))).length}명</span>
+                        <span style={{fontSize:"12px",color:"var(--text-muted)",marginLeft:"10px"}}>지급일: {weeklyPeriod?.payment}</span>
+                      </div>
+                      <div style={{display:"flex",gap:"8px",alignItems:"center"}}>
+                        <span style={{fontSize:"13px",fontWeight:700,color:STEP_COLORS[1]}}>{formatKRW(weeklyResult.reduce((s,r)=>s+r.net,0))} 지급 예정</span>
+                        <button onClick={()=>{
+                          const rows = weeklyResult.map(r=>`${r.name}\t${r.phone??""}\t${r.email??""}\t${r.bank??""} ${r.account??""}\t${r.holder??""}\t${formatKRW(r.gross)}\t${formatKRW(r.tax)}\t${formatKRW(r.net)}`).join("\n");
+                          const header = "이름\t전화번호\t이메일\t계좌번호\t예금주\t세전수당\t원천징수\t실지급액\n";
+                          const blob = new Blob(["\uFEFF"+header+rows],{type:"text/tab-separated-values;charset=utf-8"});
+                          const url = URL.createObjectURL(blob);
+                          const a = document.createElement("a"); a.href=url; a.download=`지급명세_${weeklyPeriod?.payment??""}.tsv`; a.click();
+                        }} style={{display:"flex",alignItems:"center",gap:"6px",padding:"7px 12px",borderRadius:"8px",background:"rgba(0,200,150,0.1)",border:"1px solid rgba(0,200,150,0.25)",color:"#00C896",cursor:"pointer",fontSize:"12px",fontWeight:600}}>
+                          <Download size={13}/> 출력
+                        </button>
+                      </div>
                     </div>
                     <div style={{overflowX:"auto"}}>
-                      <table style={{width:"100%",borderCollapse:"collapse",minWidth:"600px"}}>
-                        <thead><tr style={{borderBottom:"1px solid var(--bg-border)"}}>
-                          {["회원","직급","판매수당","추천수당","오버라이딩","세전합계","세후 실수령","계좌"].map(h=>(
-                            <th key={h} style={{padding:"10px 14px",textAlign:"left",fontSize:"11px",color:"var(--text-muted)",fontWeight:600,whiteSpace:"nowrap"}}>{h}</th>
+                      <table style={{width:"100%",borderCollapse:"collapse",minWidth:"900px"}}>
+                        <thead><tr style={{borderBottom:"1px solid var(--bg-border)",background:"var(--bg-elevated)"}}>
+                          {["이름","회원번호","전화번호","이메일","직급","판매수당","추천수당","오버라이딩","세전합계","원천징수","실수령액","계좌"].map(h=>(
+                            <th key={h} style={{padding:"10px 12px",textAlign:"left",fontSize:"11px",color:"var(--text-muted)",fontWeight:700,whiteSpace:"nowrap"}}>{h}</th>
                           ))}
                         </tr></thead>
                         <tbody>
-                          {weeklyResult.filter(r=>!weeklySearch||(r.name.includes(weeklySearch)||r.code.includes(weeklySearch)||r.account?.includes(weeklySearch))).map((r,i)=>(
-                            <tr key={r.id} style={{borderBottom:"1px solid var(--bg-border)"}}>
-                              <td style={{padding:"11px 14px"}}>
-                                <p style={{fontSize:"13px",fontWeight:600,color:"var(--text-primary)"}}>{r.name}</p>
-                                <p style={{fontSize:"11px",color:"var(--text-muted)",fontFamily:"monospace"}}>{r.code}</p>
+                          {weeklyResult.filter(r=>!weeklySearch||(r.name.includes(weeklySearch)||r.code?.includes(weeklySearch)||r.phone?.includes(weeklySearch)||r.email?.includes(weeklySearch)||r.account?.includes(weeklySearch))).map((r,i)=>(
+                            <tr key={r.id} style={{borderBottom:"1px solid var(--bg-border)",background:i%2===0?"transparent":"rgba(0,0,0,0.02)"}}>
+                              <td style={{padding:"10px 12px"}}>
+                                <p style={{fontSize:"13px",fontWeight:700,color:"var(--text-primary)",margin:0}}>{r.name}</p>
                               </td>
-                              <td style={{padding:"11px 14px"}}>
+                              <td style={{padding:"10px 12px",fontSize:"11px",color:"var(--text-muted)",fontFamily:"monospace",whiteSpace:"nowrap"}}>{r.code}</td>
+                              <td style={{padding:"10px 12px",fontSize:"12px",color:"var(--text-secondary)",whiteSpace:"nowrap"}}>{r.phone??"-"}</td>
+                              <td style={{padding:"10px 12px",fontSize:"12px",color:"var(--text-secondary)",whiteSpace:"nowrap"}}>{r.email??"-"}</td>
+                              <td style={{padding:"10px 12px"}}>
                                 <span style={{padding:"2px 8px",borderRadius:"999px",fontSize:"11px",fontWeight:600,background:`${r.rank?.color}22`,color:r.rank?.color}}>{r.rank?.name}</span>
                               </td>
-                              <td style={{padding:"11px 14px",fontSize:"13px",color:"#4FA3E8",fontWeight:500}}>{formatKRW(r.sales)}</td>
-                              <td style={{padding:"11px 14px",fontSize:"13px",color:"#FF9500",fontWeight:500}}>{formatKRW(r.ref)}</td>
-                              <td style={{padding:"11px 14px",fontSize:"13px",color:"#E8599A",fontWeight:500}}>{formatKRW(r.over)}</td>
-                              <td style={{padding:"11px 14px",fontSize:"13px",fontWeight:700,color:"var(--text-primary)"}}>{formatKRW(r.gross)}</td>
-                              <td style={{padding:"11px 14px",fontSize:"14px",fontWeight:800,color:STEP_COLORS[1]}}>{formatKRW(r.net)}</td>
-                              <td style={{padding:"11px 14px",fontSize:"12px",color:"var(--text-muted)"}}>{r.bank} {r.account}</td>
+                              <td style={{padding:"10px 12px",fontSize:"13px",color:"#4FA3E8",fontWeight:500,whiteSpace:"nowrap"}}>{formatKRW(r.sales)}</td>
+                              <td style={{padding:"10px 12px",fontSize:"13px",color:"#FF9500",fontWeight:500,whiteSpace:"nowrap"}}>{formatKRW(r.ref)}</td>
+                              <td style={{padding:"10px 12px",fontSize:"13px",color:"#E8599A",fontWeight:500,whiteSpace:"nowrap"}}>{formatKRW(r.over)}</td>
+                              <td style={{padding:"10px 12px",fontSize:"13px",fontWeight:700,color:"var(--text-primary)",whiteSpace:"nowrap"}}>{formatKRW(r.gross)}</td>
+                              <td style={{padding:"10px 12px",fontSize:"12px",color:"#F87171",whiteSpace:"nowrap"}}>-{formatKRW(r.tax)}</td>
+                              <td style={{padding:"10px 12px",fontSize:"14px",fontWeight:800,color:STEP_COLORS[1],whiteSpace:"nowrap"}}>{formatKRW(r.net)}</td>
+                              <td style={{padding:"10px 12px",fontSize:"12px",color:"var(--text-secondary)",whiteSpace:"nowrap"}}>{r.bank} {r.account} ({r.holder})</td>
                             </tr>
                           ))}
                         </tbody>
@@ -764,6 +798,58 @@ export default function ClosingPage() {
                       </div>
                     ))}
                   </div>
+
+                  {/* 매니저 명단 */}
+                  {monthlyData.managerList?.length > 0 && (
+                    <div style={{background:"rgba(255,149,0,0.05)",border:"1px solid rgba(255,149,0,0.2)",borderRadius:"14px",overflow:"hidden"}}>
+                      <div style={{padding:"12px 16px",borderBottom:"1px solid rgba(255,149,0,0.15)",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                        <span style={{fontSize:"13px",fontWeight:700,color:"#FF9500"}}>👔 매니저 명단 ({monthlyData.manager_count}명)</span>
+                        <span style={{fontSize:"12px",color:"#FF9500"}}>1인당 {formatKRW(monthlyData.per_manager)}</span>
+                      </div>
+                      <div style={{overflowX:"auto"}}>
+                        <table style={{width:"100%",borderCollapse:"collapse",minWidth:"500px"}}>
+                          <thead><tr style={{borderBottom:"1px solid rgba(255,149,0,0.1)"}}>{["이름","전화번호","이메일","계좌","지급액"].map(h=><th key={h} style={{padding:"8px 14px",textAlign:"left",fontSize:"11px",color:"var(--text-muted)",fontWeight:600}}>{h}</th>)}</tr></thead>
+                          <tbody>
+                            {monthlyData.managerList.map((m:any,i:number)=>(
+                              <tr key={m.id} style={{borderBottom:"1px solid rgba(255,149,0,0.08)"}}>
+                                <td style={{padding:"10px 14px",fontSize:"13px",fontWeight:600,color:"var(--text-primary)"}}>{m.name}</td>
+                                <td style={{padding:"10px 14px",fontSize:"12px",color:"var(--text-secondary)"}}>{m.phone??"-"}</td>
+                                <td style={{padding:"10px 14px",fontSize:"12px",color:"var(--text-secondary)"}}>{m.email??"-"}</td>
+                                <td style={{padding:"10px 14px",fontSize:"12px",color:"var(--text-muted)"}}>{m.bank_name} {m.bank_account}</td>
+                                <td style={{padding:"10px 14px",fontSize:"13px",fontWeight:800,color:"#FF9500"}}>{formatKRW(monthlyData.per_manager)}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* 디렉터 명단 */}
+                  {monthlyData.directorList?.length > 0 && (
+                    <div style={{background:"rgba(232,89,154,0.05)",border:"1px solid rgba(232,89,154,0.2)",borderRadius:"14px",overflow:"hidden"}}>
+                      <div style={{padding:"12px 16px",borderBottom:"1px solid rgba(232,89,154,0.15)",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                        <span style={{fontSize:"13px",fontWeight:700,color:"#E8599A"}}>👑 디렉터 명단 ({monthlyData.director_count}명)</span>
+                        <span style={{fontSize:"12px",color:"#E8599A"}}>1인당 {formatKRW(monthlyData.per_director)}</span>
+                      </div>
+                      <div style={{overflowX:"auto"}}>
+                        <table style={{width:"100%",borderCollapse:"collapse",minWidth:"500px"}}>
+                          <thead><tr style={{borderBottom:"1px solid rgba(232,89,154,0.1)"}}>{["이름","전화번호","이메일","계좌","지급액"].map(h=><th key={h} style={{padding:"8px 14px",textAlign:"left",fontSize:"11px",color:"var(--text-muted)",fontWeight:600}}>{h}</th>)}</tr></thead>
+                          <tbody>
+                            {monthlyData.directorList.map((m:any,i:number)=>(
+                              <tr key={m.id} style={{borderBottom:"1px solid rgba(232,89,154,0.08)"}}>
+                                <td style={{padding:"10px 14px",fontSize:"13px",fontWeight:600,color:"var(--text-primary)"}}>{m.name}</td>
+                                <td style={{padding:"10px 14px",fontSize:"12px",color:"var(--text-secondary)"}}>{m.phone??"-"}</td>
+                                <td style={{padding:"10px 14px",fontSize:"12px",color:"var(--text-secondary)"}}>{m.email??"-"}</td>
+                                <td style={{padding:"10px 14px",fontSize:"12px",color:"var(--text-muted)"}}>{m.bank_name} {m.bank_account}</td>
+                                <td style={{padding:"10px 14px",fontSize:"13px",fontWeight:800,color:"#E8599A"}}>{formatKRW(monthlyData.per_director)}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  )}
 
                   {/* 관리자 재량 대상자 지정 */}
                   <div style={{background:"rgba(108,71,255,0.05)",border:"1px solid rgba(108,71,255,0.2)",borderRadius:"14px",padding:"16px"}}>
