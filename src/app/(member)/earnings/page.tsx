@@ -210,6 +210,7 @@ export default function EarningsPage() {
   const [thisMonth, setThisMonth] = useState(0);
   const [lastMonth, setLastMonth] = useState(0);
   const [availableAmount, setAvailableAmount] = useState(0);
+  const [estimatedAmount, setEstimatedAmount] = useState(0); // 이번주 예상 수당
   const [pendingRequest, setPendingRequest] = useState<any>(null);
   const [showWithdrawal, setShowWithdrawal] = useState(false);
   const [withdrawalSuccess, setWithdrawalSuccess] = useState(false);
@@ -244,7 +245,16 @@ export default function EarningsPage() {
         supabase.from("withdrawal_requests").select("*").eq("member_id", session.user.id).eq("status", "PENDING").single(),
       ]);
 
-      setAvailableAmount((member as any)?.withdrawal_available ?? 0);
+      const withdrawalAvail = (member as any)?.withdrawal_available ?? 0;
+      setAvailableAmount(withdrawalAvail);
+
+      // 이번주 발생 수당 (마감 전 예상액)
+      const now2 = new Date();
+      const weekStart = new Date(now2); weekStart.setDate(now2.getDate() - now2.getDay() + 1); weekStart.setHours(0,0,0,0);
+      const { data: weekComm } = await supabase.from("commissions").select("amount").eq("member_id", session.user.id).gte("created_at", weekStart.toISOString());
+      const weekTotal = weekComm?.reduce((s:number,c:any)=>s+c.amount,0)??0;
+      setEstimatedAmount(weekTotal);
+
       setThisMonth(thisComm?.reduce((s:number,c:any)=>s+c.amount,0) ?? 0);
       setLastMonth(lastComm?.reduce((s:number,c:any)=>s+c.amount,0) ?? 0);
       setItems((commList as any) ?? []);
@@ -287,9 +297,16 @@ export default function EarningsPage() {
       }}>
         <div style={{ position: "absolute", right: -20, top: -20, width: 120, height: 120, borderRadius: "50%", background: "var(--gold)", opacity: 0.06 }} />
         <p style={{ fontSize: "12px", color: "var(--text-muted)", marginBottom: "6px" }}>출금 가능 금액</p>
-        <p style={{ fontFamily: "Syne,sans-serif", fontSize: "36px", fontWeight: 900, color: "var(--gold)", marginBottom: "6px" }}>
+        <p style={{ fontFamily: "Syne,sans-serif", fontSize: "36px", fontWeight: 900, color: "var(--gold)", marginBottom: "4px" }}>
           {formatKRW(availableAmount)}
         </p>
+        {estimatedAmount > 0 && availableAmount === 0 && (
+          <div style={{ display:"flex", alignItems:"center", gap:"6px", marginBottom:"4px" }}>
+            <span style={{ fontSize:"12px", color:"var(--text-muted)" }}>이번주 발생 수당</span>
+            <span style={{ fontSize:"14px", fontWeight:700, color:"var(--gold)" }}>{formatKRW(estimatedAmount)}</span>
+            <span style={{ fontSize:"11px", color:"var(--text-muted)" }}>(마감 후 출금 가능)</span>
+          </div>
+        )}
         <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "16px" }}>
           <Clock size={12} color="var(--text-muted)" />
           <p style={{ fontSize: "12px", color: "var(--text-muted)", margin: 0 }}>
