@@ -3,7 +3,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { createBrowserSupabaseClient } from "@/lib/supabase";
 import { formatKRW } from "@/lib/utils";
-import { decrypt } from "@/lib/crypto";
 import { CheckCircle, XCircle, Clock, Download, Search, Eye, EyeOff, RefreshCw } from "lucide-react";
 import { Skeleton, SkeletonTable, SkeletonStyle } from "@/components/ui/Skeleton";
 
@@ -251,4 +250,3 @@ export default function WithdrawalsPage() {
     </div>
   );
 }
-
