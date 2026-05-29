@@ -5,6 +5,7 @@ import { Users, Wallet, ShoppingBag, ChevronRight, ArrowUpRight, Package } from 
 import { formatKRW } from "@/lib/utils";
 import Link from "next/link";
 import { createBrowserSupabaseClient } from "@/lib/supabase";
+import { Skeleton, SkeletonStat, SkeletonCard, SkeletonStyle } from "@/components/ui/Skeleton";
 import CommissionPlanModal from "@/components/ui/CommissionPlanModal";
 
 const QUICK_MENU = [
@@ -122,10 +123,17 @@ export default function PortalPage() {
 
   if (loading) {
     return (
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "60vh", flexDirection: "column", gap: "12px" }}>
-        <div style={{ width: 36, height: 36, border: "3px solid var(--bg-border)", borderTopColor: "var(--gold)", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />
-        <p style={{ fontSize: "13px", color: "var(--text-muted)" }}>데이터 불러오는 중...</p>
-        <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
+      <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
+        <SkeletonStyle />
+        <SkeletonCard height={180} />
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: "10px" }}>
+          {Array.from({length:4}).map((_,i)=><SkeletonStat key={i}/>)}
+        </div>
+        <SkeletonCard height={120} />
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px" }}>
+          <SkeletonCard height={200} />
+          <SkeletonCard height={200} />
+        </div>
       </div>
     );
   }
