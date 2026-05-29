@@ -44,40 +44,18 @@ export default function NewMemberPage() {
       : { data: null, error: null };
 
     // signUp 사용
-    const { data: signUpData, error: signUpErr } = await supabase.auth.signUp({ email: form.email, password: form.password });
-    if (signUpErr) { setError(signUpErr.message); setLoading(false); return; }
-
-    const userId = signUpData.user?.id;
-    if (!userId) { setError("계정 생성 실패"); setLoading(false); return; }
-
-    // 추천인 찾기
-    let sponsorId: string | null = null;
-    if (form.sponsor_code) {
-      const { data: sponsor } = await supabase.from("members").select("id").eq("member_code", form.sponsor_code).single();
-      sponsorId = (sponsor as any)?.id ?? null;
-    }
-
-    // 회원 번호 생성
-    const { count } = await supabase.from("members").select("*", { count: "exact", head: true });
-    const memberCode = `M-${String((count ?? 0) + 1).padStart(6, "0")}`;
-
-    // members 테이블 삽입
-    const { error: memberErr } = await supabase.from("members").insert({
-      id: userId, member_code: memberCode, name: form.name, email: form.email, phone: form.phone || null,
-      rank_id: form.rank_id || null, sponsor_id: sponsorId,
-      bank_name: form.bank_name || null, bank_account: form.bank_account || null, bank_holder: form.bank_holder || null,
-      status: "ACTIVE", is_admin: false, joined_at: new Date().toISOString().split("T")[0],
+    // API route로 회원 등록 (이메일 인증 없이 즉시 활성화)
+    const res = await fetch("/api/admin/create-member", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        name: form.name, email: form.email, password: form.password,
+        phone: form.phone, rank_id: form.rank_id, sponsor_code: form.sponsor_code,
+        bank_name: form.bank_name, bank_account: form.bank_account, bank_holder: form.bank_holder,
+      }),
     });
-    if (memberErr) { setError(memberErr.message); setLoading(false); return; }
-
-    // member_paths 자기 자신 등록
-    await supabase.from("member_paths").insert({ ancestor_id: userId, descendant_id: userId, depth: 0 });
-    // 추천인 paths 등록
-    if (sponsorId) {
-      const { data: sponsorPaths } = await supabase.from("member_paths").select("ancestor_id, depth").eq("descendant_id", sponsorId);
-      const newPaths = (sponsorPaths ?? []).map((p: any) => ({ ancestor_id: p.ancestor_id, descendant_id: userId, depth: p.depth + 1 }));
-      if (newPaths.length) await supabase.from("member_paths").insert(newPaths);
-    }
+    const json = await res.json();
+    if (!res.ok || json.error) { setError(json.error ?? "등록 실패"); setLoading(false); return; }
 
     setLoading(false);
     router.push("/members");
