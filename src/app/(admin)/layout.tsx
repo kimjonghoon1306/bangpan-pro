@@ -7,7 +7,7 @@ import {
   LayoutDashboard, Users, ShoppingBag, Calculator,
   Settings, TrendingUp, LogOut, GitBranch,
   Wallet, Package, Bell, Menu, X, ChevronLeft, ExternalLink, CheckCircle,
-  Calendar as CalendarIcon,
+  Calendar as CalendarIcon, Banknote as BanknoteIcon,
 } from "lucide-react";
 import ThemeToggle from "@/components/ui/ThemeToggle";
 import CommissionPlanModal from "@/components/ui/CommissionPlanModal";
@@ -23,6 +23,7 @@ const NAV = [
   { label: "정산 관리",  href: "/settlement",   icon: Wallet },
   { label: "마감 · 정산", href: "/closing",      icon: CheckCircle, highlight: true },
   { label: "지급 캘린더",  href: "/calendar",     icon: CalendarIcon, highlight: true },
+  { label: "출금 신청",    href: "/withdrawals",  icon: BanknoteIcon },
   { label: "시스템 설정",href: "/settings",     icon: Settings },
 ];
 
