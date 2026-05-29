@@ -1,6 +1,6 @@
 "use client";
 
-import useSWR from "swr";
+import { useState, useEffect } from "react";
 import { fetchAdminDashboard } from "@/lib/fetchers";
 import { formatKRW } from "@/lib/utils";
 import { Skeleton, SkeletonStat, SkeletonCard, SkeletonStyle } from "@/components/ui/Skeleton";
@@ -10,10 +10,11 @@ import { useRouter } from "next/navigation";
 
 export default function DashboardPage() {
   const router = useRouter();
-  const { data, isLoading, error } = useSWR("admin-dashboard", fetchAdminDashboard, {
-    refreshInterval: 30000,
-    revalidateOnFocus: true,
-  });
+  const [data, setData] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  useEffect(() => {
+    fetchAdminDashboard().then(d => { setData(d); setIsLoading(false); });
+  }, []);
 
   const today = new Date().toLocaleDateString("ko-KR", { year:"numeric", month:"long", day:"numeric", weekday:"long" });
 
