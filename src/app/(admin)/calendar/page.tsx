@@ -8,7 +8,6 @@ import {
   CheckCircle, Clock, Download, HelpCircle, BookOpen,
   TrendingUp, Calendar, Zap, AlertCircle,
 } from "lucide-react";
-import useSWR from "swr";
 import { fetchCalendarMonth } from "@/lib/fetchers";
 import { Skeleton, SkeletonStyle } from "@/components/ui/Skeleton";
 
@@ -310,12 +309,13 @@ export default function CalendarPage() {
   const DAYS = ["일","월","화","수","목","금","토"];
   const todayStr = toDateStr(now);
 
-  // SWR로 한달치 데이터 한번에 가져오기
-  const { data: calData, isLoading: statsLoading } = useSWR(
-    `calendar-${year}-${month}`,
-    () => fetchCalendarMonth(year, month),
-    { revalidateOnFocus: false }
-  );
+  const [calData, setCalData] = useState<any>(null);
+  const statsLoading = !calData;
+
+  useEffect(() => {
+    setCalData(null);
+    fetchCalendarMonth(year, month).then(d => setCalData(d));
+  }, [year, month]);
 
   useEffect(() => {
     if (!calData) return;
