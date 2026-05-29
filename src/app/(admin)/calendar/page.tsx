@@ -8,6 +8,9 @@ import {
   CheckCircle, Clock, Download, HelpCircle, BookOpen,
   TrendingUp, Calendar, Zap, AlertCircle,
 } from "lucide-react";
+import useSWR from "swr";
+import { fetchCalendarMonth } from "@/lib/fetchers";
+import { Skeleton, SkeletonStyle } from "@/components/ui/Skeleton";
 
 // ─── 유틸 ──────────────────────────────────────────────
 function getFridays(year: number, month: number): Date[] {
@@ -299,7 +302,7 @@ export default function CalendarPage() {
   const [closingDates, setClosingDates] = useState<Set<string>>(new Set());
   const [paidFridays, setPaidFridays] = useState<Set<string>>(new Set());
   const [fridayStats, setFridayStats] = useState<Record<string,{count:number,amount:number}>>({}); 
-  const [statsLoading, setStatsLoading] = useState(true);
+  // statsLoading은 useSWR에서 관리
 
   const fridays = getFridays(year, month);
   const firstDay = new Date(year, month, 1).getDay();
@@ -307,41 +310,31 @@ export default function CalendarPage() {
   const DAYS = ["일","월","화","수","목","금","토"];
   const todayStr = toDateStr(now);
 
+  // SWR로 한달치 데이터 한번에 가져오기
+  const { data: calData, isLoading: statsLoading } = useSWR(
+    `calendar-${year}-${month}`,
+    () => fetchCalendarMonth(year, month),
+    { revalidateOnFocus: false }
+  );
+
   useEffect(() => {
-    async function load() {
-      setStatsLoading(true);
-      const supabase = createBrowserSupabaseClient();
-      const monthStart = new Date(year, month, 1).toISOString();
-      const monthEnd = new Date(year, month+1, 1).toISOString();
+    if (!calData) return;
+    setClosingDates(new Set(calData.closings.map((c:any)=>c.closing_date)));
+    setPaidFridays(new Set(calData.settlements.filter((s:any)=>s.status==="PAID").map((s:any)=>s.payment_date)));
 
-      const [{ data: closings }, { data: settlements }] = await Promise.all([
-        supabase.from("daily_closings").select("closing_date").gte("closing_date", toDateStr(new Date(year,month,1))).lte("closing_date", toDateStr(new Date(year,month+1,0))),
-        supabase.from("weekly_settlements").select("payment_date, status").gte("payment_date", toDateStr(new Date(year,month,1))).lte("payment_date", toDateStr(new Date(year,month+1,0))),
-      ]);
-
-      setClosingDates(new Set((closings??[]).map((c:any)=>c.closing_date)));
-      setPaidFridays(new Set((settlements??[]).filter((s:any)=>s.status==="PAID").map((s:any)=>s.payment_date)));
-
-      // 각 금요일별 예상 인원·금액 미리 계산 (간략 버전)
-      const stats: Record<string,{count:number,amount:number}> = {};
-      for (const fri of fridays) {
-        const { start, end } = getPayWeek(fri);
-        const { data: orders } = await supabase.from("orders")
-          .select("total_bv, total_price")
-          .eq("status","PAID")
-          .gte("paid_at", toDateStr(start)+"T00:00:00")
-          .lte("paid_at", toDateStr(end)+"T23:59:59");
-        const totalBv = (orders??[]).reduce((s:number,o:any)=>s+o.total_bv,0);
-        const estComm = Math.floor(totalBv * 0.30); // 파트너 기준 최소
-        const { count: memberCount } = await supabase.from("members")
-          .select("*",{count:"exact",head:true}).eq("is_admin",false);
-        stats[toDateStr(fri)] = { count: (orders??[]).length > 0 ? (memberCount??0) : 0, amount: estComm };
-      }
-      setFridayStats(stats);
-      setStatsLoading(false);
+    // 클라이언트에서 금요일별 집계 (쿼리 없음)
+    const stats: Record<string,{count:number,amount:number}> = {};
+    for (const fri of fridays) {
+      const { start, end } = getPayWeek(fri);
+      const friOrders = calData.orders.filter((o:any)=>{
+        const d = o.paid_at?.split("T")[0]??"";
+        return d >= toDateStr(start) && d <= toDateStr(end);
+      });
+      const totalBv = friOrders.reduce((s:number,o:any)=>s+o.total_bv,0);
+      stats[toDateStr(fri)] = { count: friOrders.length, amount: Math.floor(totalBv * 0.30) };
     }
-    load();
-  }, [year, month]);
+    setFridayStats(stats);
+  }, [calData, year, month]);
 
   function prevMonth() { if (month===0){setYear(y=>y-1);setMonth(11);}else setMonth(m=>m-1); }
   function nextMonth() { if (month===11){setYear(y=>y+1);setMonth(0);}else setMonth(m=>m+1); }
@@ -547,4 +540,3 @@ export default function CalendarPage() {
     </div>
   );
 }
-
