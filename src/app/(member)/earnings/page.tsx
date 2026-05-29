@@ -322,7 +322,7 @@ export default function EarningsPage() {
       </div>
 
       {/* ── 이번달 / 지난달 수당 ── */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: "10px" }}>
         <div style={{ background: "var(--bg-elevated)", border: "1px solid var(--bg-border)", borderRadius: "14px", padding: "16px" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "6px" }}>
             <Wallet size={13} color="var(--gold)" />
