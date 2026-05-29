@@ -214,6 +214,7 @@ export default function EarningsPage() {
   const [pendingRequest, setPendingRequest] = useState<any>(null);
   const [showWithdrawal, setShowWithdrawal] = useState(false);
   const [withdrawalSuccess, setWithdrawalSuccess] = useState(false);
+  const [discretionItems, setDiscretionItems] = useState<any[]>([]);
   const [period, setPeriod] = useState<"this"|"last">("this");
 
   useEffect(() => {
@@ -234,6 +235,7 @@ export default function EarningsPage() {
         { data: lastComm },
         { data: commList },
         { data: pending },
+        { data: discretion },
       ] = await Promise.all([
         supabase.from("members").select("withdrawal_available").eq("id", session.user.id).single(),
         supabase.from("commissions").select("amount").eq("member_id", session.user.id).gte("created_at", thisStart),
@@ -243,6 +245,7 @@ export default function EarningsPage() {
           .eq("member_id", session.user.id)
           .order("created_at", { ascending: false }).limit(50),
         supabase.from("withdrawal_requests").select("*").eq("member_id", session.user.id).eq("status", "PENDING").single(),
+        supabase.from("admin_discretion_payouts").select("amount, reason, monthly_shared_payouts(year,month)").eq("member_id", session.user.id).order("created_at",{ascending:false}).limit(3),
       ]);
 
       const withdrawalAvail = (member as any)?.withdrawal_available ?? 0;
@@ -259,6 +262,7 @@ export default function EarningsPage() {
       setLastMonth(lastComm?.reduce((s:number,c:any)=>s+c.amount,0) ?? 0);
       setItems((commList as any) ?? []);
       setPendingRequest(pending);
+      setDiscretionItems((discretion as any) ?? []);
       setLoading(false);
     }
     load();
