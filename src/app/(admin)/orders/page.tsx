@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { Search, Download, Eye, Package, TrendingUp, Clock, CheckCircle } from "lucide-react";
 import { cn, formatKRW } from "@/lib/utils";
 import { createBrowserSupabaseClient } from "@/lib/supabase";
+import { Skeleton, SkeletonTable, SkeletonStat, SkeletonStyle } from "@/components/ui/Skeleton";
 
 const STATUS_MAP: Record<string, { label: string; cls: string }> = {
   PENDING:   { label: "결제대기", cls: "badge-gold" },
@@ -107,7 +108,10 @@ export default function OrdersPage() {
 
       <div className="card-elevated p-0 overflow-hidden">
         {loading ? (
-          <div className="p-8 text-center text-text-muted text-sm">불러오는 중...</div>
+          <div className="p-4">
+  <SkeletonStyle />
+  <SkeletonTable rows={6} cols={5} />
+</div>
         ) : (
           <div className="overflow-x-auto">
             <table className="table-base">
