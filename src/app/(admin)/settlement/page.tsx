@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { Play, CheckCircle, Download, Wallet, TrendingUp, Users, AlertCircle, Check, Clock, HelpCircle, BookOpen, X, Calendar, FileText, CreditCard } from "lucide-react";
+import { Skeleton, SkeletonTable, SkeletonStat, SkeletonStyle } from "@/components/ui/Skeleton";
 import { formatKRW } from "@/lib/utils";
 import { createBrowserSupabaseClient } from "@/lib/supabase";
 
