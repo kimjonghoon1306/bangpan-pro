@@ -191,7 +191,7 @@ export default function NetworkPage() {
       </div>
 
       {/* 현황 카드 */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: "10px" }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(120px, 1fr))", gap: "10px" }}>
         {[
           { label: "직접 추천", value: `${stats.direct}명`, icon: Users, color: "var(--gold)" },
           { label: "전체 하위", value: `${stats.total}명`, icon: GitBranch, color: "#4F8EF7" },
