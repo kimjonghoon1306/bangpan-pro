@@ -25,7 +25,7 @@ export default function DashboardPage() {
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px,1fr))", gap: "12px" }}>
         {Array.from({length:4}).map((_,i)=><SkeletonStat key={i}/>)}
       </div>
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px" }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "14px" }}>
         <SkeletonCard height={200} />
         <SkeletonCard height={200} />
       </div>
