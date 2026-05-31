@@ -145,7 +145,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       </aside>
 
       {/* 메인 */}
-      <div style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0, marginLeft: collapsed ? "68px" : "240px", transition: "margin-left 0.3s" }} className="max-md:ml-0">
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0, transition: "margin-left 0.3s" }}
+        className={collapsed ? "md:ml-[68px]" : "md:ml-[240px]"}>
         <header style={{ height: "60px", display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 20px", background: "var(--bg-surface)", borderBottom: "1px solid var(--bg-border)", flexShrink: 0, position: "sticky", top: 0, zIndex: 30 }}>
           <button className="md:hidden" onClick={() => setMobileOpen(true)} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--text-muted)" }}>
             <Menu size={22} />
