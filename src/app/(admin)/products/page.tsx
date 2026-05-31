@@ -127,7 +127,7 @@ export default function ProductsPage() {
               <h3 style={{ fontSize: "16px", fontWeight: 700, color: "var(--text-primary)" }}>{modal === "add" ? "상품 등록" : "상품 수정"}</h3>
               <button onClick={() => setModal(null)} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--text-muted)" }}><X size={18} /></button>
             </div>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: "12px" }}>
               {[
                 { label: "상품코드", key: "code", type: "text" }, { label: "상품명", key: "name", type: "text" },
                 { label: "카테고리", key: "category", type: "text" }, { label: "재고", key: "stock", type: "number" },
