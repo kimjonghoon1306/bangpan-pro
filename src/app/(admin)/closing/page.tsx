@@ -862,7 +862,7 @@ export default function ClosingPage() {
                       <button onClick={()=>setDiscretionList(d=>[...d,{memberId:"",name:"",amount:0,reason:""}])} style={{padding:"5px 12px",borderRadius:"8px",background:"rgba(108,71,255,0.15)",border:"1px solid rgba(108,71,255,0.3)",color:"#6C47FF",cursor:"pointer",fontSize:"12px",fontWeight:600}}>+ 추가</button>
                     </div>
                     {discretionList.map((d,i)=>(
-                      <div key={i} style={{display:"grid",gridTemplateColumns:"2fr 1fr 2fr auto",gap:"8px",marginBottom:"8px",alignItems:"center"}}>
+                      <div key={i} style={{display:"flex",flexWrap:"wrap",marginBottom:"8px",alignItems:"center"}}>
                         <select className="input-base" style={{fontSize:"12px",padding:"7px 10px"}} value={d.memberId} onChange={e=>{
                           const m = allMembers.find(am=>am.id===e.target.value);
                           setDiscretionList(dl=>dl.map((item,idx)=>idx===i?{...item,memberId:e.target.value,name:m?.name??""}:item));
