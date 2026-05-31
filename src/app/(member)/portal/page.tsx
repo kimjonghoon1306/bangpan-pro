@@ -126,7 +126,7 @@ export default function PortalPage() {
       <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
         <SkeletonStyle />
         <SkeletonCard height={180} />
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: "10px" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(80px, 1fr))", gap: "10px" }}>
           {Array.from({length:4}).map((_,i)=><SkeletonStat key={i}/>)}
         </div>
         <SkeletonCard height={120} />
@@ -182,7 +182,7 @@ export default function PortalPage() {
           </div>
 
           {/* 실적 4칸 */}
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: "8px" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(100px, 1fr))", gap: "8px" }}>
             {[
               { label: "개인 PV", value: (member?.personal_pv ?? 0).toLocaleString() },
               { label: "그룹 GV", value: (member?.group_gv ?? 0).toLocaleString() },
@@ -199,7 +199,7 @@ export default function PortalPage() {
       </div>
 
       {/* 빠른 메뉴 */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: "10px" }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(80px, 1fr))", gap: "10px" }}>
         {QUICK_MENU.map((q) => (
           <Link key={q.label} href={q.href} style={{ textDecoration: "none" }}>
             <div style={{
