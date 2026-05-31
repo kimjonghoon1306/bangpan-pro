@@ -4,17 +4,18 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
   LayoutDashboard, GitBranch, Wallet,
-  ShoppingBag, User, LogOut,
+  ShoppingBag, User, LogOut, Calendar as CalendarIcon,
 } from "lucide-react";
 import ThemeToggle from "@/components/ui/ThemeToggle";
 import { createBrowserSupabaseClient } from "@/lib/supabase";
 
 const NAV = [
-  { label: "현황", href: "/portal", icon: LayoutDashboard },
-  { label: "조직", href: "/network", icon: GitBranch },
-  { label: "수당", href: "/earnings", icon: Wallet },
-  { label: "쇼핑", href: "/shop", icon: ShoppingBag },
-  { label: "내정보", href: "/profile", icon: User },
+  { label: "현황",   href: "/portal",   icon: LayoutDashboard },
+  { label: "조직",   href: "/network",  icon: GitBranch },
+  { label: "수당",   href: "/earnings", icon: Wallet },
+  { label: "캘린더", href: "/mycalendar", icon: CalendarIcon },
+  { label: "쇼핑",   href: "/shop",     icon: ShoppingBag },
+  { label: "내정보", href: "/profile",  icon: User },
 ];
 
 export default function MemberLayout({ children }: { children: React.ReactNode }) {
@@ -118,20 +119,21 @@ export default function MemberLayout({ children }: { children: React.ReactNode }
             const active = pathname === item.href;
             return (
               <Link key={item.href} href={item.href} style={{
-                display: "flex", flexDirection: "column", alignItems: "center", gap: "2px",
-                padding: "10px 0 8px",
+                display: "flex", flexDirection: "column", alignItems: "center", gap: "1px",
+                padding: "8px 0 6px",
                 color: active ? "var(--gold)" : "var(--text-muted)",
-                textDecoration: "none", fontSize: "10px",
+                textDecoration: "none", fontSize: "9px",
                 fontWeight: active ? 700 : 400,
                 position: "relative", transition: "color 0.15s",
+                flex: 1,
               }}>
                 {active && <span style={{
                   position: "absolute", top: 0, left: "50%", transform: "translateX(-50%)",
-                  width: "28px", height: "2px", borderRadius: "0 0 4px 4px",
+                  width: "24px", height: "2px", borderRadius: "0 0 4px 4px",
                   background: "var(--gold)",
                 }} />}
-                <item.icon size={21} />
-                {item.label}
+                <item.icon size={19} />
+                <span style={{ fontSize: "9px", lineHeight: 1.2 }}>{item.label}</span>
               </Link>
             );
           })}
