@@ -114,26 +114,31 @@ export default function MemberLayout({ children }: { children: React.ReactNode }
         background: "var(--bg-surface)", borderTop: "1px solid var(--bg-border)",
         paddingBottom: "env(safe-area-inset-bottom)",
       }}>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(5,1fr)" }}>
+        <div style={{
+          display: "flex", overflowX: "auto", scrollSnapType: "x mandatory",
+          WebkitOverflowScrolling: "touch",
+          msOverflowStyle: "none", scrollbarWidth: "none",
+        }}>
+          <style>{`.__tab_scroll::-webkit-scrollbar{display:none}`}</style>
           {NAV.map((item) => {
             const active = pathname === item.href;
             return (
               <Link key={item.href} href={item.href} style={{
-                display: "flex", flexDirection: "column", alignItems: "center", gap: "1px",
-                padding: "8px 0 6px",
+                display: "flex", flexDirection: "column", alignItems: "center", gap: "2px",
+                padding: "10px 16px 8px", minWidth: "68px", flexShrink: 0,
+                scrollSnapAlign: "start",
                 color: active ? "var(--gold)" : "var(--text-muted)",
-                textDecoration: "none", fontSize: "9px",
+                textDecoration: "none",
                 fontWeight: active ? 700 : 400,
                 position: "relative", transition: "color 0.15s",
-                flex: 1,
               }}>
                 {active && <span style={{
                   position: "absolute", top: 0, left: "50%", transform: "translateX(-50%)",
                   width: "24px", height: "2px", borderRadius: "0 0 4px 4px",
                   background: "var(--gold)",
                 }} />}
-                <item.icon size={19} />
-                <span style={{ fontSize: "9px", lineHeight: 1.2 }}>{item.label}</span>
+                <item.icon size={20} />
+                <span style={{ fontSize: "9px", lineHeight: 1.2, whiteSpace: "nowrap" }}>{item.label}</span>
               </Link>
             );
           })}
