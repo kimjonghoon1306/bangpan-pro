@@ -1,9 +1,8 @@
 import { createBrowserSupabaseClient } from "@/lib/supabase";
 
-const supabase = createBrowserSupabaseClient();
-
 // ─── 관리자 대시보드 ────────────────────────────────────
 export async function fetchAdminDashboard() {
+  const supabase = createBrowserSupabaseClient();
   const now = new Date();
   const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
   const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
@@ -32,6 +31,7 @@ export async function fetchAdminDashboard() {
 
 // ─── 회원 포털 대시보드 ─────────────────────────────────
 export async function fetchMemberPortal(userId: string) {
+  const supabase = createBrowserSupabaseClient();
   const now = new Date();
   const thisMonthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
   const lastMonthStart = new Date(now.getFullYear(), now.getMonth()-1, 1).toISOString();
@@ -62,6 +62,7 @@ export async function fetchMemberPortal(userId: string) {
 
 // ─── 정산 기간 목록 ─────────────────────────────────────
 export async function fetchSettlementPeriods() {
+  const supabase = createBrowserSupabaseClient();
   const now = new Date();
   // 이번달 기간 없으면 자동 생성
   const { data: existing } = await supabase.from("settlement_periods").select("id").eq("year", now.getFullYear()).eq("month", now.getMonth()+1).maybeSingle();
@@ -74,6 +75,7 @@ export async function fetchSettlementPeriods() {
 
 // ─── 회원 목록 ──────────────────────────────────────────
 export async function fetchMembers(page=0, limit=50, rankFilter?:string, search?:string) {
+  const supabase = createBrowserSupabaseClient();
   let q = supabase.from("members").select("id, member_code, name, phone, email, status, personal_pv, group_gv, rank:ranks(id,name,color,level), created_at", {count:"exact"}).eq("is_admin",false).order("created_at",{ascending:false}).range(page*limit, (page+1)*limit-1);
   if (search) q = q.or(`name.ilike.%${search}%,member_code.ilike.%${search}%,phone.ilike.%${search}%,email.ilike.%${search}%`);
   const { data, count } = await q;
@@ -82,6 +84,7 @@ export async function fetchMembers(page=0, limit=50, rankFilter?:string, search?
 
 // ─── 캘린더 한달치 데이터 ───────────────────────────────
 export async function fetchCalendarMonth(year: number, month: number) {
+  const supabase = createBrowserSupabaseClient();
   const start = new Date(year, month, 1).toISOString().split("T")[0];
   const end   = new Date(year, month+1, 0).toISOString().split("T")[0];
 
