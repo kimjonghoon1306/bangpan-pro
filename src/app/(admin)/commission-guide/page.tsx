@@ -180,7 +180,7 @@ export default function CommissionGuidePage() {
           수당 플랜 설명서
         </h1>
         <p style={{ fontSize: "14px", color: "var(--text-muted)", margin: 0 }}>
-          농축수산물 방판 · 1대 오버라이드 구조 · 총 수당 재원 55%
+          농축수산물 방판 · 1대 오버라이드 구조 · 총 수당 재원 54%
         </p>
       </div>
       <div style={{ position: "absolute", top: "20px", right: "20px" }}>
@@ -356,7 +356,7 @@ export default function CommissionGuidePage() {
               ))}
             </div>
             <div style={{ display: "flex", justifyContent: "space-between", marginTop: "8px" }}>
-              <span style={{ fontSize: "11px", color: "var(--text-muted)" }}>수당 합계 55%</span>
+              <span style={{ fontSize: "11px", color: "var(--text-muted)" }}>수당 합계 54%</span>
               <span style={{ fontSize: "11px", color: "var(--text-muted)" }}>회사 45%</span>
             </div>
           </div>

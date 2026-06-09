@@ -56,7 +56,7 @@ export default function CommissionGuideModal({ onClose }: { onClose: () => void 
         {/* 헤더 */}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <div>
-            <p style={{ fontSize: "10px", color: "var(--text-muted)", letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: "3px" }}>1대 오버라이드 · 총 수당 재원 55%</p>
+            <p style={{ fontSize: "10px", color: "var(--text-muted)", letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: "3px" }}>1대 오버라이드 · 총 수당 재원 54%</p>
             <h2 style={{ fontFamily: "Syne,sans-serif", fontSize: "22px", fontWeight: 800, color: "#fff", margin: 0 }}>수당 플랜 설명서</h2>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
@@ -153,10 +153,10 @@ export default function CommissionGuideModal({ onClose }: { onClose: () => void 
                 {[
                   { label: "직판 32%", w: 32, color: "#4FA3E8" },
                   { label: "추천 10%", w: 10, color: "#EF9F27" },
-                  { label: "패스트 5%", w: 5, color: "#10B981" },
-                  { label: "팀원 3%", w: 3, color: "#F472B6" },
-                  { label: "풀 5%", w: 5, color: "#A78BFA" },
-                  { label: "회사 45%", w: 45, color: "rgba(255,255,255,0.06)" },
+                  { label: "패스트 5%", w: 5,  color: "#10B981" },
+                  { label: "팀원 3%",  w: 3,  color: "#F472B6" },
+                  { label: "풀 4%",   w: 4,  color: "#A78BFA" },
+                  { label: "회사 46%", w: 46, color: "var(--bg-border)" },
                 ].map(({ label, w, color }) => (
                   <div key={label} style={{ width: `${w}%`, background: color, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "8px", fontWeight: 800, color: color.startsWith("rgba") ? "rgba(255,255,255,0.2)" : "#fff", whiteSpace: "nowrap", overflow: "hidden" }}>
                     {w >= 5 ? label : ""}
@@ -164,7 +164,7 @@ export default function CommissionGuideModal({ onClose }: { onClose: () => void 
                 ))}
               </div>
               <div style={{ display: "flex", justifyContent: "space-between", marginTop: "6px" }}>
-                <span style={{ fontSize: "10px", fontWeight: 700, color: "#C9A84C" }}>수당 합계 55%</span>
+                <span style={{ fontSize: "10px", fontWeight: 700, color: "#C9A84C" }}>수당 합계 54%</span>
                 <span style={{ fontSize: "10px", color: "var(--text-muted)" }}>회사 수익 45%</span>
               </div>
             </div>
@@ -215,7 +215,7 @@ export default function CommissionGuideModal({ onClose }: { onClose: () => void 
               },
               {
                 title: "📈 3개월 차 — 팀 3명 구성",
-                color: "#EF9F27", base: "창업비 300만원 기준",
+                color: "#378ADD", base: "창업비 300만원 기준",
                 items: [
                   { label: "직판 수당 32%", amount: 960000, note: "내 창업비" },
                   { label: "추천 오버라이드 × 3명", amount: 900000, note: "300만 × 10% × 3" },

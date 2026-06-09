@@ -1,165 +1,70 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
-import { createBrowserSupabaseClient } from "@/lib/supabase";
+import { useState } from "react";
 import { formatKRW } from "@/lib/utils";
-import {
-  BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
-  Cell, PieChart, Pie, Legend,
-} from "recharts";
-import {
-  TrendingUp, Users, Wallet, Zap, Target, Award,
-  ChevronRight, RotateCcw, Calculator,
-} from "lucide-react";
+import { RotateCcw, Calculator, Users, Zap, TrendingUp, CheckCircle } from "lucide-react";
 
-interface Tier { rank_level: number; rate: number; }
-interface Rule { id: string; name: string; rule_type: string; target_depth_from: number; is_volume_only: boolean; calc_type: string; tiers: Tier[]; }
-interface Rank { id: string; code: string; name: string; level: number; color: string; }
-
-const RANK_COLORS: Record<number, { main: string; bg: string; glow: string }> = {
-  1: { main: "#378ADD", bg: "rgba(55,138,221,0.12)", glow: "rgba(55,138,221,0.3)" },
-  2: { main: "#EF9F27", bg: "rgba(239,159,39,0.12)",  glow: "rgba(239,159,39,0.3)" },
-  3: { main: "#D4537E", bg: "rgba(212,83,126,0.12)",  glow: "rgba(212,83,126,0.3)" },
+// ─── 색상 상수 (전체 앱 통일) ──────────────────────────
+const CLR = {
+  member:   { main: "#6B7280", bg: "rgba(107,114,128,0.12)", border: "rgba(107,114,128,0.3)",  label: "멤버",   icon: "👤", fee: 50000,    base: 50000    },
+  manager:  { main: "#378ADD", bg: "rgba(55,138,221,0.12)",  border: "rgba(55,138,221,0.3)",   label: "매니저", icon: "👔", fee: 3300000,  base: 3000000  },
+  director: { main: "#E8599A", bg: "rgba(232,89,154,0.12)",  border: "rgba(232,89,154,0.3)",   label: "디렉터", icon: "👑", fee: 5500000,  base: 5000000  },
+};
+const COMM = {
+  sales:    { color: "#4FA3E8", label: "① 직판 수당 32%"          },
+  ref:      { color: "#EF9F27", label: "② 추천 오버라이드 10%"    },
+  fast:     { color: "#10B981", label: "④ 패스트 스타트 +5%"      },
+  first:    { color: "#F472B6", label: "⑤ 팀원 첫모집 보너스 +3%" },
+  pool:     { color: "#A78BFA", label: "⑥/⑦ 매니저·디렉터 풀 2%"  },
 };
 
-function Slider({ label, value, min, max, step, unit, onChange, color }: any) {
-  const pct = Math.min(100, ((value - min) / (max - min)) * 100);
-  return (
-    <div style={{ marginBottom: "18px" }}>
-      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "8px" }}>
-        <span style={{ fontSize: "12px", color: "var(--text-muted)", fontWeight: 600 }}>{label}</span>
-        <span style={{ fontSize: "14px", fontWeight: 800, color }}>
-          {unit === "원" ? formatKRW(value) : `${value.toLocaleString()}${unit}`}
-        </span>
-      </div>
-      <div style={{ position: "relative", height: "6px", background: "var(--bg-border)", borderRadius: "3px" }}>
-        <div style={{ position: "absolute", left: 0, top: 0, height: "100%", width: `${pct}%`, background: `linear-gradient(90deg, ${color}88, ${color})`, borderRadius: "3px", transition: "width 0.1s" }} />
-        <input type="range" min={min} max={max} step={step} value={value}
-          onChange={(e) => onChange(Number(e.target.value))}
-          style={{ position: "absolute", inset: 0, width: "100%", opacity: 0, cursor: "pointer", height: "100%", margin: 0 }}
-        />
-        <div style={{ position: "absolute", top: "50%", left: `${pct}%`, transform: "translate(-50%,-50%)", width: 16, height: 16, borderRadius: "50%", background: color, border: "3px solid var(--bg-surface)", boxShadow: `0 0 8px ${color}`, pointerEvents: "none", transition: "left 0.1s" }} />
-      </div>
-      <div style={{ display: "flex", justifyContent: "space-between", marginTop: "4px" }}>
-        <span style={{ fontSize: "10px", color: "var(--text-muted)" }}>{unit === "원" ? formatKRW(min) : `${min}${unit}`}</span>
-        <span style={{ fontSize: "10px", color: "var(--text-muted)" }}>{unit === "원" ? formatKRW(max) : `${max}${unit}`}</span>
-      </div>
-    </div>
-  );
-}
-
-function ResultCard({ label, amount, color, bg, glow, sub }: any) {
-  return (
-    <div style={{ background: bg, border: `1px solid ${glow}`, borderRadius: "16px", padding: "18px", position: "relative", overflow: "hidden" }}>
-      <div style={{ position: "absolute", right: -20, bottom: -20, width: 80, height: 80, borderRadius: "50%", background: color, opacity: 0.08 }} />
-      <p style={{ fontSize: "11px", color, fontWeight: 700, marginBottom: "4px", textTransform: "uppercase", letterSpacing: "0.05em" }}>{label}</p>
-      <p style={{ fontFamily: "Syne,sans-serif", fontSize: "22px", fontWeight: 800, color }}>{formatKRW(amount)}</p>
-      {sub && <p style={{ fontSize: "11px", color, opacity: 0.7, marginTop: "2px" }}>{sub}</p>}
-    </div>
-  );
-}
-
-function CustomTooltip({ active, payload, label }: any) {
-  if (!active || !payload?.length) return null;
-  return (
-    <div style={{ background: "var(--bg-elevated)", border: "1px solid var(--bg-border)", borderRadius: "10px", padding: "10px 14px", fontSize: "12px" }}>
-      <p style={{ color: "var(--text-muted)", marginBottom: "4px" }}>{label}</p>
-      {payload.map((p: any) => (
-        <p key={p.name} style={{ color: p.fill ?? p.color, fontWeight: 600 }}>{p.name}: {formatKRW(p.value)}</p>
-      ))}
-    </div>
-  );
-}
+type MyRank = "manager" | "director";
 
 export default function SimulationPage() {
-  const [ranks, setRanks] = useState<Rank[]>([]);
-  const [rules, setRules] = useState<Rule[]>([]);
-  const [selectedLevel, setSelectedLevel] = useState(1);
-  const [loading, setLoading] = useState(true);
+  // ─── 입력값 ────────────────────────────────────────
+  const [myRank, setMyRank]         = useState<MyRank>("manager");
+  const [mgrCount, setMgrCount]     = useState(3);   // 직추천 매니저 수
+  const [dirCount, setDirCount]     = useState(0);   // 직추천 디렉터 수
+  const [fastDone, setFastDone]     = useState(false); // 패스트스타트 달성
+  const [firstCount, setFirstCount] = useState(1);   // 팀원 첫모집 성공 건수
+  const [totalFee, setTotalFee]     = useState(50000000); // 월 전체 창업비 총액
+  const [mgrTotal, setMgrTotal]     = useState(10);  // 전체 매니저 인원
+  const [dirTotal, setDirTotal]     = useState(3);   // 전체 디렉터 인원
 
-  // 슬라이더 입력값
-  const [mySales, setMySales]           = useState(1000000);
-  const [directCount, setDirectCount]   = useState(3);
-  const [directAvgSales, setDirectAvgSales] = useState(500000);
-  const [teamSales, setTeamSales]       = useState(3000000);
+  const r = CLR[myRank];
+  const base = r.base;
 
-  useEffect(() => {
-    async function load() {
-      const supabase = createBrowserSupabaseClient();
-      const [{ data: rankData }, { data: ruleData }] = await Promise.all([
-        supabase.from("ranks").select("id, code, name, level, color").order("level"),
-        supabase.from("commission_rules").select("id, name, rule_type, target_depth_from, is_volume_only, calc_type, tiers:commission_tiers(rank_level, rate)").eq("is_active", true),
-      ]);
-      setRanks(rankData ?? []);
-      setRules((ruleData as any) ?? []);
-      setLoading(false);
-    }
-    load();
-  }, []);
+  // ─── 수당 계산 ─────────────────────────────────────
+  const sales   = Math.floor(base * 0.32);
+  const refAmt  = Math.floor((mgrCount * 3000000 + dirCount * 5000000) * 0.10);
+  const fastAmt = fastDone ? Math.floor(base * 0.05) : 0;
+  const firstAmt = Math.floor(firstCount * 3000000 * 0.03); // 기본 매니저 기준
+  const poolAmt = myRank === "manager"
+    ? Math.floor(totalFee * 0.02 / Math.max(mgrTotal, 1))
+    : Math.floor(totalFee * 0.02 / Math.max(dirTotal, 1));
 
-  // 직급별 수당 계산
-  const calcForLevel = useCallback((level: number) => {
-    const directRefSales = directCount * directAvgSales;
+  const total = sales + refAmt + fastAmt + firstAmt + poolAmt;
+  const tax   = Math.floor(total * 0.033);
+  const net   = total - tax;
 
-    // ① 내 판매 수당
-    const salesRule = rules.find(r => r.rule_type === "REFERRAL" && r.target_depth_from === 0 && !r.is_volume_only);
-    const salesRate = salesRule?.tiers?.find(t => t.rank_level === level)?.rate ?? 0;
-    const salesComm = Math.floor(mySales * salesRate / 100);
-
-    // ② 추천 수당
-    const refRule = rules.find(r => r.rule_type === "REFERRAL" && r.target_depth_from === 1 && !r.is_volume_only);
-    const refRate = refRule?.tiers?.find(t => t.rank_level === level)?.rate ?? 0;
-    const refComm = Math.floor(directRefSales * refRate / 100);
-
-    // ③ 오버라이딩 (매니저 level>=2)
-    const overRule = rules.find(r => r.rule_type === "TEAM" && !r.is_volume_only);
-    const overRate = level >= 2 ? (overRule?.tiers?.find(t => t.rank_level === level)?.rate ?? 0) : 0;
-    const overComm = Math.floor(teamSales * overRate / 100);
-
-    const total = salesComm + refComm + overComm;
-    const tax = Math.floor(total * 0.033);
-    return { salesComm, refComm, overComm, total, net: total - tax, salesRate, refRate, overRate };
-  }, [rules, mySales, directCount, directAvgSales, teamSales]);
-
-  const result = calcForLevel(selectedLevel);
-  const rc = RANK_COLORS[selectedLevel] ?? RANK_COLORS[1];
-  const selectedRank = ranks.find(r => r.level === selectedLevel);
-
-  // 직급별 비교 데이터
-  const compareData = ranks.map(r => {
-    const c = calcForLevel(r.level);
-    return { name: r.name, 판매수당: c.salesComm, 추천수당: c.refComm, 오버라이딩: c.overComm, total: c.total, color: r.color };
-  });
-
-  // 파이 차트 데이터
-  const pieData = [
-    { name: "내 판매 수당", value: result.salesComm, color: "#378ADD" },
-    { name: "추천 수당",    value: result.refComm,   color: "#EF9F27" },
-    { name: "오버라이딩",  value: result.overComm,  color: "#D4537E" },
-  ].filter(d => d.value > 0);
-
-  // 목표 시나리오
-  const scenarios = [500000, 1000000, 2000000, 3000000, 5000000].map(sales => {
-    const r = calcForLevel(selectedLevel);
-    const ratio = sales / mySales;
-    return {
-      label: formatKRW(sales),
-      total: Math.floor(result.total * ratio),
-      net: Math.floor(result.net * ratio),
-    };
-  });
+  const items = [
+    { key: "sales",  amount: sales,    ...COMM.sales  },
+    { key: "ref",    amount: refAmt,   ...COMM.ref    },
+    ...(fastDone       ? [{ key: "fast",  amount: fastAmt,  ...COMM.fast  }] : []),
+    ...(firstCount > 0 ? [{ key: "first", amount: firstAmt, ...COMM.first }] : []),
+    { key: "pool",   amount: poolAmt,  ...COMM.pool   },
+  ];
 
   function reset() {
-    setMySales(1000000); setDirectCount(3);
-    setDirectAvgSales(500000); setTeamSales(3000000);
+    setMyRank("manager"); setMgrCount(3); setDirCount(0);
+    setFastDone(false); setFirstCount(1); setTotalFee(50000000);
+    setMgrTotal(10); setDirTotal(3);
   }
 
-  if (loading) return (
-    <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "60vh", flexDirection: "column", gap: "12px" }}>
-      <div style={{ width: 36, height: 36, border: "3px solid var(--bg-border)", borderTopColor: "var(--gold)", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />
-      <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
-    </div>
-  );
+  // ─── 비교 시나리오 (직추천 수별) ────────────────────
+  const compareData = [1, 2, 3, 5, 7, 10].map(n => ({
+    n, total: Math.floor(sales + n * 3000000 * 0.10 + (fastDone ? Math.floor(base * 0.05) : 0) + firstAmt + poolAmt),
+  }));
 
   return (
     <div style={{ padding: "20px", display: "flex", flexDirection: "column", gap: "20px" }}>
@@ -170,104 +75,167 @@ export default function SimulationPage() {
           <h1 style={{ fontFamily: "Syne,sans-serif", fontSize: "22px", fontWeight: 800, color: "var(--text-primary)", display: "flex", alignItems: "center", gap: "8px" }}>
             <Calculator size={22} color="var(--gold)" /> 수당 시뮬레이션
           </h1>
-          <p style={{ fontSize: "12px", color: "var(--text-muted)", marginTop: "2px" }}>실제 수당 플랜 기준 — 직급·매출·조직 규모별 수익 예측</p>
+          <p style={{ fontSize: "12px", color: "var(--text-muted)", marginTop: "2px" }}>창업비 기준 · 실제 수당 플랜으로 계산</p>
         </div>
         <button onClick={reset} style={{ display: "flex", alignItems: "center", gap: "6px", padding: "8px 14px", borderRadius: "9px", background: "var(--bg-elevated)", border: "1px solid var(--bg-border)", color: "var(--text-secondary)", cursor: "pointer", fontSize: "13px" }}>
           <RotateCcw size={13} /> 초기화
         </button>
       </div>
 
-      {/* 직급 선택 */}
-      <div>
-        <p style={{ fontSize: "11px", color: "var(--text-muted)", fontWeight: 700, marginBottom: "10px", textTransform: "uppercase", letterSpacing: "0.06em" }}>직급 선택</p>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: "10px" }}>
-          {ranks.map((r) => {
-            const rc2 = RANK_COLORS[r.level] ?? { main: r.color, bg: `${r.color}22`, glow: `${r.color}44` };
-            const active = selectedLevel === r.level;
-            const c = calcForLevel(r.level);
-            return (
-              <button key={r.id} onClick={() => setSelectedLevel(r.level)} style={{
-                padding: "16px 14px", borderRadius: "16px", cursor: "pointer", textAlign: "left", transition: "all 0.2s",
-                background: active ? rc2.bg : "var(--bg-elevated)",
-                border: `2px solid ${active ? rc2.main : "var(--bg-border)"}`,
-                boxShadow: active ? `0 0 20px ${rc2.glow}` : "none",
-                transform: active ? "translateY(-2px)" : "none",
-              }}>
-                <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "8px" }}>
-                  <div style={{ width: 8, height: 8, borderRadius: "50%", background: rc2.main, boxShadow: active ? `0 0 6px ${rc2.main}` : "none" }} />
-                  <span style={{ fontSize: "14px", fontWeight: 800, color: active ? rc2.main : "var(--text-primary)" }}>{r.name}</span>
+      {/* ─── 메인 2열 ─────────────────────────────────── */}
+      <div style={{ display: "grid", gridTemplateColumns: "380px 1fr", gap: "20px" }} className="max-lg:block max-lg:space-y-5">
+
+        {/* 좌측 — 입력 */}
+        <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
+
+          {/* 내 직급 */}
+          <div style={{ background: "var(--bg-elevated)", border: "1px solid var(--bg-border)", borderRadius: "18px", padding: "20px" }}>
+            <p style={{ fontSize: "11px", color: "var(--text-muted)", fontWeight: 700, marginBottom: "12px", textTransform: "uppercase", letterSpacing: "0.06em" }}>내 직급 선택</p>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
+              {(["manager", "director"] as MyRank[]).map(k => {
+                const c = CLR[k];
+                const active = myRank === k;
+                return (
+                  <button key={k} onClick={() => setMyRank(k)} style={{
+                    padding: "16px 12px", borderRadius: "14px", cursor: "pointer", textAlign: "center", transition: "all 0.2s",
+                    background: active ? c.bg : "var(--bg)",
+                    border: `2px solid ${active ? c.main : "var(--bg-border)"}`,
+                    boxShadow: active ? `0 0 20px ${c.bg}` : "none",
+                  }}>
+                    <div style={{ fontSize: "28px", marginBottom: "6px" }}>{c.icon}</div>
+                    <p style={{ fontSize: "14px", fontWeight: 800, color: active ? c.main : "var(--text-primary)", margin: 0 }}>{c.label}</p>
+                    <p style={{ fontSize: "11px", color: active ? c.main : "var(--text-muted)", margin: "3px 0 0", opacity: 0.8 }}>
+                      창업비 {k === "manager" ? "330만원" : "550만원"}
+                    </p>
+                    {active && (
+                      <div style={{ marginTop: "8px", padding: "3px 8px", borderRadius: "6px", background: `${c.main}20`, display: "inline-block" }}>
+                        <span style={{ fontSize: "10px", fontWeight: 700, color: c.main }}>직판 {Math.floor(c.base * 0.32 / 10000)}만원 즉시</span>
+                      </div>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* 직추천 모집 */}
+          <div style={{ background: "var(--bg-elevated)", border: "1px solid var(--bg-border)", borderRadius: "18px", padding: "20px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "16px" }}>
+              <Users size={15} color="#EF9F27" />
+              <p style={{ fontSize: "13px", fontWeight: 700, color: "var(--text-primary)", margin: 0 }}>직추천 모집</p>
+              <span style={{ fontSize: "11px", color: "var(--text-muted)" }}>각 창업비 × 10%</span>
+            </div>
+
+            {/* 매니저 모집 */}
+            <div style={{ marginBottom: "16px" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "8px" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                  <span style={{ fontSize: "14px" }}>👔</span>
+                  <span style={{ fontSize: "12px", color: "var(--text-secondary)", fontWeight: 600 }}>매니저 모집</span>
                 </div>
-                <p style={{ fontSize: "11px", color: active ? rc2.main : "var(--text-muted)", opacity: 0.8 }}>합계 수당률</p>
-                <p style={{ fontFamily: "Syne,sans-serif", fontSize: "20px", fontWeight: 800, color: rc2.main, marginTop: "2px" }}>
-                  {(calcForLevel(r.level).salesRate + calcForLevel(r.level).refRate + calcForLevel(r.level).overRate).toFixed(0)}%
-                </p>
-                <p style={{ fontSize: "11px", color: active ? rc2.main : "var(--text-muted)", marginTop: "2px", opacity: 0.7 }}>
-                  예상 {formatKRW(c.total)}
-                </p>
-              </button>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* 메인 2열 */}
-      <div style={{ display: "grid", gridTemplateColumns: "400px 1fr", gap: "20px" }} className="max-lg:block max-lg:space-y-5">
-
-        {/* 좌측 — 입력 슬라이더 */}
-        <div style={{ background: "var(--bg-elevated)", border: `1px solid ${rc.glow}`, borderRadius: "18px", padding: "22px", position: "relative", overflow: "hidden" }}>
-          <div style={{ position: "absolute", top: -40, right: -40, width: 120, height: 120, borderRadius: "50%", background: rc.main, opacity: 0.06 }} />
-
-          <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "20px" }}>
-            <div style={{ width: 34, height: 34, borderRadius: "10px", background: rc.bg, display: "flex", alignItems: "center", justifyContent: "center" }}>
-              <TrendingUp size={17} color={rc.main} />
-            </div>
-            <div>
-              <p style={{ fontSize: "14px", fontWeight: 700, color: "var(--text-primary)" }}>매출 조건 설정</p>
-              <p style={{ fontSize: "11px", color: "var(--text-muted)" }}>{selectedRank?.name} 기준</p>
-            </div>
-          </div>
-
-          <Slider label="내 직접 판매 매출" value={mySales} min={0} max={10000000} step={100000} unit="원" onChange={setMySales} color={rc.main} />
-
-          <div style={{ height: "1px", background: "var(--bg-border)", margin: "16px 0" }} />
-
-          <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "14px" }}>
-            <Users size={14} color="#EF9F27" />
-            <span style={{ fontSize: "12px", fontWeight: 700, color: "var(--text-primary)" }}>직접 추천 조직</span>
-          </div>
-
-          <Slider label="직접 추천 인원" value={directCount} min={0} max={30} step={1} unit="명" onChange={setDirectCount} color="#EF9F27" />
-          <Slider label="추천인 인당 평균 매출" value={directAvgSales} min={0} max={3000000} step={50000} unit="원" onChange={setDirectAvgSales} color="#EF9F27" />
-
-          {selectedLevel >= 2 && (
-            <>
-              <div style={{ height: "1px", background: "var(--bg-border)", margin: "16px 0" }} />
-              <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "14px" }}>
-                <Zap size={14} color="#D4537E" />
-                <span style={{ fontSize: "12px", fontWeight: 700, color: "var(--text-primary)" }}>오버라이딩 (팀 매출)</span>
+                <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                  <span style={{ fontSize: "11px", color: "var(--text-muted)" }}>× 30만원</span>
+                  <span style={{ fontSize: "16px", fontWeight: 800, color: "#378ADD", minWidth: "40px", textAlign: "right" }}>{mgrCount}명</span>
+                </div>
               </div>
-              <Slider label="산하 팀 전체 매출" value={teamSales} min={0} max={20000000} step={500000} unit="원" onChange={setTeamSales} color="#D4537E" />
-            </>
-          )}
+              <input type="range" min={0} max={20} step={1} value={mgrCount} onChange={e => setMgrCount(+e.target.value)}
+                style={{ width: "100%", accentColor: "#378ADD", cursor: "pointer" }} />
+              <div style={{ display: "flex", justifyContent: "space-between", marginTop: "2px" }}>
+                <span style={{ fontSize: "10px", color: "var(--text-muted)" }}>0명</span>
+                <span style={{ fontSize: "11px", fontWeight: 700, color: "#378ADD" }}>{formatKRW(mgrCount * 300000)}</span>
+                <span style={{ fontSize: "10px", color: "var(--text-muted)" }}>20명</span>
+              </div>
+            </div>
 
-          {/* 수당률 표 */}
-          <div style={{ marginTop: "18px", background: "var(--bg)", borderRadius: "12px", padding: "14px", border: "1px solid var(--bg-border)" }}>
-            <p style={{ fontSize: "11px", color: "var(--text-muted)", fontWeight: 700, marginBottom: "10px" }}>적용 수당률 ({selectedRank?.name})</p>
+            {/* 디렉터 모집 */}
+            <div>
+              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "8px" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                  <span style={{ fontSize: "14px" }}>👑</span>
+                  <span style={{ fontSize: "12px", color: "var(--text-secondary)", fontWeight: 600 }}>디렉터 모집</span>
+                </div>
+                <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                  <span style={{ fontSize: "11px", color: "var(--text-muted)" }}>× 50만원</span>
+                  <span style={{ fontSize: "16px", fontWeight: 800, color: "#E8599A", minWidth: "40px", textAlign: "right" }}>{dirCount}명</span>
+                </div>
+              </div>
+              <input type="range" min={0} max={10} step={1} value={dirCount} onChange={e => setDirCount(+e.target.value)}
+                style={{ width: "100%", accentColor: "#E8599A", cursor: "pointer" }} />
+              <div style={{ display: "flex", justifyContent: "space-between", marginTop: "2px" }}>
+                <span style={{ fontSize: "10px", color: "var(--text-muted)" }}>0명</span>
+                <span style={{ fontSize: "11px", fontWeight: 700, color: "#E8599A" }}>{formatKRW(dirCount * 500000)}</span>
+                <span style={{ fontSize: "10px", color: "var(--text-muted)" }}>10명</span>
+              </div>
+            </div>
+          </div>
+
+          {/* 보너스 조건 */}
+          <div style={{ background: "var(--bg-elevated)", border: "1px solid var(--bg-border)", borderRadius: "18px", padding: "20px" }}>
+            <p style={{ fontSize: "11px", color: "var(--text-muted)", fontWeight: 700, marginBottom: "14px", textTransform: "uppercase", letterSpacing: "0.06em" }}>추가 보너스</p>
+
+            {/* 패스트 스타트 */}
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 14px", borderRadius: "12px", background: fastDone ? "rgba(16,185,129,0.08)" : "var(--bg)", border: `1px solid ${fastDone ? "#10B981" : "var(--bg-border)"}`, marginBottom: "10px", cursor: "pointer", transition: "all 0.2s" }}
+              onClick={() => setFastDone(!fastDone)}>
+              <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                <span style={{ fontSize: "18px" }}>🚀</span>
+                <div>
+                  <p style={{ fontSize: "13px", fontWeight: 700, color: fastDone ? "#10B981" : "var(--text-primary)", margin: 0 }}>패스트 스타트 달성</p>
+                  <p style={{ fontSize: "10px", color: "var(--text-muted)", margin: 0 }}>가입 후 90일 내 미션 달성</p>
+                </div>
+              </div>
+              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                <span style={{ fontSize: "12px", fontWeight: 700, color: "#10B981" }}>+{formatKRW(fastAmt)}</span>
+                <div style={{ width: 22, height: 22, borderRadius: "50%", background: fastDone ? "#10B981" : "var(--bg-border)", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.2s" }}>
+                  {fastDone && <CheckCircle size={14} color="#fff" />}
+                </div>
+              </div>
+            </div>
+
+            {/* 팀원 첫모집 */}
+            <div>
+              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "8px" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                  <span style={{ fontSize: "16px" }}>🎯</span>
+                  <span style={{ fontSize: "12px", color: "var(--text-secondary)", fontWeight: 600 }}>팀원 첫모집 성공</span>
+                </div>
+                <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                  <span style={{ fontSize: "11px", color: "var(--text-muted)" }}>× 9만원</span>
+                  <span style={{ fontSize: "16px", fontWeight: 800, color: "#F472B6", minWidth: "30px", textAlign: "right" }}>{firstCount}건</span>
+                </div>
+              </div>
+              <input type="range" min={0} max={20} step={1} value={firstCount} onChange={e => setFirstCount(+e.target.value)}
+                style={{ width: "100%", accentColor: "#F472B6", cursor: "pointer" }} />
+              <div style={{ display: "flex", justifyContent: "space-between", marginTop: "2px" }}>
+                <span style={{ fontSize: "10px", color: "var(--text-muted)" }}>0건</span>
+                <span style={{ fontSize: "11px", fontWeight: 700, color: "#F472B6" }}>{formatKRW(firstAmt)}</span>
+                <span style={{ fontSize: "10px", color: "var(--text-muted)" }}>20건</span>
+              </div>
+            </div>
+          </div>
+
+          {/* 풀 배분 설정 */}
+          <div style={{ background: "var(--bg-elevated)", border: "1px solid var(--bg-border)", borderRadius: "18px", padding: "20px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "14px" }}>
+              <Zap size={14} color="#A78BFA" />
+              <p style={{ fontSize: "13px", fontWeight: 700, color: "var(--text-primary)", margin: 0 }}>풀 배분 설정</p>
+            </div>
             {[
-              { label: "① 내 판매 수당", rate: result.salesRate, color: "#378ADD" },
-              { label: "② 추천 수당",    rate: result.refRate,   color: "#EF9F27" },
-              { label: "③ 오버라이딩",  rate: result.overRate,  color: "#D4537E" },
-            ].map(({ label, rate, color }) => (
-              <div key={label} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "6px" }}>
-                <span style={{ fontSize: "12px", color: "var(--text-secondary)" }}>{label}</span>
-                <span style={{ padding: "2px 10px", borderRadius: "999px", fontSize: "12px", fontWeight: 800, background: `${color}18`, color, border: `1px solid ${color}33` }}>
-                  {rate}%
-                </span>
+              { label: "월 전체 창업비 총액", value: totalFee, set: setTotalFee, max: 500000000, step: 5000000, color: "#A78BFA", unit: "원" },
+              { label: "전체 매니저 수",       value: mgrTotal, set: setMgrTotal, max: 100,       step: 1,       color: "#378ADD", unit: "명" },
+              { label: "전체 디렉터 수",       value: dirTotal, set: setDirTotal, max: 50,        step: 1,       color: "#E8599A", unit: "명" },
+            ].map(({ label, value, set, max, step, color, unit }) => (
+              <div key={label} style={{ marginBottom: "12px" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "5px" }}>
+                  <span style={{ fontSize: "11px", color: "var(--text-muted)", fontWeight: 600 }}>{label}</span>
+                  <span style={{ fontSize: "12px", fontWeight: 700, color }}>{unit === "원" ? formatKRW(value) : `${value}${unit}`}</span>
+                </div>
+                <input type="range" min={0} max={max} step={step} value={value} onChange={e => set(+e.target.value)}
+                  style={{ width: "100%", accentColor: color, cursor: "pointer" }} />
               </div>
             ))}
-            <div style={{ borderTop: "1px solid var(--bg-border)", marginTop: "8px", paddingTop: "8px", display: "flex", justifyContent: "space-between" }}>
-              <span style={{ fontSize: "12px", fontWeight: 700, color: "var(--text-primary)" }}>합계</span>
-              <span style={{ fontSize: "14px", fontWeight: 800, color: rc.main }}>{(result.salesRate + result.refRate + result.overRate).toFixed(0)}%</span>
+            <div style={{ padding: "10px 12px", borderRadius: "10px", background: "rgba(167,139,250,0.08)", border: "1px solid rgba(167,139,250,0.2)", marginTop: "4px" }}>
+              <p style={{ fontSize: "11px", color: "var(--text-muted)", margin: "0 0 4px" }}>내 풀 배분 예상</p>
+              <p style={{ fontFamily: "Syne, sans-serif", fontSize: "18px", fontWeight: 800, color: "#A78BFA", margin: 0 }}>{formatKRW(poolAmt)}</p>
             </div>
           </div>
         </div>
@@ -275,156 +243,119 @@ export default function SimulationPage() {
         {/* 우측 — 결과 */}
         <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
 
-          {/* 수당 결과 카드 4개 */}
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: "10px" }}>
-            <ResultCard label="① 내 판매 수당" amount={result.salesComm} color="#378ADD" bg="rgba(55,138,221,0.08)" glow="rgba(55,138,221,0.25)" sub={`${result.salesRate}% 적용`} />
-            <ResultCard label="② 추천 수당" amount={result.refComm} color="#EF9F27" bg="rgba(239,159,39,0.08)" glow="rgba(239,159,39,0.25)" sub={`${directCount}명 × ${result.refRate}%`} />
-            <ResultCard label="③ 오버라이딩" amount={result.overComm} color="#D4537E" bg="rgba(212,83,126,0.08)" glow="rgba(212,83,126,0.25)" sub={selectedLevel >= 2 ? `${result.overRate}% 적용` : "매니저 이상"} />
-            <ResultCard label="월 합계 수당" amount={result.total} color={rc.main} bg={rc.bg} glow={rc.glow} sub={`세후 ${formatKRW(result.net)}`} />
-          </div>
-
-          {/* 세전/세후 강조 */}
-          <div style={{ background: `linear-gradient(135deg, ${rc.bg}, rgba(0,0,0,0.05))`, border: `1px solid ${rc.glow}`, borderRadius: "18px", padding: "20px", display: "grid", gridTemplateColumns: "1fr 1px 1fr", gap: "0", alignItems: "center" }}>
-            <div style={{ textAlign: "center" }}>
-              <p style={{ fontSize: "11px", color: "var(--text-muted)", marginBottom: "4px" }}>월 수당 (세전)</p>
-              <p style={{ fontFamily: "Syne,sans-serif", fontSize: "28px", fontWeight: 800, color: rc.main }}>{formatKRW(result.total)}</p>
-              <p style={{ fontSize: "11px", color: "var(--text-muted)", marginTop: "4px" }}>연간 {formatKRW(result.total * 12)}</p>
-            </div>
-            <div style={{ width: "1px", background: "var(--bg-border)", height: "60px", margin: "0 auto" }} />
-            <div style={{ textAlign: "center" }}>
-              <p style={{ fontSize: "11px", color: "var(--text-muted)", marginBottom: "4px" }}>월 실수령 (3.3% 공제)</p>
-              <p style={{ fontFamily: "Syne,sans-serif", fontSize: "28px", fontWeight: 800, color: "var(--emerald)" }}>{formatKRW(result.net)}</p>
-              <p style={{ fontSize: "11px", color: "var(--text-muted)", marginTop: "4px" }}>연간 {formatKRW(result.net * 12)}</p>
+          {/* 최종 수당 히어로 */}
+          <div style={{ background: r.bg, border: `2px solid ${r.main}`, borderRadius: "20px", padding: "24px", position: "relative", overflow: "hidden" }}>
+            <div style={{ position: "absolute", top: -40, right: -40, width: 160, height: 160, borderRadius: "50%", background: r.main, opacity: 0.08 }} />
+            <div style={{ position: "relative", display: "grid", gridTemplateColumns: "1fr 1px 1fr", gap: "0", alignItems: "center" }}>
+              <div style={{ textAlign: "center" }}>
+                <p style={{ fontSize: "11px", color: "var(--text-muted)", marginBottom: "6px" }}>월 예상 수당 (세전)</p>
+                <p style={{ fontFamily: "Syne,sans-serif", fontSize: "36px", fontWeight: 900, color: r.main, lineHeight: 1 }}>{formatKRW(total)}</p>
+                <p style={{ fontSize: "11px", color: "var(--text-muted)", marginTop: "6px" }}>연간 {formatKRW(total * 12)}</p>
+              </div>
+              <div style={{ width: "1px", background: "var(--bg-border)", height: "70px", margin: "0 auto" }} />
+              <div style={{ textAlign: "center" }}>
+                <p style={{ fontSize: "11px", color: "var(--text-muted)", marginBottom: "6px" }}>실수령 (3.3% 공제)</p>
+                <p style={{ fontFamily: "Syne,sans-serif", fontSize: "36px", fontWeight: 900, color: "var(--emerald)", lineHeight: 1 }}>{formatKRW(net)}</p>
+                <p style={{ fontSize: "11px", color: "var(--text-muted)", marginTop: "6px" }}>세금 {formatKRW(tax)}</p>
+              </div>
             </div>
           </div>
 
-          {/* 수당 구성 파이 + 직급 비교 바 */}
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px" }} className="max-md:block max-md:space-y-3">
-            {/* 파이 차트 */}
-            <div style={{ background: "var(--bg-elevated)", border: "1px solid var(--bg-border)", borderRadius: "16px", padding: "18px" }}>
-              <p style={{ fontSize: "13px", fontWeight: 700, color: "var(--text-primary)", marginBottom: "14px" }}>수당 구성 비율</p>
-              {pieData.length > 0 ? (
-                <>
-                  <ResponsiveContainer width="100%" height={140}>
-                    <PieChart>
-                      <Pie data={pieData} cx="50%" cy="50%" innerRadius={35} outerRadius={60} dataKey="value" paddingAngle={4}>
-                        {pieData.map((entry, i) => <Cell key={i} fill={entry.color} />)}
-                      </Pie>
-                      <Tooltip formatter={(v: any) => formatKRW(v)} />
-                    </PieChart>
-                  </ResponsiveContainer>
-                  <div style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
-                    {pieData.map((d) => (
-                      <div key={d.name} style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                        <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                          <span style={{ width: 8, height: 8, borderRadius: "2px", background: d.color, flexShrink: 0 }} />
-                          <span style={{ fontSize: "11px", color: "var(--text-secondary)" }}>{d.name}</span>
-                        </div>
-                        <span style={{ fontSize: "11px", fontWeight: 600, color: d.color }}>{formatKRW(d.value)}</span>
-                      </div>
-                    ))}
+          {/* 수당 항목별 바 */}
+          <div style={{ background: "var(--bg-elevated)", border: "1px solid var(--bg-border)", borderRadius: "18px", padding: "20px" }}>
+            <p style={{ fontSize: "13px", fontWeight: 700, color: "var(--text-primary)", marginBottom: "16px" }}>수당 항목 상세</p>
+            {items.map(({ key, label, color, amount }) => {
+              const pct = total > 0 ? (amount / total) * 100 : 0;
+              return (
+                <div key={key} style={{ marginBottom: "12px" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "5px" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                      <div style={{ width: 10, height: 10, borderRadius: "3px", background: color, flexShrink: 0 }} />
+                      <span style={{ fontSize: "12px", color: "var(--text-secondary)", fontWeight: 500 }}>{label}</span>
+                    </div>
+                    <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                      <span style={{ fontSize: "11px", color: "var(--text-muted)" }}>{pct.toFixed(0)}%</span>
+                      <span style={{ fontSize: "14px", fontWeight: 800, color, minWidth: "80px", textAlign: "right" }}>{formatKRW(amount)}</span>
+                    </div>
                   </div>
-                </>
-              ) : (
-                <div style={{ height: 140, display: "flex", alignItems: "center", justifyContent: "center", color: "var(--text-muted)", fontSize: "13px" }}>매출 입력 필요</div>
-              )}
-            </div>
-
-            {/* 직급 비교 바 */}
-            <div style={{ background: "var(--bg-elevated)", border: "1px solid var(--bg-border)", borderRadius: "16px", padding: "18px" }}>
-              <p style={{ fontSize: "13px", fontWeight: 700, color: "var(--text-primary)", marginBottom: "14px" }}>직급별 수당 비교</p>
-              <ResponsiveContainer width="100%" height={180}>
-                <BarChart data={compareData} margin={{ top: 0, right: 5, bottom: 0, left: -20 }}>
-                  <XAxis dataKey="name" tick={{ fill: "var(--text-muted)", fontSize: 11 }} axisLine={false} tickLine={false} />
-                  <YAxis tick={{ fill: "var(--text-muted)", fontSize: 10 }} axisLine={false} tickLine={false} tickFormatter={(v) => `${(v/10000).toFixed(0)}만`} />
-                  <Tooltip content={<CustomTooltip />} />
-                  <Bar dataKey="판매수당" stackId="a" fill="#378ADD" radius={[0,0,0,0]} />
-                  <Bar dataKey="추천수당" stackId="a" fill="#EF9F27" />
-                  <Bar dataKey="오버라이딩" stackId="a" fill="#D4537E" radius={[4,4,0,0]} />
-                </BarChart>
-              </ResponsiveContainer>
+                  <div style={{ height: "6px", background: "var(--bg-border)", borderRadius: "3px", overflow: "hidden" }}>
+                    <div style={{ height: "100%", width: `${pct}%`, background: color, borderRadius: "3px", transition: "width 0.4s ease" }} />
+                  </div>
+                </div>
+              );
+            })}
+            <div style={{ borderTop: "1px solid var(--bg-border)", marginTop: "14px", paddingTop: "12px", display: "flex", justifyContent: "space-between" }}>
+              <span style={{ fontSize: "13px", fontWeight: 700, color: "var(--text-primary)" }}>합계</span>
+              <span style={{ fontFamily: "Syne, sans-serif", fontSize: "18px", fontWeight: 800, color: r.main }}>{formatKRW(total)}</span>
             </div>
           </div>
-        </div>
-      </div>
 
-      {/* 목표 매출 시나리오 */}
-      <div style={{ background: "var(--bg-elevated)", border: "1px solid var(--bg-border)", borderRadius: "18px", padding: "22px" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "16px" }}>
-          <Target size={18} color="#A78BFA" />
-          <p style={{ fontSize: "14px", fontWeight: 700, color: "var(--text-primary)" }}>내 판매 매출별 예상 수당 시나리오</p>
-          <span style={{ fontSize: "11px", color: "var(--text-muted)", marginLeft: "4px" }}>({selectedRank?.name} 기준, 조직 조건 동일)</span>
-        </div>
-        <div style={{ overflowX: "auto" }}>
-          <table style={{ width: "100%", borderCollapse: "collapse", minWidth: "500px" }}>
-            <thead>
-              <tr style={{ borderBottom: "1px solid var(--bg-border)" }}>
-                {["내 판매 매출", "판매 수당", "추천 수당", "오버라이딩", "월 합계", "월 실수령"].map(h => (
-                  <th key={h} style={{ padding: "10px 14px", textAlign: "left", fontSize: "11px", color: "var(--text-muted)", fontWeight: 600, whiteSpace: "nowrap" }}>{h}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {[500000, 1000000, 2000000, 3000000, 5000000, 10000000].map((sales, i) => {
-                const salesComm = Math.floor(sales * result.salesRate / 100);
-                const refComm2 = Math.floor(directCount * directAvgSales * result.refRate / 100);
-                const overComm2 = Math.floor(teamSales * result.overRate / 100);
-                const total2 = salesComm + refComm2 + overComm2;
-                const net2 = Math.floor(total2 * 0.967);
-                const isSelected = sales === mySales;
-                const colors = ["#378ADD","#EF9F27","#D4537E","#A78BFA","#10B981","#F59E0B"];
+          {/* 직추천 수별 비교 */}
+          <div style={{ background: "var(--bg-elevated)", border: "1px solid var(--bg-border)", borderRadius: "18px", padding: "20px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "16px" }}>
+              <TrendingUp size={15} color="#EF9F27" />
+              <p style={{ fontSize: "13px", fontWeight: 700, color: "var(--text-primary)", margin: 0 }}>직추천 매니저 수별 예상 수당</p>
+              <span style={{ fontSize: "11px", color: "var(--text-muted)" }}>현재 조건 기준</span>
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+              {compareData.map(({ n, total: t }) => {
+                const isNow = n === mgrCount;
+                const maxTotal = compareData[compareData.length - 1].total || 1;
+                const barW = (t / maxTotal) * 100;
                 return (
-                  <tr key={sales} style={{ borderBottom: "1px solid var(--bg-border)", background: isSelected ? `${rc.bg}` : "transparent", transition: "background 0.15s" }}
-                    onMouseEnter={e => { if (!isSelected) (e.currentTarget as HTMLElement).style.background = "rgba(201,168,76,0.03)"; }}
-                    onMouseLeave={e => { if (!isSelected) (e.currentTarget as HTMLElement).style.background = "transparent"; }}
-                  >
-                    <td style={{ padding: "11px 14px" }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                        <div style={{ width: 3, height: 18, borderRadius: "2px", background: colors[i] }} />
-                        <span style={{ fontSize: "13px", fontWeight: isSelected ? 700 : 500, color: isSelected ? rc.main : "var(--text-primary)" }}>{formatKRW(sales)}</span>
-                        {isSelected && <span style={{ padding: "1px 6px", borderRadius: "999px", fontSize: "10px", fontWeight: 700, background: rc.bg, color: rc.main, border: `1px solid ${rc.glow}` }}>현재</span>}
-                      </div>
-                    </td>
-                    <td style={{ padding: "11px 14px", fontSize: "13px", color: "#378ADD", fontWeight: 500 }}>{formatKRW(salesComm)}</td>
-                    <td style={{ padding: "11px 14px", fontSize: "13px", color: "#EF9F27", fontWeight: 500 }}>{formatKRW(refComm2)}</td>
-                    <td style={{ padding: "11px 14px", fontSize: "13px", color: "#D4537E", fontWeight: 500 }}>{formatKRW(overComm2)}</td>
-                    <td style={{ padding: "11px 14px", fontSize: "14px", fontWeight: 700, color: "var(--text-primary)" }}>{formatKRW(total2)}</td>
-                    <td style={{ padding: "11px 14px", fontSize: "14px", fontWeight: 700, color: "var(--emerald)" }}>{formatKRW(net2)}</td>
-                  </tr>
+                  <div key={n} style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                    <span style={{ fontSize: "12px", fontWeight: isNow ? 800 : 500, color: isNow ? "#EF9F27" : "var(--text-muted)", minWidth: "30px", textAlign: "right" }}>{n}명</span>
+                    <div style={{ flex: 1, height: "20px", background: "var(--bg-border)", borderRadius: "4px", overflow: "hidden", position: "relative" }}>
+                      <div style={{ height: "100%", width: `${barW}%`, background: isNow ? "#EF9F27" : "rgba(239,159,39,0.4)", borderRadius: "4px", transition: "width 0.4s ease" }} />
+                    </div>
+                    <span style={{ fontSize: "12px", fontWeight: isNow ? 800 : 500, color: isNow ? "#EF9F27" : "var(--text-secondary)", minWidth: "70px", textAlign: "right" }}>{formatKRW(t)}</span>
+                    {isNow && <span style={{ fontSize: "9px", padding: "1px 6px", borderRadius: "999px", background: "rgba(239,159,39,0.15)", color: "#EF9F27", border: "1px solid rgba(239,159,39,0.3)", fontWeight: 700, flexShrink: 0 }}>현재</span>}
+                  </div>
                 );
               })}
-            </tbody>
-          </table>
+            </div>
+          </div>
+
+          {/* 창업비별 수당 한눈에 */}
+          <div style={{ background: "var(--bg-elevated)", border: "1px solid var(--bg-border)", borderRadius: "18px", overflow: "hidden" }}>
+            <div style={{ padding: "16px 20px", borderBottom: "1px solid var(--bg-border)" }}>
+              <p style={{ fontSize: "13px", fontWeight: 700, color: "var(--text-primary)", margin: 0 }}>창업비별 수당 기준표</p>
+            </div>
+            <table style={{ width: "100%", borderCollapse: "collapse" }}>
+              <thead>
+                <tr style={{ borderBottom: "1px solid var(--bg-border)" }}>
+                  <th style={{ padding: "10px 16px", textAlign: "left", fontSize: "11px", color: "var(--text-muted)", fontWeight: 600 }}>수당 항목</th>
+                  <th style={{ padding: "10px 16px", textAlign: "center", fontSize: "12px", fontWeight: 700, color: "#378ADD" }}>👔 매니저</th>
+                  <th style={{ padding: "10px 16px", textAlign: "center", fontSize: "12px", fontWeight: 700, color: "#E8599A" }}>👑 디렉터</th>
+                </tr>
+              </thead>
+              <tbody>
+                {[
+                  { label: "직판 수당 (32%)", mgr: 960000, dir: 1600000, color: "#4FA3E8" },
+                  { label: "추천 오버라이드 (10%)", mgr: 300000, dir: 500000, color: "#EF9F27", sub: "1명 기준" },
+                  { label: "패스트 스타트 (5%)", mgr: 150000, dir: 250000, color: "#10B981", sub: "90일 달성 시" },
+                  { label: "팀원 첫모집 (3%)", mgr: 90000, dir: 150000, color: "#F472B6", sub: "1건 기준" },
+                ].map(({ label, mgr, dir, color, sub }) => (
+                  <tr key={label} style={{ borderBottom: "1px solid var(--bg-border)" }}>
+                    <td style={{ padding: "11px 16px" }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                        <div style={{ width: 8, height: 8, borderRadius: "2px", background: color, flexShrink: 0 }} />
+                        <div>
+                          <p style={{ fontSize: "12px", color: "var(--text-primary)", margin: 0, fontWeight: 500 }}>{label}</p>
+                          {sub && <p style={{ fontSize: "10px", color: "var(--text-muted)", margin: 0 }}>{sub}</p>}
+                        </div>
+                      </div>
+                    </td>
+                    <td style={{ padding: "11px 16px", textAlign: "center", fontSize: "13px", fontWeight: 700, color: "#378ADD" }}>{formatKRW(mgr)}</td>
+                    <td style={{ padding: "11px 16px", textAlign: "center", fontSize: "13px", fontWeight: 700, color: "#E8599A" }}>{formatKRW(dir)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
         </div>
       </div>
-
-      {/* 조직 성장 시나리오 */}
-      <div style={{ background: "var(--bg-elevated)", border: "1px solid var(--bg-border)", borderRadius: "18px", padding: "22px" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "16px" }}>
-          <Award size={18} color="#EF9F27" />
-          <p style={{ fontSize: "14px", fontWeight: 700, color: "var(--text-primary)" }}>직추천 인원별 예상 수당 시나리오</p>
-          <span style={{ fontSize: "11px", color: "var(--text-muted)", marginLeft: "4px" }}>({selectedRank?.name}, 내 매출 및 인당 매출 동일)</span>
-        </div>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: "10px" }}>
-          {[1, 3, 5, 10, 15, 20].map((cnt, i) => {
-            const refComm3 = Math.floor(cnt * directAvgSales * result.refRate / 100);
-            const total3 = result.salesComm + refComm3 + result.overComm;
-            const colors = ["rgba(55,138,221,", "rgba(239,159,39,", "rgba(212,83,126,", "rgba(167,139,250,", "rgba(16,185,129,", "rgba(245,158,11,"];
-            const textColors = ["#378ADD", "#EF9F27", "#D4537E", "#A78BFA", "#10B981", "#F59E0B"];
-            return (
-              <div key={cnt} style={{ background: `${colors[i]}0.08)`, border: `1px solid ${colors[i]}0.25)`, borderRadius: "14px", padding: "14px", textAlign: "center" }}>
-                <div style={{ width: 36, height: 36, borderRadius: "50%", background: `${colors[i]}0.15)`, margin: "0 auto 8px", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                  <Users size={16} color={textColors[i]} />
-                </div>
-                <p style={{ fontSize: "11px", color: "var(--text-muted)", marginBottom: "2px" }}>직추천 {cnt}명</p>
-                <p style={{ fontFamily: "Syne,sans-serif", fontSize: "18px", fontWeight: 800, color: textColors[i] }}>{formatKRW(total3)}</p>
-                <p style={{ fontSize: "10px", color: "var(--text-muted)", marginTop: "2px" }}>실수령 {formatKRW(Math.floor(total3 * 0.967))}</p>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-
     </div>
   );
 }

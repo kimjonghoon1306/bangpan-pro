@@ -93,7 +93,7 @@ export default function CommissionPlanModal({ onClose }: { onClose: () => void }
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <div>
             <p style={{ fontSize: "11px", color: "var(--text-muted)", letterSpacing: "0.15em", textTransform: "uppercase", marginBottom: "4px" }}>
-              1대 오버라이드 구조 · 총 수당 재원 55%
+              1대 오버라이드 구조 · 총 수당 재원 54%
             </p>
             <h2 style={{ fontFamily: "Syne,sans-serif", fontSize: "26px", fontWeight: 800, color: "var(--text-primary)", margin: 0 }}>수당 플랜</h2>
           </div>
@@ -227,12 +227,12 @@ export default function CommissionPlanModal({ onClose }: { onClose: () => void }
             <p style={{ fontSize: "12px", color: "var(--text-muted)", fontWeight: 700, marginBottom: "14px", letterSpacing: "0.08em" }}>창업비 100% 배분 구조</p>
             <div style={{ display: "flex", height: "28px", borderRadius: "8px", overflow: "hidden", gap: "2px", marginBottom: "10px" }}>
               {[
-                { label: "직판 32%", w: 32, color: "#4FA3E8" },
-                { label: "추천 10%", w: 10, color: "#F5A623" },
+                { label: "직판 32%",  w: 32, color: "#4FA3E8" },
+                { label: "추천 10%",  w: 10, color: "#EF9F27" },
                 { label: "패스트 5%", w: 5,  color: "#10B981" },
-                { label: "팀원 3%",  w: 3,  color: "#F472B6" },
-                { label: "풀 5%",   w: 5,  color: "#A78BFA" },
-                { label: "회사 45%", w: 45, color: "rgba(255,255,255,0.06)" },
+                { label: "팀원 3%",   w: 3,  color: "#F472B6" },
+                { label: "풀 4%",     w: 4,  color: "#A78BFA" },
+                { label: "회사 46%",  w: 46, color: "var(--bg-border)" },
               ].map(({ label, w, color }) => (
                 <div key={label} style={{ width: `${w}%`, background: color, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "9px", fontWeight: 800, color: color.startsWith("rgba") ? "rgba(255,255,255,0.25)" : "#fff", whiteSpace: "nowrap", overflow: "hidden" }}>
                   {w >= 5 ? label : ""}
@@ -240,8 +240,8 @@ export default function CommissionPlanModal({ onClose }: { onClose: () => void }
               ))}
             </div>
             <div style={{ display: "flex", justifyContent: "space-between" }}>
-              <span style={{ fontSize: "11px", fontWeight: 700, color: "#C9A84C" }}>수당 합계 55%</span>
-              <span style={{ fontSize: "11px", color: "var(--text-muted)" }}>회사 수익 45%</span>
+              <span style={{ fontSize: "11px", fontWeight: 700, color: "#C9A84C" }}>수당 합계 54%</span>
+              <span style={{ fontSize: "11px", color: "var(--text-muted)" }}>회사 수익 46%</span>
             </div>
           </div>
 
@@ -251,7 +251,7 @@ export default function CommissionPlanModal({ onClose }: { onClose: () => void }
               <Zap size={18} color="#A78BFA" />
               <div>
                 <p style={{ fontSize: "14px", fontWeight: 700, color: "#A78BFA", margin: 0 }}>전체 창업비 매출 5% 풀</p>
-                <p style={{ fontSize: "11px", color: "var(--text-muted)", margin: 0 }}>매달 전체 창업비 합계에서 별도 적립</p>
+                <p style={{ fontSize: "11px", color: "var(--text-muted)", margin: 0 }}>전체 창업비 4% 별도 적립 — 매니저·디렉터 균등 배분</p>
               </div>
               <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: "6px" }}>
                 <span style={{ fontSize: "11px", color: "var(--text-muted)" }}>월 창업비 총액</span>
@@ -287,7 +287,7 @@ export default function CommissionPlanModal({ onClose }: { onClose: () => void }
             </p>
             <div style={{ display: "flex", alignItems: "center", gap: "6px", padding: "6px 14px", borderRadius: "999px", background: "rgba(201,168,76,0.1)", border: "1px solid rgba(201,168,76,0.25)" }}>
               <span style={{ fontSize: "12px", color: "rgba(201,168,76,0.7)" }}>총 수당 재원</span>
-              <span style={{ fontFamily: "Syne,sans-serif", fontSize: "16px", fontWeight: 800, color: "#C9A84C" }}>55%</span>
+              <span style={{ fontFamily: "Syne,sans-serif", fontSize: "16px", fontWeight: 800, color: "#C9A84C" }}>54%</span>
             </div>
           </div>
 

@@ -31,7 +31,7 @@ const GUIDE_ITEMS = [
     steps: [
       "직급별 직판수당·추천오버라이드·패스트스타트·팀원첫모집 비율 한 번에 확인",
       "합계 % 와 승급 조건(직추천·누적매출)도 표시",
-      "총 수당 재원이 55%를 초과하면 경고 표시",
+      "총 수당 재원이 54%를 초과하면 경고 표시",
     ],
   },
   {
@@ -401,7 +401,7 @@ export default function PlanPage() {
           <div style={{ display: "flex", alignItems: "center", gap: "8px", padding: "8px 16px", borderRadius: "12px", background: "rgba(201,168,76,0.08)", border: "1px solid rgba(201,168,76,0.25)" }}>
           <span style={{ fontSize: "12px", color: "var(--text-muted)" }}>총 수당 재원</span>
           <span style={{ fontFamily: "Syne,sans-serif", fontSize: "20px", fontWeight: 800, color: "var(--gold)" }}>{totalBudget}%</span>
-          <span style={{ fontSize: "11px", color: "var(--text-muted)" }}>/ 55%</span>
+          <span style={{ fontSize: "11px", color: "var(--text-muted)" }}>/ 54%</span>
           <div style={{ width: "80px", height: "6px", background: "var(--bg-border)", borderRadius: "3px", overflow: "hidden" }}>
             <div style={{ height: "100%", width: `${Math.min((totalBudget / 55) * 100, 100)}%`, background: totalBudget > 55 ? "#F87171" : "var(--gold)", borderRadius: "3px", transition: "width 0.3s" }} />
           </div>
