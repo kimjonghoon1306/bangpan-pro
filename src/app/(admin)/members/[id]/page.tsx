@@ -85,7 +85,7 @@ export default function MemberDetailPage() {
             <div style={{ width: 64, height: 64, borderRadius: "50%", background: `${rankColor}22`, border: `3px solid ${rankColor}55`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "24px", fontWeight: 800, color: rankColor, margin: "0 auto 12px" }}>{member.name[0]}</div>
             <p style={{ fontFamily: "Syne,sans-serif", fontSize: "18px", fontWeight: 800, color: "var(--text-primary)", marginBottom: "4px" }}>{member.name}</p>
             <p style={{ fontSize: "11px", color: "var(--text-muted)", fontFamily: "monospace", marginBottom: "10px" }}>{member.member_code}</p>
-            <span style={{ padding: "4px 12px", borderRadius: "999px", fontSize: "12px", fontWeight: 700, background: `${rankColor}22`, color: rankColor, border: `1px solid ${rankColor}44` }}>{member.rank?.name ?? "파트너"}</span>
+            <span style={{ padding: "4px 12px", borderRadius: "999px", fontSize: "12px", fontWeight: 700, background: `${rankColor}22`, color: rankColor, border: `1px solid ${rankColor}44` }}>{member.rank?.name ?? "멤버"}</span>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px", marginTop: "14px" }}>
               {[
                 { label: "개인 PV", value: member.personal_pv },

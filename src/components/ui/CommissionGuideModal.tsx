@@ -146,15 +146,22 @@ export default function CommissionGuideModal({ onClose }: { onClose: () => void 
         {tab === "structure" && (
           <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
 
-            {/* 핵심 규칙 2가지 */}
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
-              <div style={{ background: "rgba(79,163,232,0.08)", border: "1px solid rgba(79,163,232,0.3)", borderRadius: "12px", padding: "14px" }}>
-                <p style={{ fontSize: "12px", fontWeight: 800, color: "#4FA3E8", margin: "0 0 4px" }}>💼 판권</p>
-                <p style={{ fontSize: "11px", color: "var(--text-secondary)", margin: 0, lineHeight: 1.5 }}>내가 소개할 때 <strong>1회</strong> 받는 소개수수료<br/>매니저 <strong>25%</strong> / 디렉터 <strong>32%</strong></p>
+            {/* 핵심 규칙 3가지 */}
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "8px" }}>
+              <div style={{ background: "rgba(107,114,128,0.08)", border: "1.5px solid rgba(107,114,128,0.35)", borderRadius: "12px", padding: "12px" }}>
+                <p style={{ fontSize: "11px", fontWeight: 800, color: "#6B7280", margin: "0 0 4px" }}>👤 멤버 소개</p>
+                <p style={{ fontSize: "18px", fontWeight: 900, color: "#6B7280", margin: "0 0 2px" }}>5%</p>
+                <p style={{ fontSize: "10px", color: "var(--text-muted)", margin: 0, lineHeight: 1.4 }}>어떤 창업자든<br/>소개 시 창업비 × 5%</p>
               </div>
-              <div style={{ background: "rgba(239,159,39,0.08)", border: "1px solid rgba(239,159,39,0.3)", borderRadius: "12px", padding: "14px" }}>
-                <p style={{ fontSize: "12px", fontWeight: 800, color: "#EF9F27", margin: "0 0 4px" }}>🔄 관리비용</p>
-                <p style={{ fontSize: "11px", color: "var(--text-secondary)", margin: 0, lineHeight: 1.5 }}>팀원이 판권 받을 때마다<br/>팀원 판권 수익의 <strong>10%</strong> 지속 수령</p>
+              <div style={{ background: "rgba(79,163,232,0.08)", border: "1.5px solid rgba(79,163,232,0.35)", borderRadius: "12px", padding: "12px" }}>
+                <p style={{ fontSize: "11px", fontWeight: 800, color: "#4FA3E8", margin: "0 0 4px" }}>💼 판권</p>
+                <p style={{ fontSize: "18px", fontWeight: 900, color: "#4FA3E8", margin: "0 0 2px" }}>25%/32%</p>
+                <p style={{ fontSize: "10px", color: "var(--text-muted)", margin: 0, lineHeight: 1.4 }}>1회 소개수수료<br/>매니저 25% · 디렉터 32%</p>
+              </div>
+              <div style={{ background: "rgba(239,159,39,0.08)", border: "1.5px solid rgba(239,159,39,0.35)", borderRadius: "12px", padding: "12px" }}>
+                <p style={{ fontSize: "11px", fontWeight: 800, color: "#EF9F27", margin: "0 0 4px" }}>🔄 관리비용</p>
+                <p style={{ fontSize: "18px", fontWeight: 900, color: "#EF9F27", margin: "0 0 2px" }}>10%</p>
+                <p style={{ fontSize: "10px", color: "var(--text-muted)", margin: 0, lineHeight: 1.4 }}>팀원 판권 수익의<br/>10% 지속 수령</p>
               </div>
             </div>
 

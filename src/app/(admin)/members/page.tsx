@@ -12,11 +12,15 @@ const STATUS_MAP: Record<string, { label: string; color: string; bg: string }> =
 };
 
 const RANK_COLOR: Record<string, { color: string; bg: string }> = {
-  다이아:   { color: "#38BDF8", bg: "rgba(56,189,248,0.12)" },
+  디렉터: { color: "#E8599A", bg: "rgba(232,89,154,0.12)" },
+  매니저: { color: "#378ADD", bg: "rgba(55,138,221,0.12)"  },
+  멤버:   { color: "#6B7280", bg: "rgba(107,114,128,0.12)" },
+  // fallback — 이전 직급명 호환
+  다이아:   { color: "#38BDF8", bg: "rgba(56,189,248,0.12)"  },
   플래티넘: { color: "#A78BFA", bg: "rgba(167,139,250,0.12)" },
-  골드:     { color: "#C9A84C", bg: "rgba(201,168,76,0.12)" },
+  골드:     { color: "#C9A84C", bg: "rgba(201,168,76,0.12)"  },
   실버:     { color: "#94A3B8", bg: "rgba(148,163,184,0.12)" },
-  일반회원: { color: "#444466", bg: "rgba(68,68,102,0.12)" },
+  일반회원: { color: "#444466", bg: "rgba(68,68,102,0.12)"   },
 };
 
 export default function MembersPage() {
