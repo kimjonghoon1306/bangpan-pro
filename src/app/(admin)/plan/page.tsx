@@ -239,7 +239,7 @@ export default function PlanPage() {
     const ruleList = (rules as any[]) ?? [];
     const salesRule = ruleList.find(r => r.rule_type === "REFERRAL" && r.target_depth_from === 0 && !r.is_volume_only);
     const refRule   = ruleList.find(r => r.rule_type === "REFERRAL" && r.target_depth_from === 1 && !r.is_volume_only);
-    const overRule  = ruleList.find(r => r.rule_type === "TEAM" && !r.is_volume_only);
+    const overRule  = null; // 1대 구조 — 오버라이딩 없음
 
     // 기본값 (DB 없어도 동작)
     const DEFAULT_RATES: Record<number, {s:number,r:number,o:number}> = {
@@ -256,17 +256,16 @@ export default function PlanPage() {
       const def = DEFAULT_RATES[r.level] ?? { s: 0, r: 0, o: 0 };
       const sTier = salesRule?.tiers?.find((t: any) => t.rank_level === r.level);
       const rTier = refRule?.tiers?.find((t: any)   => t.rank_level === r.level);
-      const oTier = overRule?.tiers?.find((t: any)  => t.rank_level === r.level);
       return {
         rankId: r.id, rankCode: r.code, rankName: r.name,
         rankLevel: r.level, rankColor: r.color,
         salesRate: sTier?.rate ?? def.s,
         refRate:   rTier?.rate ?? def.r,
-        overRate:  r.level >= 2 ? (oTier?.rate ?? def.o) : 0,
+        overRate:  0,
         minGv:     r.min_gv ?? 0,
         minDirect: r.min_direct_referral ?? 0,
-        salesRuleId: salesRule?.id ?? "", refRuleId: refRule?.id ?? "", overRuleId: overRule?.id ?? "",
-        salesTierId: sTier?.id ?? "", refTierId: rTier?.id ?? "", overTierId: oTier?.id ?? "",
+        salesRuleId: salesRule?.id ?? "", refRuleId: refRule?.id ?? "", overRuleId: "",
+        salesTierId: sTier?.id ?? "", refTierId: rTier?.id ?? "", overTierId: "",
       };
     });
 

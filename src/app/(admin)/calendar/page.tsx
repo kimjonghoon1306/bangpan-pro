@@ -35,7 +35,7 @@ function toDateStr(d: Date) { return d.toISOString().split("T")[0]; }
 
 // ─── 기본 수당률 ────────────────────────────────────────
 const DEFAULT_RATES: Record<number,{s:number,r:number,o:number}> = {
-  1:{s:25,r:5,o:0}, 2:{s:28,r:7,o:3}, 3:{s:32,r:10,o:8}
+  1:{s: 0,r: 5,o:0}, 2:{s:32,r:10,o:0}, 3:{s:32,r:10,o:0}
 };
 
 // ─── 사용 가이드 모달 ──────────────────────────────────

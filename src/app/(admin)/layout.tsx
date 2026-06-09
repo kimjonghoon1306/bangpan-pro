@@ -8,7 +8,7 @@ import {
   LayoutDashboard, Users, ShoppingBag, Calculator,
   Settings, TrendingUp, LogOut, GitBranch,
   Wallet, Package, Bell, Menu, X, ChevronLeft, ExternalLink, CheckCircle,
-  Calendar as CalendarIcon, Banknote as BanknoteIcon,
+  Calendar as CalendarIcon, Banknote as BanknoteIcon, BookOpen,
 } from "lucide-react";
 import ThemeToggle from "@/components/ui/ThemeToggle";
 import CommissionPlanModal from "@/components/ui/CommissionPlanModal";
@@ -41,7 +41,8 @@ const NAV_GROUPS = [
     label: "정산",
     color: "var(--gold)", // gold — 수당·돈
     items: [
-      { label: "수당 플랜",   href: "/plan",        icon: Calculator,   highlight: true },
+      { label: "수당 플랜",   href: "/plan",              icon: Calculator,   highlight: true },
+      { label: "수당 설명서", href: "/commission-guide",  icon: BookOpen,     highlight: true },
       { label: "정산 관리",   href: "/settlement",  icon: Wallet },
       { label: "마감 · 정산", href: "/closing",     icon: CheckCircle,  highlight: true, color: "#FF2D78" },
       { label: "지급 캘린더", href: "/calendar",    icon: CalendarIcon, highlight: true, color: "#FF2D78" },

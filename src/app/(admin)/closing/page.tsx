@@ -168,9 +168,9 @@ function ClosingGuideModal({ onClose }: { onClose: () => void }) {
 
 // ─── 기본 수당률 (DB 없어도 동작) ─────────────────────
 const DEFAULT_RATES: Record<number,{sales:number,ref:number,over:number}> = {
-  1:{sales:25,ref:5,over:0},
-  2:{sales:28,ref:7,over:3},
-  3:{sales:32,ref:10,over:8},
+  1:{sales: 0, ref: 5, over:0},
+  2:{sales:32, ref:10, over:0},
+  3:{sales:32, ref:10, over:0},
 };
 
 // ─── 색상 ────────────────────────────────────────────

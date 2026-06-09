@@ -222,11 +222,10 @@ export default function SettlementPage() {
     // 수당 규칙 로드 (없으면 PDF 기본값 사용)
     const { data: rules } = await supabase.from("commission_rules").select("*, tiers:commission_tiers(rank_level, rate)").eq("is_active", true);
     
-    // PDF 기본 수당률 (DB 없어도 무조건 동작)
     const DEFAULT_RATES: Record<number,{sales:number,ref:number,over:number}> = {
-      1: { sales: 25, ref: 5,  over: 0 },
-      2: { sales: 28, ref: 7,  over: 3 },
-      3: { sales: 32, ref: 10, over: 8 },
+      1: { sales:  0, ref:  5, over: 0 },
+      2: { sales: 32, ref: 10, over: 0 },
+      3: { sales: 32, ref: 10, over: 0 },
     };
 
     function getSalesRate(level: number, ruleList: any[]) {
