@@ -7,6 +7,7 @@ import Link from "next/link";
 import { createBrowserSupabaseClient } from "@/lib/supabase";
 import { Skeleton, SkeletonStat, SkeletonCard, SkeletonStyle } from "@/components/ui/Skeleton";
 import CommissionPlanModal from "@/components/ui/CommissionPlanModal";
+import CommissionGuideModal from "@/components/ui/CommissionGuideModal";
 
 const QUICK_MENU = [
   { label: "내 조직",   href: "/network",  icon: Users,       color: "#6C47FF", bg: "rgba(108,71,255,0.10)" },  // violet — 사람
@@ -43,6 +44,7 @@ export default function PortalPage() {
   const [recentComm, setRecentComm] = useState<Commission[]>([]);
   const [loading, setLoading] = useState(true);
   const [showPlan, setShowPlan] = useState(false);
+  const [showGuide, setShowGuide] = useState(false);
 
   useEffect(() => {
     async function load() {
@@ -223,33 +225,51 @@ export default function PortalPage() {
         ))}
       </div>
 
-      {/* 수당 플랜 보기 버튼 */}
-      <button
-        onClick={() => setShowPlan(true)}
-        style={{
-          width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between",
-          padding: "14px 18px", borderRadius: "14px",
+      {/* 수당 버튼 2개 */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
+        {/* 수당 플랜 */}
+        <button onClick={() => setShowPlan(true)} style={{
+          display: "flex", alignItems: "center", gap: "10px",
+          padding: "14px 16px", borderRadius: "14px",
           background: "linear-gradient(135deg, rgba(201,168,76,0.12), rgba(232,201,122,0.08))",
           border: "1px solid rgba(201,168,76,0.3)", cursor: "pointer", transition: "all 0.2s",
         }}
-        onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = "linear-gradient(135deg, rgba(201,168,76,0.2), rgba(232,201,122,0.12))"}
-        onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = "linear-gradient(135deg, rgba(201,168,76,0.12), rgba(232,201,122,0.08))"}
-      >
-        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-          <div style={{ width: 36, height: 36, borderRadius: "10px", background: "rgba(201,168,76,0.15)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#C9A84C" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+          onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = "linear-gradient(135deg, rgba(201,168,76,0.2), rgba(232,201,122,0.14))"}
+          onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = "linear-gradient(135deg, rgba(201,168,76,0.12), rgba(232,201,122,0.08))"}
+        >
+          <div style={{ width: 34, height: 34, borderRadius: "10px", background: "rgba(201,168,76,0.15)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#C9A84C" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <polyline points="22,7 13.5,15.5 8.5,10.5 2,17" /><polyline points="16,7 22,7 22,13" />
             </svg>
           </div>
           <div style={{ textAlign: "left" }}>
-            <p style={{ fontSize: "14px", fontWeight: 700, color: "var(--gold)", margin: 0 }}>수당 플랜 보기</p>
-            <p style={{ fontSize: "11px", color: "var(--text-muted)", margin: 0 }}>파트너 · 매니저 · 디렉터 수당 체계</p>
+            <p style={{ fontSize: "13px", fontWeight: 700, color: "var(--gold)", margin: 0 }}>수당 플랜</p>
+            <p style={{ fontSize: "10px", color: "var(--text-muted)", margin: 0 }}>직급별 수당 비율</p>
           </div>
-        </div>
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9,18 15,12 9,6"/></svg>
-      </button>
+        </button>
 
-      {showPlan && <CommissionPlanModal onClose={() => setShowPlan(false)} />}
+        {/* 수당 설명서 */}
+        <button onClick={() => setShowGuide(true)} style={{
+          display: "flex", alignItems: "center", gap: "10px",
+          padding: "14px 16px", borderRadius: "14px",
+          background: "linear-gradient(135deg, rgba(232,89,154,0.10), rgba(232,89,154,0.06))",
+          border: "1px solid rgba(232,89,154,0.3)", cursor: "pointer", transition: "all 0.2s",
+        }}
+          onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = "linear-gradient(135deg, rgba(232,89,154,0.18), rgba(232,89,154,0.10))"}
+          onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = "linear-gradient(135deg, rgba(232,89,154,0.10), rgba(232,89,154,0.06))"}
+        >
+          <div style={{ width: 34, height: 34, borderRadius: "10px", background: "rgba(232,89,154,0.15)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+            <span style={{ fontSize: "18px" }}>📊</span>
+          </div>
+          <div style={{ textAlign: "left" }}>
+            <p style={{ fontSize: "13px", fontWeight: 700, color: "#E8599A", margin: 0 }}>수당 설명서</p>
+            <p style={{ fontSize: "10px", color: "var(--text-muted)", margin: 0 }}>조직도 · 시나리오</p>
+          </div>
+        </button>
+      </div>
+
+      {showPlan  && <CommissionPlanModal    onClose={() => setShowPlan(false)} />}
+      {showGuide && <CommissionGuideModal   onClose={() => setShowGuide(false)} />}
 
       {/* PC: 조직볼륨 + 최근수당 나란히 / 모바일: 스택 */}
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px" }} className="max-md:block max-md:space-y-3">
