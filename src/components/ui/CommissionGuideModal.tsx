@@ -462,6 +462,7 @@ export default function CommissionGuideModal({ onClose }: { onClose: () => void 
                     { label: "창업비",    v1: "330만원",        v2: "550만원" },
                     { label: "판권",      v1: "25%",            v2: "32%" },
                     { label: "소개 시",   v1: "75만원/건",      v2: "160만원/건" },
+                    { label: "관리비용",  v1: "팀원판권×10%",   v2: "팀원판권×10%" },
                     { label: "패스트스타트", v1: "+3%",         v2: "+5%" },
                     { label: "팀원첫모집",  v1: "+2%/건",       v2: "+3%/건" },
                     { label: "구매가격",   v1: "소매가",        v2: "도매가" },

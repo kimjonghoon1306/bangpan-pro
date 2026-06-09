@@ -363,6 +363,37 @@ export default function CommissionGuidePage() {
             <p style={{ fontSize: "10px", color: "var(--text-muted)", margin: "8px 0 0" }}>※ 관리비용(팀원 판권의 10%)은 별도 산정됩니다</p>
           </div>
 
+          {/* 매니저 vs 디렉터 비교 — 모바일 가로 고정 */}
+          <div style={{ display: "flex", gap: "8px" }}>
+            {[
+              { rank: "매니저", color: "#378ADD", icon: "👔", fee: "300만",
+                items: [{ k: "판권", v: "25%=75만", c: "#4FA3E8" }, { k: "관리비용", v: "×10%", c: "#EF9F27" }, { k: "패스트", v: "+3%=9만", c: "#10B981" }, { k: "첫모집", v: "+2%/건", c: "#F472B6" }],
+                total: "40%" },
+              { rank: "디렉터", color: "#E8599A", icon: "👑", fee: "500만",
+                items: [{ k: "판권", v: "32%=160만", c: "#4FA3E8" }, { k: "관리비용", v: "×10%", c: "#EF9F27" }, { k: "패스트", v: "+5%=25만", c: "#10B981" }, { k: "첫모집", v: "+3%/건", c: "#F472B6" }],
+                total: "50%" },
+            ].map(r => (
+              <div key={r.rank} style={{ flex: 1, background: `${r.color}08`, border: `1.5px solid ${r.color}30`, borderRadius: "14px", padding: "14px", minWidth: 0 }}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "10px" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                    <span style={{ fontSize: "22px", flexShrink: 0 }}>{r.icon}</span>
+                    <div style={{ minWidth: 0 }}>
+                      <p style={{ fontSize: "14px", fontWeight: 800, color: r.color, margin: 0, whiteSpace: "nowrap" }}>{r.rank}</p>
+                      <p style={{ fontSize: "10px", color: "var(--text-muted)", margin: 0 }}>창업비 {r.fee}</p>
+                    </div>
+                  </div>
+                  <span style={{ fontSize: "16px", fontWeight: 900, color: r.color, flexShrink: 0 }}>{r.total}</span>
+                </div>
+                {r.items.map(i => (
+                  <div key={i.k} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "6px 10px", borderRadius: "8px", background: "var(--bg)", marginBottom: "4px" }}>
+                    <span style={{ fontSize: "11px", color: "var(--text-muted)" }}>{i.k}</span>
+                    <span style={{ fontSize: "11px", fontWeight: 700, color: i.c }}>{i.v}</span>
+                  </div>
+                ))}
+              </div>
+            ))}
+          </div>
+
           {/* 수당 카드 7가지 */}
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "14px" }}>
             {COMMISSIONS.map((c) => (
@@ -445,6 +476,40 @@ export default function CommissionGuidePage() {
       {/* ── TAB: 시나리오 ── */}
       {activeTab === "scenarios" && (
         <div className="fade-up" style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+
+          {/* 직급별 영업 수익표 */}
+          <div style={{ background: "var(--bg-elevated)", border: "1px solid var(--bg-border)", borderRadius: "16px", overflow: "hidden" }}>
+            <div style={{ padding: "14px 20px", borderBottom: "1px solid var(--bg-border)", background: "rgba(201,168,76,0.07)" }}>
+              <p style={{ fontSize: "14px", fontWeight: 800, color: "#C9A84C", margin: 0 }}>💼 직급별 판권 수익 — 누구를 소개해도 내 직급 기준</p>
+              <p style={{ fontSize: "11px", color: "var(--text-muted)", margin: "3px 0 0" }}>창업비 × 내 직급 판권율 = 1회성 소개수수료</p>
+            </div>
+            {[
+              { who: "매니저", whoColor: "#378ADD", whoIcon: "👔", rate: "25%",
+                rows: [{ target: "멤버 소개", fee: "5만원", earn: "12,500원" }, { target: "매니저 소개", fee: "300만원", earn: "75만원" }, { target: "디렉터 소개", fee: "500만원", earn: "125만원" }] },
+              { who: "디렉터", whoColor: "#E8599A", whoIcon: "👑", rate: "32%",
+                rows: [{ target: "멤버 소개", fee: "5만원", earn: "16,000원" }, { target: "매니저 소개", fee: "300만원", earn: "96만원" }, { target: "디렉터 소개", fee: "500만원", earn: "160만원" }] },
+              { who: "멤버 (소개수당)", whoColor: "#6B7280", whoIcon: "👤", rate: "5%",
+                rows: [{ target: "멤버 소개", fee: "5만원", earn: "2,500원" }, { target: "매니저 소개", fee: "300만원", earn: "15만원" }, { target: "디렉터 소개", fee: "500만원", earn: "25만원" }] },
+            ].map((g, gi) => (
+              <div key={g.who}>
+                <div style={{ display: "flex", alignItems: "center", gap: "8px", padding: "10px 20px", background: `${g.whoColor}06`, borderBottom: "1px solid var(--bg-border)" }}>
+                  <span style={{ fontSize: "16px" }}>{g.whoIcon}</span>
+                  <span style={{ fontSize: "13px", fontWeight: 800, color: g.whoColor }}>{g.who} 가 영업 시</span>
+                  <span style={{ padding: "2px 10px", borderRadius: "999px", background: `${g.whoColor}18`, border: `1px solid ${g.whoColor}35`, fontSize: "12px", fontWeight: 700, color: g.whoColor }}>판권 {g.rate}</span>
+                </div>
+                {g.rows.map((r, ri) => (
+                  <div key={r.target} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "11px 20px", borderBottom: ri < g.rows.length - 1 || gi < 2 ? "1px solid var(--bg-border)" : "none" }}>
+                    <div>
+                      <span style={{ fontSize: "13px", color: "var(--text-primary)", fontWeight: 500 }}>{r.target}</span>
+                      <span style={{ fontSize: "11px", color: "var(--text-muted)", marginLeft: "8px" }}>창업비 {r.fee}</span>
+                    </div>
+                    <span style={{ fontSize: "14px", fontWeight: 800, color: g.whoColor }}>{r.earn}</span>
+                  </div>
+                ))}
+              </div>
+            ))}
+          </div>
+
           {/* 시나리오 선택 */}
           <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
             {SCENARIOS.map((s, i) => (
@@ -669,6 +734,39 @@ export default function CommissionGuidePage() {
                 <p style={{ fontSize: "12px", color: "var(--text-muted)", margin: 0, fontStyle: "italic" }}>추가 혜택은 추후 공개 예정입니다.</p>
               </div>
             </div>
+          </div>
+
+          {/* 창업 유형 비교 */}
+          <div style={{ background: "var(--bg-elevated)", border: "1px solid var(--bg-border)", borderRadius: "18px", overflow: "hidden" }}>
+            <div style={{ padding: "14px 20px", borderBottom: "1px solid var(--bg-border)" }}>
+              <p style={{ fontSize: "14px", fontWeight: 700, color: "var(--text-primary)", margin: 0 }}>창업 유형 비교</p>
+            </div>
+            <table style={{ width: "100%", borderCollapse: "collapse" }}>
+              <thead>
+                <tr style={{ borderBottom: "1px solid var(--bg-border)" }}>
+                  <th style={{ padding: "10px 16px", textAlign: "left", fontSize: "11px", color: "var(--text-muted)", fontWeight: 600 }}>구분</th>
+                  <th style={{ padding: "10px 16px", textAlign: "center", fontSize: "13px", fontWeight: 700, color: "#378ADD" }}>👔 매니저</th>
+                  <th style={{ padding: "10px 16px", textAlign: "center", fontSize: "13px", fontWeight: 700, color: "#E8599A" }}>👑 디렉터</th>
+                </tr>
+              </thead>
+              <tbody>
+                {[
+                  { label: "창업비",    v1: "330만원",         v2: "550만원" },
+                  { label: "판권",      v1: "25%",             v2: "32%" },
+                  { label: "소개 시",   v1: "75만원/건",       v2: "160만원/건" },
+                  { label: "관리비용",  v1: "팀원판권×10%",    v2: "팀원판권×10%" },
+                  { label: "패스트스타트", v1: "+3% = +9만원", v2: "+5% = +25만원" },
+                  { label: "팀원첫모집",  v1: "+2%/건",        v2: "+3%/건" },
+                  { label: "구매가격",   v1: "소매가",         v2: "도매가 (저렴)" },
+                ].map(({ label, v1, v2 }) => (
+                  <tr key={label} style={{ borderBottom: "1px solid var(--bg-border)" }}>
+                    <td style={{ padding: "10px 16px", fontSize: "12px", color: "var(--text-muted)", fontWeight: 500 }}>{label}</td>
+                    <td style={{ padding: "10px 16px", textAlign: "center", fontSize: "12px", fontWeight: 700, color: "#378ADD" }}>{v1}</td>
+                    <td style={{ padding: "10px 16px", textAlign: "center", fontSize: "12px", fontWeight: 700, color: "#E8599A" }}>{v2}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
 
           {/* 빠른 승급 팁 */}
