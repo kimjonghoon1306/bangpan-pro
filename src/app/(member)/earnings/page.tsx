@@ -16,10 +16,10 @@ interface CommItem {
 }
 
 const TYPE_MAP: Record<string, { label: string; color: string; bg: string }> = {
-  REFERRAL:   { label: "추천", color: "#4FA3E8", bg: "rgba(79,163,232,0.12)" },
-  TEAM:       { label: "오버", color: "#E8599A", bg: "rgba(232,89,154,0.12)" },
-  RANK_BONUS: { label: "직급", color: "#00C896", bg: "rgba(0,200,150,0.12)" },
-  MATCHING:   { label: "매칭", color: "#A78BFA", bg: "rgba(167,139,250,0.12)" },
+  REFERRAL:   { label: "추천", color: "#C9A84C", bg: "rgba(201,168,76,0.12)" },   // gold — 내 판매 수당
+  TEAM:       { label: "오버", color: "#FF2D78", bg: "rgba(255,45,120,0.12)" },   // pink — 오버라이딩
+  RANK_BONUS: { label: "직급", color: "#059669", bg: "rgba(5,150,105,0.12)" },    // emerald — 달성 보너스
+  MATCHING:   { label: "매칭", color: "#6C47FF", bg: "rgba(108,71,255,0.12)" },   // violet — 조직 매칭
 };
 
 // ─── 출금 신청 팝업 ─────────────────────────────────

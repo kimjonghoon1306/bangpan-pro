@@ -99,7 +99,7 @@ export default function OrdersPage() {
         </div>
         <div className="flex gap-2 flex-wrap">
           {["ALL", "PENDING", "PAID", "SHIPPING", "DELIVERED", "CANCELLED"].map((s) => (
-            <button key={s} onClick={() => setStatusFilter(s)} className={cn("px-3 py-2 rounded-lg text-xs font-medium transition-all border", statusFilter === s ? "bg-gold/15 text-gold border-gold/25" : "bg-bg-elevated text-text-secondary border-bg-border hover:border-gold/20")}>
+            <button key={s} onClick={() => setStatusFilter(s)} className={cn("px-3 py-2 rounded-lg text-xs font-medium transition-all border", statusFilter === s ? "bg-blue-500/10 text-blue-400 border-blue-400/25" : "bg-bg-elevated text-text-secondary border-bg-border hover:border-blue-400/20")}>
               {s === "ALL" ? "전체" : STATUS_MAP[s]?.label}
             </button>
           ))}

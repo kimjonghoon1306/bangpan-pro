@@ -15,19 +15,22 @@ import CommissionPlanModal from "@/components/ui/CommissionPlanModal";
 
 const NAV_GROUPS = [
   {
+    color: "var(--text-secondary)",
     items: [
       { label: "대시보드", href: "/dashboard", icon: LayoutDashboard },
     ],
   },
   {
     label: "회원",
+    color: "#6C47FF",   // violet — 사람
     items: [
-      { label: "회원 관리", href: "/members",  icon: Users },
-      { label: "조직도",    href: "/org",      icon: GitBranch },
+      { label: "회원 관리", href: "/members", icon: Users },
+      { label: "조직도",    href: "/org",     icon: GitBranch },
     ],
   },
   {
     label: "영업",
+    color: "#2563EB",   // blue — 운영·거래
     items: [
       { label: "매출 관리", href: "/sales",    icon: TrendingUp },
       { label: "주문 관리", href: "/orders",   icon: ShoppingBag },
@@ -36,16 +39,18 @@ const NAV_GROUPS = [
   },
   {
     label: "정산",
+    color: "var(--gold)", // gold — 수당·돈
     items: [
-      { label: "수당 플랜",   href: "/plan",        icon: Calculator,  highlight: true },
+      { label: "수당 플랜",   href: "/plan",        icon: Calculator,   highlight: true },
       { label: "정산 관리",   href: "/settlement",  icon: Wallet },
-      { label: "마감 · 정산", href: "/closing",     icon: CheckCircle, highlight: true },
-      { label: "지급 캘린더", href: "/calendar",    icon: CalendarIcon,highlight: true },
+      { label: "마감 · 정산", href: "/closing",     icon: CheckCircle,  highlight: true, color: "#FF2D78" },
+      { label: "지급 캘린더", href: "/calendar",    icon: CalendarIcon, highlight: true, color: "#FF2D78" },
       { label: "출금 신청",   href: "/withdrawals", icon: BanknoteIcon },
     ],
   },
   {
     label: "설정",
+    color: "var(--text-muted)",
     items: [
       { label: "시스템 설정", href: "/settings", icon: Settings },
     ],
@@ -153,7 +158,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               )}
               {group.items.map((item) => {
                 const active = pathname === item.href || pathname.startsWith(item.href + "/");
-                const isCalendar = item.href === "/calendar";
+                const c = (item as any).color ?? group.color ?? "var(--gold)";
+                const cRgb = c.startsWith("var") ? "201,168,76" :
+                             c === "#6C47FF" ? "108,71,255" :
+                             c === "#2563EB" ? "37,99,235" :
+                             c === "#FF2D78" ? "255,45,120" :
+                             c === "#059669" ? "5,150,105" : "201,168,76";
                 return (
                   <Link key={item.href} href={item.href} onClick={() => setMobileOpen(false)}
                     title={collapsed ? item.label : undefined}
@@ -162,19 +172,19 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                       justifyContent: collapsed ? "center" : "flex-start",
                       padding: collapsed ? "10px 0" : "8px 10px",
                       borderRadius: "10px", marginBottom: "1px",
-                      background: active ? "rgba(201,168,76,0.1)" : "transparent",
-                      border: active ? "1px solid rgba(201,168,76,0.2)" : "1px solid transparent",
-                      color: active ? "var(--gold)" : "var(--text-secondary)",
+                      background: active ? `rgba(${cRgb},0.1)` : "transparent",
+                      border: active ? `1px solid rgba(${cRgb},0.25)` : "1px solid transparent",
+                      color: active ? c : "var(--text-secondary)",
                       textDecoration: "none", transition: "all 0.15s", position: "relative",
                     }}
-                    onMouseEnter={e => { if (!active) { (e.currentTarget as HTMLElement).style.background = "rgba(201,168,76,0.05)"; (e.currentTarget as HTMLElement).style.color = "var(--text-primary)"; }}}
+                    onMouseEnter={e => { if (!active) { (e.currentTarget as HTMLElement).style.background = `rgba(${cRgb},0.05)`; (e.currentTarget as HTMLElement).style.color = "var(--text-primary)"; }}}
                     onMouseLeave={e => { if (!active) { (e.currentTarget as HTMLElement).style.background = "transparent"; (e.currentTarget as HTMLElement).style.color = "var(--text-secondary)"; }}}
                   >
-                    {active && <span style={{ position: "absolute", left: 0, top: "50%", transform: "translateY(-50%)", width: "3px", height: "60%", borderRadius: "0 2px 2px 0", background: "var(--gold)" }} />}
-                    <item.icon size={16} style={{ flexShrink: 0, color: active ? "var(--gold)" : "var(--text-muted)" }} />
+                    {active && <span style={{ position: "absolute", left: 0, top: "50%", transform: "translateY(-50%)", width: "3px", height: "60%", borderRadius: "0 2px 2px 0", background: c }} />}
+                    <item.icon size={16} style={{ flexShrink: 0, color: active ? c : "var(--text-muted)" }} />
                     {!collapsed && <span style={{ fontSize: "13px", fontWeight: active ? 600 : 500, flex: 1 }}>{item.label}</span>}
-                    {!collapsed && item.highlight && !active && (
-                      <span style={{ width: 6, height: 6, borderRadius: "50%", background: "var(--gold)", flexShrink: 0, animation: "glowPulse 2s infinite" }} />
+                    {!collapsed && (item as any).highlight && !active && (
+                      <span style={{ width: 6, height: 6, borderRadius: "50%", background: c, flexShrink: 0, animation: "glowPulse 2s infinite" }} />
                     )}
                   </Link>
                 );

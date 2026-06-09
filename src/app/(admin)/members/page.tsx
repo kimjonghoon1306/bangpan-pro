@@ -68,7 +68,7 @@ export default function MembersPage() {
           </div>
           <button type="submit" className="btn-gold" style={{ fontSize: "13px", padding: "9px 16px", whiteSpace: "nowrap" }}>검색</button>
         </form>
-        <button onClick={() => setShowFilter(!showFilter)} style={{ display: "flex", alignItems: "center", gap: "6px", padding: "9px 14px", borderRadius: "10px", background: showFilter ? "rgba(201,168,76,0.1)" : "var(--bg-elevated)", border: `1px solid ${showFilter ? "rgba(201,168,76,0.3)" : "var(--bg-border)"}`, color: showFilter ? "var(--gold)" : "var(--text-secondary)", cursor: "pointer", fontSize: "13px" }}>
+        <button onClick={() => setShowFilter(!showFilter)} style={{ display: "flex", alignItems: "center", gap: "6px", padding: "9px 14px", borderRadius: "10px", background: showFilter ? "rgba(108,71,255,0.1)" : "var(--bg-elevated)", border: `1px solid ${showFilter ? "rgba(108,71,255,0.3)" : "var(--bg-border)"}`, color: showFilter ? "var(--violet)" : "var(--text-secondary)", cursor: "pointer", fontSize: "13px" }}>
           <Filter size={14} /> 필터
         </button>
       </div>
@@ -76,7 +76,7 @@ export default function MembersPage() {
       {showFilter && (
         <div style={{ background: "var(--bg-elevated)", border: "1px solid var(--bg-border)", borderRadius: "12px", padding: "14px", marginBottom: "12px", display: "flex", gap: "6px", flexWrap: "wrap" }}>
           {["ALL","ACTIVE","INACTIVE","SUSPENDED"].map((s) => (
-            <button key={s} onClick={() => { setStatusFilter(s); setPage(1); }} style={{ padding: "6px 14px", borderRadius: "8px", fontSize: "12px", fontWeight: 500, cursor: "pointer", background: statusFilter === s ? "rgba(201,168,76,0.15)" : "var(--bg)", border: `1px solid ${statusFilter === s ? "rgba(201,168,76,0.3)" : "var(--bg-border)"}`, color: statusFilter === s ? "var(--gold)" : "var(--text-secondary)" }}>
+            <button key={s} onClick={() => { setStatusFilter(s); setPage(1); }} style={{ padding: "6px 14px", borderRadius: "8px", fontSize: "12px", fontWeight: 500, cursor: "pointer", background: statusFilter === s ? "rgba(108,71,255,0.12)" : "var(--bg)", border: `1px solid ${statusFilter === s ? "rgba(108,71,255,0.3)" : "var(--bg-border)"}`, color: statusFilter === s ? "var(--violet)" : "var(--text-secondary)" }}>
               {s === "ALL" ? "전체" : STATUS_MAP[s]?.label}
             </button>
           ))}

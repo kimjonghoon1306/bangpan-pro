@@ -9,10 +9,10 @@ import { Skeleton, SkeletonStat, SkeletonCard, SkeletonStyle } from "@/component
 import CommissionPlanModal from "@/components/ui/CommissionPlanModal";
 
 const QUICK_MENU = [
-  { label: "내 조직", href: "/network", icon: Users, color: "#C9A84C", bg: "rgba(201,168,76,0.10)" },
-  { label: "수당 내역", href: "/earnings", icon: Wallet, color: "#10B981", bg: "rgba(16,185,129,0.10)" },
-  { label: "쇼핑몰", href: "/shop", icon: ShoppingBag, color: "#4F8EF7", bg: "rgba(79,142,247,0.10)" },
-  { label: "내 정보", href: "/profile", icon: Package, color: "#A78BFA", bg: "rgba(167,139,250,0.10)" },
+  { label: "내 조직",   href: "/network",  icon: Users,       color: "#6C47FF", bg: "rgba(108,71,255,0.10)" },  // violet — 사람
+  { label: "수당 내역", href: "/earnings", icon: Wallet,      color: "#C9A84C", bg: "rgba(201,168,76,0.10)" },  // gold — 돈
+  { label: "쇼핑몰",   href: "/shop",     icon: ShoppingBag, color: "#2563EB", bg: "rgba(37,99,235,0.10)" },   // blue — 운영
+  { label: "내 정보",  href: "/profile",  icon: Package,     color: "#059669", bg: "rgba(5,150,105,0.10)" },   // emerald — 중립
 ];
 
 interface MemberData {
@@ -110,10 +110,11 @@ export default function PortalPage() {
   const maxVol = member ? Math.max(member.left_volume, member.right_volume, 1) : 1;
 
   const typeInfo = (type: string) => {
-    if (type === "REFERRAL") return { label: "추천", color: "#C9A84C" };
-    if (type === "TEAM") return { label: "간접", color: "#4F8EF7" };
-    if (type === "RANK_BONUS") return { label: "직급", color: "#10B981" };
-    return { label: "수당", color: "#A78BFA" };
+    if (type === "REFERRAL") return { label: "추천", color: "#C9A84C" };   // gold
+    if (type === "TEAM")     return { label: "오버", color: "#FF2D78" };   // pink
+    if (type === "RANK_BONUS") return { label: "직급", color: "#059669" }; // emerald
+    if (type === "MATCHING") return { label: "매칭", color: "#6C47FF" };   // violet
+    return { label: "수당", color: "#C9A84C" };
   };
 
   const formatCommDate = (d: string) => {
@@ -257,14 +258,14 @@ export default function PortalPage() {
         <div style={{ background: "var(--bg-elevated)", border: "1px solid var(--bg-border)", borderRadius: "16px", padding: "18px" }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "14px" }}>
             <h3 style={{ fontSize: "14px", fontWeight: 700, color: "var(--text-primary)" }}>조직 볼륨</h3>
-            <Link href="/network" style={{ fontSize: "12px", color: "var(--gold)", textDecoration: "none", display: "flex", alignItems: "center", gap: "2px" }}>
+            <Link href="/network" style={{ fontSize: "12px", color: "var(--violet)", textDecoration: "none", display: "flex", alignItems: "center", gap: "2px" }}>
               조직 보기 <ChevronRight size={12} />
             </Link>
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: "12px", marginBottom: "14px" }}>
             {[
-              { side: "좌측", vol: member?.left_volume ?? 0, color: "#C9A84C" },
-              { side: "우측", vol: member?.right_volume ?? 0, color: "#4F8EF7" },
+              { side: "좌측", vol: member?.left_volume ?? 0,  color: "#6C47FF" },  // violet
+              { side: "우측", vol: member?.right_volume ?? 0, color: "#2563EB" },  // blue
             ].map((s) => (
               <div key={s.side}>
                 <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "5px" }}>
@@ -283,9 +284,9 @@ export default function PortalPage() {
               </div>
             ))}
           </div>
-          <div style={{ padding: "10px", borderRadius: "10px", background: "rgba(201,168,76,0.05)", border: "1px solid rgba(201,168,76,0.15)", textAlign: "center" }}>
+          <div style={{ padding: "10px", borderRadius: "10px", background: "rgba(108,71,255,0.05)", border: "1px solid rgba(108,71,255,0.15)", textAlign: "center" }}>
             <p style={{ fontSize: "10px", color: "var(--text-muted)", marginBottom: "2px" }}>매칭 볼륨</p>
-            <p style={{ fontFamily: "Syne,sans-serif", fontSize: "18px", fontWeight: 800, color: "var(--gold)" }}>
+            <p style={{ fontFamily: "Syne,sans-serif", fontSize: "18px", fontWeight: 800, color: "var(--violet)" }}>
               {Math.min(member?.left_volume ?? 0, member?.right_volume ?? 0).toLocaleString()} GV
             </p>
           </div>

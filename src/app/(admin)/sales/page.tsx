@@ -119,7 +119,7 @@ export default function SalesPage() {
         <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
           <div style={{ display: "flex", background: "var(--bg-elevated)", border: "1px solid var(--bg-border)", borderRadius: "10px", padding: "3px", gap: "2px" }}>
             {(["daily","weekly","monthly"] as const).map((p) => (
-              <button key={p} onClick={() => setPeriod(p)} style={{ padding: "7px 14px", borderRadius: "8px", fontSize: "12px", fontWeight: 600, cursor: "pointer", transition: "all 0.15s", background: period === p ? "rgba(201,168,76,0.15)" : "transparent", border: `1px solid ${period === p ? "rgba(201,168,76,0.3)" : "transparent"}`, color: period === p ? "var(--gold)" : "var(--text-secondary)" }}>
+              <button key={p} onClick={() => setPeriod(p)} style={{ padding: "7px 14px", borderRadius: "8px", fontSize: "12px", fontWeight: 600, cursor: "pointer", transition: "all 0.15s", background: period === p ? "rgba(37,99,235,0.12)" : "transparent", border: `1px solid ${period === p ? "rgba(37,99,235,0.3)" : "transparent"}`, color: period === p ? "var(--accent)" : "var(--text-secondary)" }}>
                 {p === "daily" ? "일별" : p === "weekly" ? "주별" : "월별"}
               </button>
             ))}

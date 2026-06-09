@@ -63,10 +63,10 @@ export default function DashboardPage() {
       {/* 통계 카드 */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px,1fr))", gap: "12px" }}>
         {[
-          { label: "이번달 매출",  value: formatKRW(data?.monthRevenue??0),     color: "#C9A84C", icon: TrendingUp },
-          { label: "오늘 매출",    value: formatKRW(data?.todayRevenue??0),      color: "#4F8EF7", icon: ShoppingBag },
-          { label: "전체 회원",    value: `${(data?.totalMembers??0).toLocaleString()}명`, color: "#00C896", icon: Users },
-          { label: "오늘 마감",    value: data?.todayClosing ? "완료" : "미완료", color: data?.todayClosing ? "#00C896" : "#FF9500", icon: CheckCircle },
+          { label: "이번달 매출",  value: formatKRW(data?.monthRevenue??0),     color: "#C9A84C", icon: TrendingUp },   // gold — 돈
+          { label: "오늘 매출",    value: formatKRW(data?.todayRevenue??0),      color: "#2563EB", icon: ShoppingBag },   // blue — 운영
+          { label: "전체 회원",    value: `${(data?.totalMembers??0).toLocaleString()}명`, color: "#6C47FF", icon: Users },   // violet — 사람
+          { label: "오늘 마감",    value: data?.todayClosing ? "완료" : "미완료", color: data?.todayClosing ? "#059669" : "#FF2D78", icon: CheckCircle },  // emerald 완료 / pink 미완료
         ].map(s => (
           <div key={s.label} style={{ background: "var(--bg-elevated)", border: "1px solid var(--bg-border)", borderRadius: "14px", padding: "16px", position: "relative", overflow: "hidden" }}>
             <svg style={{ position:"absolute", right:-8, top:-8, opacity:0.06 }} width="80" height="80" viewBox="0 0 80 80"><circle cx="60" cy="20" r="40" fill={s.color}/></svg>
@@ -82,12 +82,12 @@ export default function DashboardPage() {
       {/* 바로가기 */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px,1fr))", gap: "10px" }}>
         {[
-          {label:"회원 관리",   href:"/members",    color:"#4F8EF7"},
-          {label:"주문 관리",   href:"/orders",     color:"#C9A84C"},
-          {label:"수당 플랜",   href:"/plan",       color:"#A78BFA"},
-          {label:"마감·정산",  href:"/closing",    color:"#00C896"},
-          {label:"지급 캘린더",href:"/calendar",   color:"#FF2D78"},
-          {label:"정산 관리",   href:"/settlement", color:"#FF9500"},
+          {label:"회원 관리",   href:"/members",    color:"#6C47FF"},  // violet — 사람
+          {label:"주문 관리",   href:"/orders",     color:"#2563EB"},  // blue — 운영
+          {label:"수당 플랜",   href:"/plan",       color:"#C9A84C"},  // gold — 돈
+          {label:"마감·정산",  href:"/closing",    color:"#FF2D78"},  // pink — 긴급
+          {label:"지급 캘린더",href:"/calendar",   color:"#FF2D78"},  // pink — 긴급
+          {label:"정산 관리",   href:"/settlement", color:"#C9A84C"},  // gold — 돈
         ].map(q => (
           <Link key={q.href} href={q.href} style={{
             padding:"14px", borderRadius:"14px", textAlign:"center", textDecoration:"none",
