@@ -38,7 +38,7 @@ const GUIDE_ITEMS = [
       "정산 대상 기간(2주 전)과 지급 예정일(금요일)이 자동 표시됩니다",
       "회원번호·전화번호·이메일로 특정 회원 검색 가능",
       "'주간 수당 계산' 버튼 클릭 → 해당 기간 모든 회원 수당 계산",
-      "판매수당·추천수당·오버라이딩·세전·세후·계좌 한눈에 확인",
+      "판권·관리비용·세전·세후·계좌 한눈에 확인",
       "'정산 확정 및 지급 처리' 클릭 → 지급 완료 처리",
     ],
   },
@@ -275,15 +275,6 @@ export default function ClosingPage() {
     const supabase = createBrowserSupabaseClient();
     const today = new Date().toISOString().split("T")[0];
 
-    // 오늘 주문 집계
-    const { data: orders } = await supabase.from("orders")
-      .select("id, member_id, total_price, total_bv, total_pv, status")
-      .gte("created_at", today + "T00:00:00").lt("created_at", today + "T23:59:59")
-      .neq("status", "CANCELLED");
-
-    const totalRevenue = orders?.reduce((s:number,o:any)=>s+o.total_price,0) ?? 0;
-    const totalBv = orders?.reduce((s:number,o:any)=>s+o.total_bv,0) ?? 0;
-
     // 수당 규칙 로드
     const { data: rules } = await supabase.from("commission_rules")
       .select("*, tiers:commission_tiers(rank_level,rate)").eq("is_active", true);
@@ -291,54 +282,57 @@ export default function ClosingPage() {
 
     // 모든 회원 직급 로드
     const { data: allMemberRanks } = await supabase.from("members")
-      .select("id, sponsor_id, rank_id, personal_pv, group_gv, cumulative_commission, rank:ranks(id,level,name)")
+      .select("id, sponsor_id, rank_id, personal_pv, group_gv, cumulative_commission, joined_at, rank:ranks(id,level,name)")
       .eq("is_admin", false);
 
     const memberMap: Record<string,any> = {};
     (allMemberRanks ?? []).forEach((m:any) => { memberMap[m.id] = m; });
+
+    // 오늘 신규 창업(가입) 회원 — 창업비 기반 정산
+    const todayNew = (allMemberRanks ?? []).filter((m:any) => (m.joined_at ?? "").startsWith(today));
+
+    // 직급별 창업비 / 판권율
+    const FEE: Record<number, number> = { 1: 50000, 2: 3000000, 3: 5000000 };
+    const DEFAULT_BANKWON: Record<number, number> = { 1: 5, 2: 25, 3: 32 };
+    const OVERRIDE_RATE = 10;
+    const bankwonRule = rList.find((r:any)=>r.rule_type==="REFERRAL"&&r.target_depth_from===1&&!r.is_volume_only)
+                     ?? rList.find((r:any)=>r.rule_type==="REFERRAL"&&!r.is_volume_only);
+    const bankwonRate = (lvl:number) => bankwonRule?.tiers?.find((t:any)=>t.rank_level===lvl)?.rate ?? DEFAULT_BANKWON[lvl] ?? 0;
+
+    const totalRevenue = todayNew.reduce((s:number,m:any)=>s+(FEE[m.rank?.level ?? 1]??0),0);
+    const totalBv = totalRevenue; // 정산 기준 = 총 창업비
 
     let totalCommission = 0;
     let rankChanges = 0;
     const memberCommMap: Record<string,number> = {};
     const memberGvAdd: Record<string,number> = {};
 
-    // 회원별 수당 계산
-    for (const order of orders ?? []) {
-      const member = memberMap[order.member_id];
-      if (!member) continue;
-      const level = member.rank?.level ?? 1;
+    // 신규 창업별 수당 계산 (판권 + 관리비용)
+    for (const nm of todayNew as any[]) {
+      const level = nm.rank?.level ?? 1;
+      const fee = FEE[level] ?? 0;
 
-      // GV 누적
-      memberGvAdd[order.member_id] = (memberGvAdd[order.member_id] ?? 0) + order.total_bv;
+      // 본인 GV 누적 (창업비)
+      memberGvAdd[nm.id] = (memberGvAdd[nm.id] ?? 0) + fee;
 
-      // ① 판매 수당
-      const sRule = rList.find((r:any)=>r.rule_type==="REFERRAL"&&r.target_depth_from===0&&!r.is_volume_only);
-      const sRate = sRule?.tiers?.find((t:any)=>t.rank_level===level)?.rate ?? DEFAULT_RATES[level]?.sales ?? 25;
-      const sComm = Math.floor(order.total_bv * sRate / 100);
-      memberCommMap[order.member_id] = (memberCommMap[order.member_id]??0) + sComm;
-      totalCommission += sComm;
-
-      // ② 추천 수당 (직접 추천인에게)
-      const sponsorId = member.sponsor_id;
+      const sponsorId = nm.sponsor_id;
       if (sponsorId && memberMap[sponsorId]) {
         const sLevel = memberMap[sponsorId]?.rank?.level ?? 1;
-        memberGvAdd[sponsorId] = (memberGvAdd[sponsorId]??0) + order.total_bv;
-        const rRule = rList.find((r:any)=>r.rule_type==="REFERRAL"&&r.target_depth_from===1&&!r.is_volume_only);
-        const rRate = rRule?.tiers?.find((t:any)=>t.rank_level===sLevel)?.rate ?? DEFAULT_RATES[sLevel]?.ref ?? 5;
-        const rComm = Math.floor(order.total_bv * rRate / 100);
-        memberCommMap[sponsorId] = (memberCommMap[sponsorId]??0) + rComm;
-        totalCommission += rComm;
+        // ① 판권 → 추천자 (추천자 직급 기준)
+        const bw = bankwonRate(sLevel);
+        const bankwonAmount = Math.floor(fee * bw / 100);
+        memberCommMap[sponsorId] = (memberCommMap[sponsorId]??0) + bankwonAmount;
+        memberGvAdd[sponsorId] = (memberGvAdd[sponsorId]??0) + fee;
+        totalCommission += bankwonAmount;
 
-        // ③ 오버라이딩 (추천인의 추천인이 매니저 이상)
+        // ② 관리비용 → 추천자의 추천자 (매니저 이상). 판권의 10%
         const grandId = memberMap[sponsorId]?.sponsor_id;
         if (grandId && memberMap[grandId]) {
           const gLevel = memberMap[grandId]?.rank?.level ?? 1;
           if (gLevel >= 2) {
-            memberGvAdd[grandId] = (memberGvAdd[grandId]??0) + order.total_bv;
-            const oRule = rList.find((r:any)=>r.rule_type==="TEAM"&&!r.is_volume_only);
-            const oRate = oRule?.tiers?.find((t:any)=>t.rank_level===gLevel)?.rate ?? DEFAULT_RATES[gLevel]?.over ?? 0;
-            const oComm = Math.floor(order.total_bv * oRate / 100);
+            const oComm = Math.floor(bankwonAmount * OVERRIDE_RATE / 100);
             memberCommMap[grandId] = (memberCommMap[grandId]??0) + oComm;
+            memberGvAdd[grandId] = (memberGvAdd[grandId]??0) + fee;
             totalCommission += oComm;
           }
         }
@@ -389,7 +383,7 @@ export default function ClosingPage() {
     // 마감 이력 저장
     const { data: closing } = await supabase.from("daily_closings").insert({
       closing_date: today,
-      total_orders: orders?.length ?? 0,
+      total_orders: todayNew.length,
       total_revenue: totalRevenue,
       total_bv: totalBv,
       total_commission: totalCommission,
@@ -402,8 +396,8 @@ export default function ClosingPage() {
       await supabase.from("daily_member_snapshots").insert(withId);
     }
 
-    setClosingResult({ orders: orders?.length??0, revenue: totalRevenue, commission: totalCommission, rankChanges });
-    setTodayClosing({ closing_date: today, status: "COMPLETED", total_orders: orders?.length??0, total_revenue: totalRevenue, total_commission: totalCommission, rank_changes: rankChanges });
+    setClosingResult({ orders: todayNew.length, revenue: totalRevenue, commission: totalCommission, rankChanges });
+    setTodayClosing({ closing_date: today, status: "COMPLETED", total_orders: todayNew.length, total_revenue: totalRevenue, total_commission: totalCommission, rank_changes: rankChanges });
     setClosingRunning(false);
   }
 
@@ -413,46 +407,54 @@ export default function ClosingPage() {
     setWeeklyCalc(true);
     const supabase = createBrowserSupabaseClient();
 
-    const { data: orders } = await supabase.from("orders")
-      .select("id, member_id, total_bv, total_price")
-      .eq("status", "PAID")
-      .gte("paid_at", weeklyPeriod.start + "T00:00:00")
-      .lte("paid_at", weeklyPeriod.end + "T23:59:59");
-
     const { data: rules } = await supabase.from("commission_rules")
       .select("*, tiers:commission_tiers(rank_level,rate)").eq("is_active",true);
     const rList = (rules as any[]) ?? [];
 
     const { data: members } = await supabase.from("members")
-      .select("id, name, member_code, phone, email, sponsor_id, rank:ranks(level,name,color), bank_name, bank_account, bank_holder")
+      .select("id, name, member_code, phone, email, sponsor_id, joined_at, rank:ranks(level,name,color), bank_name, bank_account, bank_holder")
       .eq("is_admin", false);
     const mMap: Record<string,any> = {};
     (members??[]).forEach((m:any)=>{ mMap[m.id]=m; });
 
+    // 정산 기간 내 신규 창업 (가입일 기준)
+    const newMembers = (members ?? []).filter((m:any) =>
+      (m.joined_at ?? "") >= weeklyPeriod.start && (m.joined_at ?? "") <= weeklyPeriod.end);
+
+    // 창업비 / 판권율
+    const FEE: Record<number, number> = { 1: 50000, 2: 3000000, 3: 5000000 };
+    const DEFAULT_BANKWON: Record<number, number> = { 1: 5, 2: 25, 3: 32 };
+    const OVERRIDE_RATE = 10;
+    const bankwonRule = rList.find((r:any)=>r.rule_type==="REFERRAL"&&r.target_depth_from===1&&!r.is_volume_only)
+                     ?? rList.find((r:any)=>r.rule_type==="REFERRAL"&&!r.is_volume_only);
+    const bankwonRate = (lvl:number) => bankwonRule?.tiers?.find((t:any)=>t.rank_level===lvl)?.rate ?? DEFAULT_BANKWON[lvl] ?? 0;
+
+    // sales 칸=판권 / over 칸=관리비용 (ref 미사용)
     const memberCalc: Record<string,{name:string,code:string,phone:string,email:string,rank:any,sales:number,ref:number,over:number}> = {};
-    for (const order of orders??[]) {
-      const m = mMap[order.member_id]; if(!m) continue;
-      const level = m.rank?.level??1;
-      if (!memberCalc[order.member_id]) memberCalc[order.member_id]={name:m.name,code:m.member_code,phone:m.phone??"",email:m.email??"",rank:m.rank,sales:0,ref:0,over:0};
+    const ensure = (id:string) => {
+      if (!memberCalc[id]) { const m = mMap[id]; memberCalc[id] = { name:m.name, code:m.member_code, phone:m.phone??"", email:m.email??"", rank:m.rank, sales:0, ref:0, over:0 }; }
+    };
 
-      const sRate = rList.find((r:any)=>r.rule_type==="REFERRAL"&&r.target_depth_from===0&&!r.is_volume_only)?.tiers?.find((t:any)=>t.rank_level===level)?.rate??DEFAULT_RATES[level]?.sales??25;
-      memberCalc[order.member_id].sales += Math.floor(order.total_bv*sRate/100);
+    for (const nm of newMembers as any[]) {
+      const level = nm.rank?.level ?? 1;
+      const fee = FEE[level] ?? 0;
+      const sid = nm.sponsor_id;
+      if (!sid || !mMap[sid]) continue;
 
-      const sid = m.sponsor_id;
-      if (sid && mMap[sid]) {
-        const sl = mMap[sid].rank?.level??1;
-        if (!memberCalc[sid]) memberCalc[sid]={name:mMap[sid].name,code:mMap[sid].member_code,phone:mMap[sid].phone??"",email:mMap[sid].email??"",rank:mMap[sid].rank,sales:0,ref:0,over:0};
-        const rRate = rList.find((r:any)=>r.rule_type==="REFERRAL"&&r.target_depth_from===1&&!r.is_volume_only)?.tiers?.find((t:any)=>t.rank_level===sl)?.rate??DEFAULT_RATES[sl]?.ref??5;
-        memberCalc[sid].ref += Math.floor(order.total_bv*rRate/100);
+      // ① 판권 → 추천자
+      const sl = mMap[sid].rank?.level ?? 1;
+      ensure(sid);
+      const bw = bankwonRate(sl);
+      const bankwonAmount = Math.floor(fee * bw / 100);
+      memberCalc[sid].sales += bankwonAmount;
 
-        const gid = mMap[sid]?.sponsor_id;
-        if (gid && mMap[gid]) {
-          const gl = mMap[gid].rank?.level??1;
-          if (gl>=2) {
-            if (!memberCalc[gid]) memberCalc[gid]={name:mMap[gid].name,code:mMap[gid].member_code,phone:mMap[gid].phone??"",email:mMap[gid].email??"",rank:mMap[gid].rank,sales:0,ref:0,over:0};
-            const oRate = rList.find((r:any)=>r.rule_type==="TEAM"&&!r.is_volume_only)?.tiers?.find((t:any)=>t.rank_level===gl)?.rate??DEFAULT_RATES[gl]?.over??0;
-            memberCalc[gid].over += Math.floor(order.total_bv*oRate/100);
-          }
+      // ② 관리비용 → 추천자의 추천자 (매니저 이상)
+      const gid = mMap[sid]?.sponsor_id;
+      if (gid && mMap[gid]) {
+        const gl = mMap[gid].rank?.level ?? 1;
+        if (gl >= 2) {
+          ensure(gid);
+          memberCalc[gid].over += Math.floor(bankwonAmount * OVERRIDE_RATE / 100);
         }
       }
     }
@@ -719,7 +721,7 @@ export default function ClosingPage() {
                     <div style={{overflowX:"auto"}}>
                       <table style={{width:"100%",borderCollapse:"collapse",minWidth:"900px"}}>
                         <thead><tr style={{borderBottom:"1px solid var(--bg-border)",background:"var(--bg-elevated)"}}>
-                          {["이름","회원번호","전화번호","이메일","직급","판매수당","추천수당","오버라이딩","세전합계","원천징수","실수령액","계좌"].map(h=>(
+                          {["이름","회원번호","전화번호","이메일","직급","판권","-","관리비용","세전합계","원천징수","실수령액","계좌"].map(h=>(
                             <th key={h} style={{padding:"10px 12px",textAlign:"left",fontSize:"11px",color:"var(--text-muted)",fontWeight:700,whiteSpace:"nowrap"}}>{h}</th>
                           ))}
                         </tr></thead>

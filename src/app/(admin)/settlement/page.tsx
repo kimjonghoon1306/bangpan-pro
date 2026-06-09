@@ -33,11 +33,11 @@ const GUIDE_ITEMS = [
     color: "#6C47FF",
     bg: "rgba(108,71,255,0.10)",
     title: "수당 계산 실행",
-    desc: "선택한 기간의 모든 주문을 집계해 회원별 수당을 자동 계산합니다.",
+    desc: "선택한 기간의 신규 창업(가입)을 집계해 판권·관리비용을 자동 계산합니다.",
     steps: [
       "정산할 기간을 먼저 선택합니다",
       "우측 상단 '수당 계산 실행' 버튼 클릭",
-      "판매수당 · 추천수당 · 오버라이딩이 회원별로 자동 계산됩니다",
+      "판권(추천자) · 관리비용(추천자의 추천자)이 회원별로 자동 계산됩니다",
       "계산 완료 후 '수당 내역' 탭에서 회원별 상세 확인 가능",
       "재계산이 필요하면 다시 버튼을 클릭하면 덮어씁니다",
     ],
@@ -51,7 +51,7 @@ const GUIDE_ITEMS = [
     steps: [
       "수당 계산 실행 후 '수당 내역' 탭 클릭",
       "회원명 · 적용 규칙 · 기준금액 · 비율 · 수당액 · 세후금액 확인",
-      "오버라이딩은 0단계(본인) / 1단계(직추천) / 2단계(추천인의추천인) 구분",
+      "1단계(직추천)=판권 / 2단계(추천인의 추천인)=관리비용으로 구분 표시",
       "이상한 금액이 있으면 수당 플랜 페이지에서 비율을 확인하세요",
     ],
   },
@@ -79,7 +79,7 @@ const GUIDE_ITEMS = [
       "지급완료 상태로 변경되면 되돌릴 수 없습니다",
       "수당 계산은 마감·정산 페이지의 일일 마감 후 실행하는 것을 권장합니다",
       "공유수당(매니저 풀 2% / 디렉터 풀 2% / 재량 1%)은 마감·정산 페이지에서 별도 처리합니다",
-      "반품이 있는 주문은 주문 상태를 취소로 먼저 변경하세요 — 취소 주문은 수당 계산에서 제외됩니다",
+      "창업비 기준: 멤버 5만 / 매니저 300만 / 디렉터 500만. 판권은 추천자(매니저25%·디렉터32%), 관리비용은 추천자의 추천자(판권의 10%)에게 지급됩니다",
     ],
   },
 ];
@@ -212,71 +212,72 @@ export default function SettlementPage() {
     setCalculating(true);
     const supabase = createBrowserSupabaseClient();
 
-    // 해당 기간 주문 BV 합산
-    const start = new Date(selected.year, selected.month - 1, 1).toISOString();
-    const end = new Date(selected.year, selected.month, 1).toISOString();
-    const { data: orders } = await supabase.from("orders").select("total_bv, member_id").eq("status", "PAID").gte("paid_at", start).lt("paid_at", end);
+    // 해당 기간 신규 창업(가입) 회원 조회 — 창업비 기반 정산
+    const start = new Date(selected.year, selected.month - 1, 1).toISOString().split("T")[0];
+    const end = new Date(selected.year, selected.month, 1).toISOString().split("T")[0];
+    const { data: newMembers } = await supabase
+      .from("members")
+      .select("id, sponsor_id, joined_at, rank:ranks(level)")
+      .eq("is_admin", false)
+      .gte("joined_at", start)
+      .lt("joined_at", end);
 
-    const totalBv = orders?.reduce((s: number, o: any) => s + o.total_bv, 0) ?? 0;
+    // 직급별 창업비 (실 기준 — 부가세 제외)
+    const FEE: Record<number, number> = { 1: 50000, 2: 3000000, 3: 5000000 };
+    // 판권율 (추천자 직급 기준): 멤버 5% / 매니저 25% / 디렉터 32%
+    const DEFAULT_BANKWON: Record<number, number> = { 1: 5, 2: 25, 3: 32 };
+    const OVERRIDE_RATE = 10; // 관리비용 = 추천자 판권의 10%
 
-    // 수당 규칙 로드 (없으면 PDF 기본값 사용)
+    // 수당 룰 로드
     const { data: rules } = await supabase.from("commission_rules").select("*, tiers:commission_tiers(rank_level, rate)").eq("is_active", true);
-    
-    const DEFAULT_RATES: Record<number,{sales:number,ref:number,over:number}> = {
-      1: { sales:  0, ref:  5, over: 0 },
-      2: { sales: 32, ref: 10, over: 0 },
-      3: { sales: 32, ref: 10, over: 0 },
-    };
+    const ruleList = (rules as any[]) ?? [];
+    // 판권 룰 (REFERRAL depth 1 = 추천자가 받음)
+    const bankwonRule = ruleList.find((r: any) => r.rule_type === "REFERRAL" && r.target_depth_from === 1 && !r.is_volume_only)
+                      ?? ruleList.find((r: any) => r.rule_type === "REFERRAL" && !r.is_volume_only);
+    // 관리비용 룰 (MATCHING = 오버라이드)
+    const overrideRule = ruleList.find((r: any) => r.rule_type === "MATCHING" && !r.is_volume_only);
 
-    function getSalesRate(level: number, ruleList: any[]) {
-      const rule = ruleList?.find((r: any) => r.rule_type === "REFERRAL" && r.target_depth_from === 0 && !r.is_volume_only);
-      const tier = rule?.tiers?.find((t: any) => t.rank_level === level);
-      return { rate: tier?.rate ?? DEFAULT_RATES[level]?.sales ?? 25, ruleId: rule?.id ?? null };
-    }
-    function getRefRate(level: number, ruleList: any[]) {
-      const rule = ruleList?.find((r: any) => r.rule_type === "REFERRAL" && r.target_depth_from === 1 && !r.is_volume_only);
-      const tier = rule?.tiers?.find((t: any) => t.rank_level === level);
-      return { rate: tier?.rate ?? DEFAULT_RATES[level]?.ref ?? 5, ruleId: rule?.id ?? null };
-    }
-    function getOverRate(level: number, ruleList: any[]) {
-      const rule = ruleList?.find((r: any) => r.rule_type === "TEAM" && !r.is_volume_only);
-      const tier = rule?.tiers?.find((t: any) => t.rank_level === level);
-      return { rate: tier?.rate ?? DEFAULT_RATES[level]?.over ?? 0, ruleId: rule?.id ?? null };
+    function bankwonRate(level: number) {
+      return bankwonRule?.tiers?.find((t: any) => t.rank_level === level)?.rate ?? DEFAULT_BANKWON[level] ?? 0;
     }
 
     // 회원별 수당 계산
     const commInserts: any[] = [];
-    for (const order of orders ?? []) {
-      const { data: member } = await supabase.from("members").select("id, sponsor_id, rank:ranks(level)").eq("id", order.member_id).single();
-      const memberLevel = (member as any)?.rank?.level ?? 1;
+    let totalFee = 0;
 
-      // ① 내 판매 수당 (무조건 발생)
-      const { rate: sRate, ruleId: sRuleId } = getSalesRate(memberLevel, rules ?? []);
-      commInserts.push({ period_id: selected.id, member_id: order.member_id, rule_id: sRuleId, source_member_id: order.member_id, depth: 0, base_amount: order.total_bv, rate: sRate, amount: Math.floor(order.total_bv * sRate / 100), status: "CALCULATED" });
+    for (const m of newMembers ?? []) {
+      const level = (m as any)?.rank?.level ?? 1;
+      const fee = FEE[level] ?? 0;
+      totalFee += fee;
 
-      // ② 추천 수당 (직접 추천인에게)
-      const sponsorId = (member as any)?.sponsor_id;
-      if (sponsorId) {
-        const { data: sponsor } = await supabase.from("members").select("id, rank:ranks(level)").eq("id", sponsorId).single();
-        const sponsorLevel = (sponsor as any)?.rank?.level ?? 1;
-        const { rate: rRate, ruleId: rRuleId } = getRefRate(sponsorLevel, rules ?? []);
-        commInserts.push({ period_id: selected.id, member_id: sponsorId, rule_id: rRuleId, source_member_id: order.member_id, depth: 1, base_amount: order.total_bv, rate: rRate, amount: Math.floor(order.total_bv * rRate / 100), status: "CALCULATED" });
+      const sponsorId = (m as any)?.sponsor_id;
+      if (!sponsorId) continue;
 
-        // ③ 오버라이딩 (추천인의 추천인에게 — 매니저/디렉터만)
-        const { data: sponsor2 } = await supabase.from("members").select("id, rank:ranks(level)").eq("id", sponsorId).single();
-        const sponsor2Id = (sponsor2 as any)?.sponsor_id;
-        if (sponsor2Id) {
-          const { data: grandSponsor } = await supabase.from("members").select("id, rank:ranks(level)").eq("id", sponsor2Id).single();
-          const gsLevel = (grandSponsor as any)?.rank?.level ?? 1;
-          if (gsLevel >= 2) {
-            const { rate: oRate, ruleId: oRuleId } = getOverRate(gsLevel, rules ?? []);
-            if (oRate > 0) {
-              commInserts.push({ period_id: selected.id, member_id: sponsor2Id, rule_id: oRuleId, source_member_id: order.member_id, depth: 2, base_amount: order.total_bv, rate: oRate, amount: Math.floor(order.total_bv * oRate / 100), status: "CALCULATED" });
-            }
+      // 추천자 정보
+      const { data: sponsor } = await supabase.from("members").select("id, sponsor_id, rank:ranks(level)").eq("id", sponsorId).single();
+      const sponsorLevel = (sponsor as any)?.rank?.level ?? 1;
+
+      // ① 판권 (소개수수료) → 추천자 1회. 추천자 직급 기준 비율
+      const bw = bankwonRate(sponsorLevel);
+      const bankwonAmount = Math.floor(fee * bw / 100);
+      if (bankwonRule?.id && bankwonAmount > 0) {
+        commInserts.push({ period_id: selected.id, member_id: sponsorId, rule_id: bankwonRule.id, source_member_id: (m as any).id, depth: 1, base_amount: fee, rate: bw, amount: bankwonAmount, status: "CALCULATED", note: "판권" });
+      }
+
+      // ② 관리비용 → 추천자의 추천자에게 (매니저 이상). 추천자가 받은 판권 × 10%
+      const grandId = (sponsor as any)?.sponsor_id;
+      if (grandId && bankwonAmount > 0 && overrideRule?.id) {
+        const { data: grand } = await supabase.from("members").select("id, rank:ranks(level)").eq("id", grandId).single();
+        const grandLevel = (grand as any)?.rank?.level ?? 1;
+        if (grandLevel >= 2) {
+          const ovAmount = Math.floor(bankwonAmount * OVERRIDE_RATE / 100);
+          if (ovAmount > 0) {
+            commInserts.push({ period_id: selected.id, member_id: grandId, rule_id: overrideRule.id, source_member_id: (m as any).id, depth: 2, base_amount: bankwonAmount, rate: OVERRIDE_RATE, amount: ovAmount, status: "CALCULATED", note: "관리비용" });
           }
         }
       }
     }
+    const totalBv = totalFee; // 정산 기준 = 총 창업비
 
     // 기존 계산 삭제 후 재삽입
     await supabase.from("commissions").delete().eq("period_id", selected.id);
@@ -368,7 +369,7 @@ export default function SettlementPage() {
                 <span style={{ fontFamily: "Syne,sans-serif", fontSize: "14px", fontWeight: 800, color: "var(--text-primary)" }}>{p.year}.{String(p.month).padStart(2,"0")}</span>
                 <span style={{ padding: "2px 7px", borderRadius: "999px", fontSize: "10px", fontWeight: 600, background: S.bg, color: S.color }}>{S.label}</span>
               </div>
-              <p style={{ fontSize: "11px", color: "var(--text-muted)" }}>BV {p.total_bv.toLocaleString()}</p>
+              <p style={{ fontSize: "11px", color: "var(--text-muted)" }}>창업비 {p.total_bv.toLocaleString()}</p>
               <p style={{ fontSize: "14px", fontWeight: 700, color: "var(--gold)", marginTop: "2px" }}>{formatKRW(p.total_commission)}</p>
             </button>
           );

@@ -112,10 +112,10 @@ export default function PortalPage() {
   const maxVol = member ? Math.max(member.left_volume, member.right_volume, 1) : 1;
 
   const typeInfo = (type: string) => {
-    if (type === "REFERRAL") return { label: "추천", color: "#C9A84C" };   // gold
-    if (type === "TEAM")     return { label: "오버", color: "#FF2D78" };   // pink
+    if (type === "REFERRAL") return { label: "판권", color: "#4FA3E8" };
+    if (type === "TEAM")     return { label: "관리비용", color: "#EF9F27" };
     if (type === "RANK_BONUS") return { label: "직급", color: "#059669" }; // emerald
-    if (type === "MATCHING") return { label: "매칭", color: "#6C47FF" };   // violet
+    if (type === "MATCHING") return { label: "관리비용", color: "#EF9F27" };
     return { label: "수당", color: "#C9A84C" };
   };
 

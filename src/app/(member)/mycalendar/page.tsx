@@ -66,8 +66,8 @@ function MyPaymentModal({ friday, memberId, onClose }: { friday: Date; memberId:
   }, []);
 
   const TYPE_MAP: Record<string, { label: string; color: string; bg: string }> = {
-    REFERRAL:   { label: "추천", color: "#4FA3E8", bg: "rgba(79,163,232,0.1)" },
-    TEAM:       { label: "오버", color: "#E8599A", bg: "rgba(232,89,154,0.1)" },
+    REFERRAL:   { label: "판권", color: "#4FA3E8", bg: "rgba(79,163,232,0.1)" },
+    TEAM:       { label: "관리비용", color: "#EF9F27", bg: "rgba(239,159,39,0.1)" },
     RANK_BONUS: { label: "직급", color: "#00C896", bg: "rgba(0,200,150,0.1)" },
   };
 
