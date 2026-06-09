@@ -72,9 +72,9 @@ export default function CommissionGuideModal({ onClose }: { onClose: () => void 
           {TABS.map(t => (
             <button key={t.key} onClick={() => setTab(t.key)} style={{
               padding: "8px 14px", borderRadius: "10px", cursor: "pointer", fontSize: "12px", fontWeight: 700,
-              background: tab === t.key ? "rgba(201,168,76,0.2)" : "rgba(255,255,255,0.05)",
-              border: `1.5px solid ${tab === t.key ? "rgba(201,168,76,0.6)" : "rgba(255,255,255,0.1)"}`,
-              color: tab === t.key ? "#C9A84C" : "rgba(255,255,255,0.5)",
+              background: tab === t.key ? "rgba(201,168,76,0.2)" : "var(--bg-elevated)",
+              border: `1.5px solid ${tab === t.key ? "rgba(201,168,76,0.6)" : "var(--bg-border)"}`,
+              color: tab === t.key ? "#C9A84C" : "var(--text-secondary)",
               transition: "all 0.15s",
             }}>{t.label}</button>
           ))}
