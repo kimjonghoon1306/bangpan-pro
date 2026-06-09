@@ -8,7 +8,7 @@ import {
   LayoutDashboard, Users, ShoppingBag, Calculator,
   Settings, TrendingUp, LogOut, GitBranch,
   Wallet, Package, Bell, Menu, X, ChevronLeft, ExternalLink, CheckCircle,
-  Calendar as CalendarIcon, Banknote as BanknoteIcon, BookOpen,
+  Calendar as CalendarIcon, Banknote as BanknoteIcon, BookOpen, HeartPulse,
 } from "lucide-react";
 import ThemeToggle from "@/components/ui/ThemeToggle";
 import CommissionPlanModal from "@/components/ui/CommissionPlanModal";
@@ -26,6 +26,7 @@ const NAV_GROUPS = [
     items: [
       { label: "회원 관리", href: "/members", icon: Users },
       { label: "조직도",    href: "/org",     icon: GitBranch },
+      { label: "회원 케어", href: "/care",    icon: HeartPulse, highlight: true, color: "#E8599A" },
     ],
   },
   {
@@ -164,6 +165,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                              c === "#6C47FF" ? "108,71,255" :
                              c === "#2563EB" ? "37,99,235" :
                              c === "#FF2D78" ? "255,45,120" :
+                             c === "#E8599A" ? "232,89,154" :
                              c === "#059669" ? "5,150,105" : "201,168,76";
                 return (
                   <Link key={item.href} href={item.href} onClick={() => setMobileOpen(false)}
