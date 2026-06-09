@@ -228,31 +228,33 @@ export default function CommissionGuideModal({ onClose }: { onClose: () => void 
         {tab === "commissions" && (
           <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
 
-            {/* 매니저 vs 디렉터 비교 */}
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
+            {/* 매니저 vs 디렉터 비교 — 모바일 가로 고정 */}
+            <div style={{ display: "flex", gap: "8px" }}>
               {[
-                { rank: "매니저", color: "#378ADD", icon: "👔", fee: "300만원",
-                  items: [{ k: "판권", v: "25% = 75만원", c: "#4FA3E8" }, { k: "관리비용", v: "팀원판권 × 10%", c: "#EF9F27" }, { k: "패스트스타트", v: "+3% = 9만원", c: "#10B981" }, { k: "팀원첫모집", v: "+2%/건", c: "#F472B6" }],
+                { rank: "매니저", color: "#378ADD", icon: "👔", fee: "300만",
+                  items: [{ k: "판권", v: "25%=75만", c: "#4FA3E8" }, { k: "관리비용", v: "×10%", c: "#EF9F27" }, { k: "패스트", v: "+3%=9만", c: "#10B981" }, { k: "첫모집", v: "+2%/건", c: "#F472B6" }],
                   total: "40%" },
-                { rank: "디렉터", color: "#E8599A", icon: "👑", fee: "500만원",
-                  items: [{ k: "판권", v: "32% = 160만원", c: "#4FA3E8" }, { k: "관리비용", v: "팀원판권 × 10%", c: "#EF9F27" }, { k: "패스트스타트", v: "+5% = 25만원", c: "#10B981" }, { k: "팀원첫모집", v: "+3%/건", c: "#F472B6" }],
+                { rank: "디렉터", color: "#E8599A", icon: "👑", fee: "500만",
+                  items: [{ k: "판권", v: "32%=160만", c: "#4FA3E8" }, { k: "관리비용", v: "×10%", c: "#EF9F27" }, { k: "패스트", v: "+5%=25만", c: "#10B981" }, { k: "첫모집", v: "+3%/건", c: "#F472B6" }],
                   total: "50%" },
               ].map(r => (
-                <div key={r.rank} style={{ background: `${r.color}08`, border: `1.5px solid ${r.color}30`, borderRadius: "16px", padding: "16px" }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "12px" }}>
-                    <span style={{ fontSize: "24px" }}>{r.icon}</span>
-                    <div>
-                      <p style={{ fontSize: "14px", fontWeight: 800, color: r.color, margin: 0 }}>{r.rank}</p>
-                      <p style={{ fontSize: "10px", color: "var(--text-muted)", margin: 0 }}>창업비 {r.fee}</p>
+                <div key={r.rank} style={{ flex: 1, background: `${r.color}08`, border: `1.5px solid ${r.color}30`, borderRadius: "14px", padding: "12px", minWidth: 0 }}>
+                  {/* 헤더 */}
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "10px" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                      <span style={{ fontSize: "20px", flexShrink: 0 }}>{r.icon}</span>
+                      <div style={{ minWidth: 0 }}>
+                        <p style={{ fontSize: "13px", fontWeight: 800, color: r.color, margin: 0, whiteSpace: "nowrap" }}>{r.rank}</p>
+                        <p style={{ fontSize: "9px", color: "var(--text-muted)", margin: 0 }}>창업비 {r.fee}</p>
+                      </div>
                     </div>
-                    <div style={{ marginLeft: "auto", padding: "4px 10px", borderRadius: "999px", background: `${r.color}20`, border: `1px solid ${r.color}40` }}>
-                      <span style={{ fontSize: "16px", fontWeight: 900, color: r.color }}>{r.total}</span>
-                    </div>
+                    <span style={{ fontSize: "15px", fontWeight: 900, color: r.color, flexShrink: 0 }}>{r.total}</span>
                   </div>
+                  {/* 수당 항목 */}
                   {r.items.map(i => (
-                    <div key={i.k} style={{ display: "flex", justifyContent: "space-between", padding: "6px 10px", borderRadius: "8px", background: "var(--bg)", marginBottom: "4px" }}>
-                      <span style={{ fontSize: "11px", color: "var(--text-muted)" }}>{i.k}</span>
-                      <span style={{ fontSize: "11px", fontWeight: 700, color: i.c }}>{i.v}</span>
+                    <div key={i.k} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "5px 8px", borderRadius: "6px", background: "var(--bg)", marginBottom: "3px" }}>
+                      <span style={{ fontSize: "10px", color: "var(--text-muted)", flexShrink: 0 }}>{i.k}</span>
+                      <span style={{ fontSize: "10px", fontWeight: 700, color: i.c, textAlign: "right" }}>{i.v}</span>
                     </div>
                   ))}
                 </div>
@@ -304,6 +306,58 @@ export default function CommissionGuideModal({ onClose }: { onClose: () => void 
         {/* ── 수입 예시 ── */}
         {tab === "scenarios" && (
           <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+
+            {/* 직급별 영업 수익표 */}
+            <div style={{ background: "var(--bg-elevated)", border: "1px solid var(--bg-border)", borderRadius: "16px", overflow: "hidden" }}>
+              <div style={{ padding: "14px 16px", borderBottom: "1px solid var(--bg-border)", background: "rgba(201,168,76,0.07)" }}>
+                <p style={{ fontSize: "13px", fontWeight: 800, color: "#C9A84C", margin: 0 }}>💼 내 직급별 판권 수익 (1회)</p>
+                <p style={{ fontSize: "11px", color: "var(--text-muted)", margin: "3px 0 0" }}>누구를 소개하든 내 직급 기준으로 창업비 × 판권율</p>
+              </div>
+              {[
+                {
+                  who: "매니저", whoColor: "#378ADD", whoIcon: "👔", rate: "25%",
+                  rows: [
+                    { target: "멤버 소개",    fee: "5만원",   earn: "12,500원" },
+                    { target: "매니저 소개",  fee: "300만원", earn: "75만원" },
+                    { target: "디렉터 소개",  fee: "500만원", earn: "125만원" },
+                  ]
+                },
+                {
+                  who: "디렉터", whoColor: "#E8599A", whoIcon: "👑", rate: "32%",
+                  rows: [
+                    { target: "멤버 소개",    fee: "5만원",   earn: "16,000원" },
+                    { target: "매니저 소개",  fee: "300만원", earn: "96만원" },
+                    { target: "디렉터 소개",  fee: "500만원", earn: "160만원" },
+                  ]
+                },
+                {
+                  who: "멤버", whoColor: "#6B7280", whoIcon: "👤", rate: "5%",
+                  rows: [
+                    { target: "멤버 소개",    fee: "5만원",   earn: "2,500원" },
+                    { target: "매니저 소개",  fee: "300만원", earn: "15만원" },
+                    { target: "디렉터 소개",  fee: "500만원", earn: "25만원" },
+                  ]
+                },
+              ].map((g, gi) => (
+                <div key={g.who}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "8px", padding: "10px 16px", background: `${g.whoColor}06`, borderBottom: "1px solid var(--bg-border)" }}>
+                    <span style={{ fontSize: "16px" }}>{g.whoIcon}</span>
+                    <span style={{ fontSize: "12px", fontWeight: 800, color: g.whoColor }}>{g.who} 가 영업 시</span>
+                    <span style={{ padding: "1px 8px", borderRadius: "999px", background: `${g.whoColor}18`, border: `1px solid ${g.whoColor}35`, fontSize: "11px", fontWeight: 700, color: g.whoColor }}>판권 {g.rate}</span>
+                  </div>
+                  {g.rows.map((r, ri) => (
+                    <div key={r.target} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "9px 16px", borderBottom: ri < g.rows.length - 1 || gi < 2 ? "1px solid var(--bg-border)" : "none" }}>
+                      <div>
+                        <span style={{ fontSize: "12px", color: "var(--text-primary)", fontWeight: 500 }}>{r.target}</span>
+                        <span style={{ fontSize: "10px", color: "var(--text-muted)", marginLeft: "6px" }}>창업비 {r.fee}</span>
+                      </div>
+                      <span style={{ fontSize: "13px", fontWeight: 800, color: g.whoColor }}>{r.earn}</span>
+                    </div>
+                  ))}
+                </div>
+              ))}
+            </div>
+
             {SCENARIOS.map((s, i) => (
               <div key={i} style={{ background: `${s.color}08`, border: `1.5px solid ${s.color}30`, borderRadius: "16px", padding: "16px" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "12px" }}>
