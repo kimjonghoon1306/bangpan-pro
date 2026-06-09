@@ -315,7 +315,7 @@ export default function CommissionGuidePage() {
                 <p style={{ fontSize: "14px", fontWeight: 800, color: "#378ADD", margin: 0 }}>수당 받는 경우</p>
               </div>
               <ul style={{ margin: 0, padding: "0 0 0 16px", display: "flex", flexDirection: "column", gap: "8px" }}>
-                {["내가 직접 창업 → 직판 수당 32%", "내가 직추천한 사람 창업 → 오버라이드 10%", "가입 90일 내 미션 달성 → 패스트스타트 5%", "내 팀원의 첫 모집 성공 → 3% 보너스", "매니저/디렉터 풀 월 배분"].map(t => (
+                {["창업자 소개 → 판권 (매니저 25% / 디렉터 32%)", "팀원이 판권 받을 때 → 관리비용 10% 지속", "90일 미션 달성 → 패스트스타트 (+3%/+5%)", "팀원 첫모집 성공 → 보너스 (+2%/+3%)", "매니저/디렉터 풀 월 배분"].map(t => (
                   <li key={t} style={{ fontSize: "13px", color: "var(--text-secondary)" }}>{t}</li>
                 ))}
               </ul>
@@ -414,10 +414,10 @@ export default function CommissionGuidePage() {
                 </thead>
                 <tbody>
                   {[
-                    { label: "직판 수당 (32%)", member: "—", manager: "96만원", director: "160만원", color: "#4FA3E8" },
-                    { label: "추천 오버라이드",  member: "5% = 15만/25만", manager: "10% = 30만/50만", director: "10% = 30만/50만", color: "#EF9F27" },
-                    { label: "패스트 스타트",    member: "—", manager: "+15만원", director: "+25만원", color: "#10B981" },
-                    { label: "팀원 첫모집",      member: "—", manager: "+9만원/명", director: "+15만원/명", color: "#F472B6" },
+                    { label: "판권 (매니저25%/디렉터32%)", member: "—", manager: "75만원", director: "160만원", color: "#4FA3E8" },
+                    { label: "관리비용 (팀원판권×10%)", member: "소개수당 5%", manager: "팀원판권×10%", director: "팀원판권×10%", color: "#EF9F27" },
+                    { label: "패스트 스타트", member: "—", manager: "+9만원 (3%)", director: "+25만원 (5%)", color: "#10B981" },
+                    { label: "팀원 첫모집", member: "—", manager: "+6만원/건 (2%)", director: "+15만원/건 (3%)", color: "#F472B6" },
                     { label: "매니저 풀 (2%)",   member: "—", manager: "균등배분", director: "—", color: "#EF9F27" },
                     { label: "디렉터 풀 (2%)",   member: "—", manager: "—", director: "균등배분", color: "#E8599A" },
                   ].map(({ label, member, manager, director, color }) => (
@@ -487,7 +487,7 @@ export default function CommissionGuidePage() {
                     {(i === 0 ? ["매니저 A"] : i === 1 ? ["매니저 A", "매니저 B", "매니저 C"] : ["매니저 A", "매니저 B", "매니저 C", "매니저 D", "매니저 E"]).map((name) => (
                       <div key={name} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "4px" }}>
                         <div style={{ fontSize: "10px", color: "#378ADD", fontWeight: 700 }}>
-                          {i === 2 ? "↑ 50만원" : "↑ 30만원"}
+                          {i === 2 ? "↑ 판권 160만원" : "↑ 판권 75만원"}
                         </div>
                         <div style={{ width: 44, height: 44, borderRadius: "50%", background: "#378ADD", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "22px" }}>👔</div>
                         <span style={{ fontSize: "10px", color: "var(--text-secondary)" }}>{name}</span>
@@ -596,9 +596,9 @@ export default function CommissionGuidePage() {
                 <div style={{ background: "var(--bg)", borderRadius: "12px", padding: "14px", width: "100%", textAlign: "left" }}>
                   <p style={{ fontSize: "11px", color: "var(--text-muted)", fontWeight: 700, marginBottom: "8px" }}>창업비 수당 (300만원 기준)</p>
                   {[
-                    { label: "직판 수당", val: "96만원" },
-                    { label: "추천 오버라이드", val: "30만원/명" },
-                    { label: "패스트 스타트", val: "+15만원" },
+                    { label: "판권 25%", val: "75만원/건" },
+                    { label: "관리비용", val: "팀원판권×10%" },
+                    { label: "패스트스타트", val: "+9만원 (3%)" },
                   ].map(({ label, val }) => (
                     <div key={label} style={{ display: "flex", justifyContent: "space-between", marginBottom: "4px" }}>
                       <span style={{ fontSize: "11px", color: "var(--text-muted)" }}>{label}</span>
@@ -632,8 +632,8 @@ export default function CommissionGuidePage() {
                 <div style={{ background: "var(--bg)", borderRadius: "12px", padding: "14px", width: "100%", textAlign: "left" }}>
                   <p style={{ fontSize: "11px", color: "var(--text-muted)", fontWeight: 700, marginBottom: "8px" }}>창업비 수당 (500만원 기준)</p>
                   {[
-                    { label: "직판 수당", val: "160만원" },
-                    { label: "추천 오버라이드", val: "50만원/명" },
+                    { label: "판권 32%", val: "160만원/건" },
+                    { label: "관리비용", val: "팀원판권×10%" },
                     { label: "디렉터 풀", val: "균등배분" },
                   ].map(({ label, val }) => (
                     <div key={label} style={{ display: "flex", justifyContent: "space-between", marginBottom: "4px" }}>
