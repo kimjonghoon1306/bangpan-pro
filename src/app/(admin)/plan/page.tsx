@@ -3,7 +3,8 @@
 import { useState, useEffect, useCallback } from "react";
 import { createBrowserSupabaseClient } from "@/lib/supabase";
 import { formatKRW } from "@/lib/utils";
-import { Save, Check, Edit3, X, Users, TrendingUp, Zap, Award, ChevronRight, BarChart2, HelpCircle, BookOpen, Settings2, Calculator, Shield } from "lucide-react";
+import { Save, Check, Edit3, X, Users, TrendingUp, Zap, Award, ChevronRight, BarChart2, HelpCircle, BookOpen, Settings2, Calculator, Shield, FileText } from "lucide-react";
+import Link from "next/link";
 
 // ─── 사용 가이드 팝업 ─────────────────────────────────
 const GUIDE_ITEMS = [
@@ -12,10 +13,10 @@ const GUIDE_ITEMS = [
     color: "#378ADD",
     bg: "rgba(55,138,221,0.10)",
     title: "직급별 수당 카드",
-    desc: "파트너·매니저·디렉터 3개 카드에서 각 직급의 수당 비율을 한눈에 확인합니다.",
+    desc: "멤버·매니저·디렉터 3개 카드에서 각 직급의 수당 비율을 한눈에 확인합니다.",
     steps: [
       "수정하기 버튼 클릭 → 해당 카드가 활성화됩니다",
-      "① 내 판매 수당 / ② 추천 수당 / ③ 오버라이딩 % 숫자를 직접 수정",
+      "① 직판 수당 / ② 추천 오버라이드(1대) % 숫자를 직접 수정",
       "승급 조건(직추천 수, 누적 매출)도 같은 화면에서 수정 가능",
       "저장 버튼 클릭 → DB에 즉시 반영",
     ],
@@ -27,7 +28,7 @@ const GUIDE_ITEMS = [
     title: "수당 구조 한눈에 보기",
     desc: "모든 직급의 수당 항목과 승급 조건을 표 형태로 비교합니다.",
     steps: [
-      "직급별 판매수당·추천수당·오버라이딩 비율 한 번에 확인",
+      "직급별 직판수당·추천오버라이드·패스트스타트·팀원첫모집 비율 한 번에 확인",
       "합계 % 와 승급 조건(직추천·누적매출)도 표시",
       "총 수당 재원이 55%를 초과하면 경고 표시",
     ],
@@ -37,12 +38,11 @@ const GUIDE_ITEMS = [
     color: "#A78BFA",
     bg: "rgba(167,139,250,0.10)",
     title: "수당 시뮬레이션",
-    desc: "실제 매출 조건을 입력해 예상 수당과 현재 직급을 즉시 계산합니다.",
+    desc: "창업비 기준으로 예상 수당을 즉시 계산합니다.",
     steps: [
       "하단 '수당 시뮬레이션' 버튼 클릭 → 패널 펼침",
-      "내 직접 판매 매출 / 직접 추천 인원 / 추천인 인당 매출 / 팀 전체 매출 입력",
-      "숫자 직접 입력 또는 슬라이더 조작 — 둘 다 동기화됩니다",
-      "전체 회사 월 매출 입력 → 마케팅 지원비 5% 자동 계산",
+      "직추천 매니저 수 / 직추천 디렉터 수 / 전체 창업비 매출 입력",
+      "패스트 스타트·팀원 첫모집 달성 여부 체크",
       "적용하기 버튼 클릭 → 직급 자동 판정 + 수당 상세 계산",
     ],
   },
@@ -50,13 +50,13 @@ const GUIDE_ITEMS = [
     icon: Zap,
     color: "#D4537E",
     bg: "rgba(212,83,126,0.10)",
-    title: "마케팅 지원비 5%",
-    desc: "전체 월 매출에서 별도로 떼는 공유 재원입니다.",
+    title: "5% 풀 배분",
+    desc: "전체 창업비 매출에서 별도로 적립하는 공유 재원입니다.",
     steps: [
       "매니저 풀 2% — 전체 매니저 인원으로 N분의1 균등 배분",
       "디렉터 풀 2% — 전체 디렉터 인원으로 N분의1 균등 배분",
-      "관리자 재량 1% — 마감·정산 페이지에서 직접 대상자 지정",
-      "월 매출 금액 입력칸에서 실시간 금액 확인 가능",
+      "회사 재량 1% — 마감·정산 페이지에서 직접 대상자 지정",
+      "월 창업비 총액 입력칸에서 실시간 금액 확인 가능",
     ],
   },
 ];
@@ -168,15 +168,15 @@ interface RankPlan {
   overTierId: string;
 }
 
-const RANK_STYLE: Record<number, { main: string; bg: string; border: string; shadow: string; badge: string }> = {
-  1: { main: "#378ADD", bg: "rgba(55,138,221,0.07)",  border: "rgba(55,138,221,0.25)",  shadow: "rgba(55,138,221,0.15)", badge: "rgba(55,138,221,0.15)" },
-  2: { main: "#EF9F27", bg: "rgba(239,159,39,0.07)",  border: "rgba(239,159,39,0.25)",  shadow: "rgba(239,159,39,0.15)", badge: "rgba(239,159,39,0.15)" },
-  3: { main: "#D4537E", bg: "rgba(212,83,126,0.07)",  border: "rgba(212,83,126,0.25)",  shadow: "rgba(212,83,126,0.15)", badge: "rgba(212,83,126,0.15)" },
+const RANK_STYLE: Record<number, { main: string; bg: string; border: string; shadow: string; badge: string; icon: string }> = {
+  1: { main: "#6B7280", bg: "rgba(107,114,128,0.07)", border: "rgba(107,114,128,0.25)", shadow: "rgba(107,114,128,0.15)", badge: "rgba(107,114,128,0.15)", icon: "👤" },
+  2: { main: "#378ADD", bg: "rgba(55,138,221,0.07)",  border: "rgba(55,138,221,0.25)",  shadow: "rgba(55,138,221,0.15)", badge: "rgba(55,138,221,0.15)",  icon: "👔" },
+  3: { main: "#E8599A", bg: "rgba(232,89,154,0.07)",  border: "rgba(232,89,154,0.25)",  shadow: "rgba(232,89,154,0.15)", badge: "rgba(232,89,154,0.15)",  icon: "👑" },
 };
 
 const ITEM_COLORS = {
-  sales: { main: "#378ADD", bg: "rgba(55,138,221,0.10)", label: "① 내 판매 수당" },
-  ref:   { main: "#EF9F27", bg: "rgba(239,159,39,0.10)",  label: "② 추천 수당" },
+  sales: { main: "#378ADD", bg: "rgba(55,138,221,0.10)", label: "① 직판 수당 (본인)" },
+  ref:   { main: "#EF9F27", bg: "rgba(239,159,39,0.10)",  label: "② 추천 오버라이드 (1대)" },
   over:  { main: "#D4537E", bg: "rgba(212,83,126,0.10)", label: "③ 오버라이딩" },
 };
 
@@ -241,17 +241,16 @@ export default function PlanPage() {
     const refRule   = ruleList.find(r => r.rule_type === "REFERRAL" && r.target_depth_from === 1 && !r.is_volume_only);
     const overRule  = ruleList.find(r => r.rule_type === "TEAM" && !r.is_volume_only);
 
-    // PDF 기본값 (DB 없어도 무조건 동작)
+    // 기본값 (DB 없어도 동작)
     const DEFAULT_RATES: Record<number, {s:number,r:number,o:number}> = {
-      1: { s: 25, r: 5, o: 0 },
-      2: { s: 28, r: 7, o: 3 },
-      3: { s: 32, r: 10, o: 8 },
+      1: { s: 0,  r: 5,  o: 0 },
+      2: { s: 32, r: 10, o: 0 },
+      3: { s: 32, r: 10, o: 0 },
     };
-    // ranks DB 없으면 PDF 기본 직급 사용
     const rankList = (ranks && ranks.length > 0) ? ranks : [
-      { id: "default-1", code: "PARTNER",  name: "파트너", level: 1, color: "#378ADD", min_gv: 50000,     min_direct_referral: 0 },
-      { id: "default-2", code: "MANAGER",  name: "매니저", level: 2, color: "#EF9F27", min_gv: 5000000,   min_direct_referral: 5 },
-      { id: "default-3", code: "DIRECTOR", name: "디렉터", level: 3, color: "#D4537E", min_gv: 50000000,  min_direct_referral: 3 },
+      { id: "default-1", code: "MEMBER",   name: "멤버",   level: 1, color: "#6B7280", min_gv: 50000,     min_direct_referral: 0 },
+      { id: "default-2", code: "MANAGER",  name: "매니저", level: 2, color: "#378ADD", min_gv: 10000000,  min_direct_referral: 0 },
+      { id: "default-3", code: "DIRECTOR", name: "디렉터", level: 3, color: "#D4537E", min_gv: 20000000,  min_direct_referral: 3 },
     ];
     const result: RankPlan[] = rankList.map((r: any) => {
       const def = DEFAULT_RATES[r.level] ?? { s: 0, r: 0, o: 0 };
@@ -359,6 +358,18 @@ export default function PlanPage() {
             <h1 style={{ fontFamily: "Syne,sans-serif", fontSize: "22px", fontWeight: 800, color: "var(--text-primary)" }}>수당 플랜</h1>
             <p style={{ fontSize: "12px", color: "var(--text-muted)", marginTop: "2px" }}>직급별 수당 비율과 승급 조건을 관리합니다</p>
           </div>
+          {/* 수당 설명서 버튼 */}
+          <Link href="/commission-guide" style={{
+            display: "flex", alignItems: "center", gap: "6px",
+            padding: "8px 14px", borderRadius: "999px",
+            background: "rgba(201,168,76,0.1)",
+            border: "1.5px solid rgba(201,168,76,0.35)",
+            color: "#C9A84C", cursor: "pointer", fontSize: "12px", fontWeight: 700,
+            textDecoration: "none", transition: "all 0.2s",
+          }}>
+            <FileText size={14} />
+            수당 설명서
+          </Link>
           {/* 가이드 버튼 — 애니메이션 펄스 */}
           <button onClick={() => setShowGuide(true)} style={{
             display: "flex", alignItems: "center", gap: "6px",
@@ -418,9 +429,12 @@ export default function PlanPage() {
               {/* 직급 헤더 */}
               <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: "18px" }}>
                 <div>
-                  <span style={{ display: "inline-block", padding: "4px 12px", borderRadius: "999px", fontSize: "12px", fontWeight: 700, background: rs.badge, color: rs.main, marginBottom: "6px" }}>
-                    {p.rankLevel === 1 ? "PARTNER" : p.rankLevel === 2 ? "MANAGER" : "DIRECTOR"}
-                  </span>
+                  <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "6px" }}>
+                    <span style={{ fontSize: "20px" }}>{rs.icon}</span>
+                    <span style={{ display: "inline-block", padding: "4px 12px", borderRadius: "999px", fontSize: "12px", fontWeight: 700, background: rs.badge, color: rs.main }}>
+                      {p.rankLevel === 1 ? "MEMBER" : p.rankLevel === 2 ? "MANAGER" : "DIRECTOR"}
+                    </span>
+                  </div>
                   <h3 style={{ fontFamily: "Syne,sans-serif", fontSize: "24px", fontWeight: 800, color: rs.main }}>{p.rankName}</h3>
                 </div>
                 {/* 합계 원형 뱃지 */}
@@ -524,9 +538,8 @@ export default function PlanPage() {
             </thead>
             <tbody>
               {[
-                { label: "① 내 판매 수당", key: "salesRate" as const, color: "#378ADD" },
-                { label: "② 추천 수당",    key: "refRate"   as const, color: "#EF9F27" },
-                { label: "③ 오버라이딩",  key: "overRate"  as const, color: "#D4537E" },
+                { label: "① 직판 수당 (본인)", key: "salesRate" as const, color: "#378ADD" },
+                { label: "② 추천 오버라이드 (1대)", key: "refRate" as const, color: "#EF9F27" },
               ].map(({ label, key, color }) => (
                 <tr key={label} style={{ borderBottom: "1px solid var(--bg-border)" }}>
                   <td style={{ padding: "12px 18px", fontSize: "13px", fontWeight: 500, color: "var(--text-primary)" }}>

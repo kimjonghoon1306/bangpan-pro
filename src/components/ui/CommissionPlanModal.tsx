@@ -1,31 +1,37 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { X, TrendingUp, Users, Zap, Award, ChevronUp } from "lucide-react";
+import { X, Zap } from "lucide-react";
 import { createBrowserSupabaseClient } from "@/lib/supabase";
 
 interface PlanData {
   name: string; level: number; color: string;
-  salesRate: number; refRate: number; overRate: number;
+  salesRate: number; refRate: number;
   minGv: number; minDirect: number;
 }
 
 const STYLES: Record<number, {
   main: string; dark: string; glow: string;
-  grad: string; badge: string; label: string;
+  grad: string; badge: string; label: string; icon: string;
 }> = {
-  1: { main: "#4FA3E8", dark: "#1A6DB5", glow: "rgba(79,163,232,0.4)",
-       grad: "linear-gradient(135deg,#1A3A5C,#1A5C8A)", badge: "PARTNER", label: "파트너" },
-  2: { main: "#F5A623", dark: "#B87A10", glow: "rgba(245,166,35,0.4)",
-       grad: "linear-gradient(135deg,#3D2800,#6B4500)", badge: "MANAGER", label: "매니저" },
-  3: { main: "#E8599A", dark: "#A0245E", glow: "rgba(232,89,154,0.4)",
-       grad: "linear-gradient(135deg,#3D0A20,#7A1540)", badge: "DIRECTOR", label: "디렉터" },
+  1: { main: "#6B7280", dark: "#374151", glow: "rgba(107,114,128,0.3)",
+       grad: "linear-gradient(135deg,#1a1c1e,#2a2d30)", badge: "MEMBER", label: "멤버", icon: "👤" },
+  2: { main: "#378ADD", dark: "#1A4A7A", glow: "rgba(55,138,221,0.4)",
+       grad: "linear-gradient(135deg,#0d1f35,#1a3a5c)", badge: "MANAGER", label: "매니저", icon: "👔" },
+  3: { main: "#E8599A", dark: "#7A1540", glow: "rgba(232,89,154,0.4)",
+       grad: "linear-gradient(135deg,#2a0516,#4a0d28)", badge: "DIRECTOR", label: "디렉터", icon: "👑" },
+};
+
+const FEE: Record<number, { label: string; amount: number; base: number }> = {
+  1: { label: "5만원+",   amount:  50000, base:  50000 },
+  2: { label: "330만원",  amount: 3300000, base: 3000000 },
+  3: { label: "550만원",  amount: 5500000, base: 5000000 },
 };
 
 export default function CommissionPlanModal({ onClose }: { onClose: () => void }) {
   const [plans, setPlans] = useState<PlanData[]>([]);
   const [loading, setLoading] = useState(true);
-  const [totalSales, setTotalSales] = useState(10000000);
+  const [totalSales, setTotalSales] = useState(50000000);
 
   useEffect(() => {
     async function load() {
@@ -37,24 +43,25 @@ export default function CommissionPlanModal({ onClose }: { onClose: () => void }
           .eq("is_active", true),
       ]);
       const rList = (rules as any[]) ?? [];
-      const sRule = rList.find(r => r.rule_type === "REFERRAL" && r.target_depth_from === 0 && !r.is_volume_only);
-      const rRule = rList.find(r => r.rule_type === "REFERRAL" && r.target_depth_from === 1 && !r.is_volume_only);
-      const oRule = rList.find(r => r.rule_type === "TEAM" && !r.is_volume_only);
-      const DEF: Record<number,{s:number,r:number,o:number}> = {
-        1:{s:25,r:5,o:0}, 2:{s:28,r:7,o:3}, 3:{s:32,r:10,o:8}
+      const sRule = rList.find(r => r.rule_type === "REFERRAL" && r.target_depth_from === 0);
+      const rRule = rList.find(r => r.rule_type === "REFERRAL" && r.target_depth_from === 1);
+
+      const DEF: Record<number, { s: number; r: number }> = {
+        1: { s: 32, r: 5 },
+        2: { s: 32, r: 10 },
+        3: { s: 32, r: 10 },
       };
       const rankList = (ranks && ranks.length > 0) ? ranks : [
-        {name:"파트너",level:1,color:"#378ADD",min_gv:50000,     min_direct_referral:0},
-        {name:"매니저",level:2,color:"#EF9F27",min_gv:5000000,   min_direct_referral:5},
-        {name:"디렉터",level:3,color:"#D4537E",min_gv:50000000,  min_direct_referral:3},
+        { name: "멤버",   level: 1, color: "#6B7280", min_gv: 50000,     min_direct_referral: 0 },
+        { name: "매니저", level: 2, color: "#378ADD", min_gv: 10000000,  min_direct_referral: 0 },
+        { name: "디렉터", level: 3, color: "#E8599A", min_gv: 20000000,  min_direct_referral: 3 },
       ];
       setPlans(rankList.map((r: any) => {
-        const d = DEF[r.level] ?? {s:0,r:0,o:0};
+        const d = DEF[r.level] ?? { s: 0, r: 0 };
         return {
           name: r.name, level: r.level, color: r.color,
           salesRate: sRule?.tiers?.find((t: any) => t.rank_level === r.level)?.rate ?? d.s,
           refRate:   rRule?.tiers?.find((t: any) => t.rank_level === r.level)?.rate ?? d.r,
-          overRate:  r.level >= 2 ? (oRule?.tiers?.find((t: any) => t.rank_level === r.level)?.rate ?? d.o) : 0,
           minGv: r.min_gv ?? 0, minDirect: r.min_direct_referral ?? 0,
         };
       }));
@@ -63,166 +70,224 @@ export default function CommissionPlanModal({ onClose }: { onClose: () => void }
     load();
   }, []);
 
-  const fmt = (n: number) => n >= 100000000 ? `${(n/100000000).toFixed(0)}억` : n >= 10000000 ? `${(n/10000000).toFixed(0)}천만` : n >= 10000 ? `${(n/10000).toFixed(0)}만` : `${n.toLocaleString()}`;
+  const fmt = (n: number) =>
+    n >= 100000000 ? `${(n / 100000000).toFixed(0)}억`
+    : n >= 10000000 ? `${(n / 10000000).toFixed(0)}천만`
+    : n >= 10000 ? `${(n / 10000).toFixed(0)}만`
+    : `${n.toLocaleString()}`;
 
   return (
     <div style={{
       position: "fixed", inset: 0, zIndex: 9999,
-      background: "rgba(0,0,0,0.85)", backdropFilter: "blur(12px)",
-      overflowY: "auto",
-      padding: "20px",
+      background: "rgba(0,0,0,0.88)", backdropFilter: "blur(14px)",
+      overflowY: "auto", padding: "20px",
     }} onClick={onClose}>
       <div onClick={e => e.stopPropagation()} style={{
-        width: "100%", maxWidth: "960px",
-        margin: "0 auto",
-        display: "flex", flexDirection: "column", gap: "20px",
-        paddingBottom: "20px",
+        width: "100%", maxWidth: "1000px", margin: "0 auto",
+        display: "flex", flexDirection: "column", gap: "20px", paddingBottom: "20px",
       }}>
+
         {/* 헤더 */}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <div>
-            <p style={{ fontSize: "11px", color: "rgba(255,255,255,0.4)", letterSpacing: "0.15em", textTransform: "uppercase", marginBottom: "4px" }}>Commission Structure</p>
-            <h2 style={{ fontFamily: "Syne,sans-serif", fontSize: "28px", fontWeight: 800, color: "#fff", margin: 0 }}>수당 플랜</h2>
+            <p style={{ fontSize: "11px", color: "rgba(255,255,255,0.35)", letterSpacing: "0.15em", textTransform: "uppercase", marginBottom: "4px" }}>
+              1대 오버라이드 구조 · 총 수당 재원 55%
+            </p>
+            <h2 style={{ fontFamily: "Syne,sans-serif", fontSize: "26px", fontWeight: 800, color: "#fff", margin: 0 }}>수당 플랜</h2>
           </div>
           <button onClick={onClose} style={{
             width: 40, height: 40, borderRadius: "50%",
-            background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.12)",
+            background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.12)",
             display: "flex", alignItems: "center", justifyContent: "center",
-            cursor: "pointer", color: "rgba(255,255,255,0.6)", transition: "all 0.2s",
-          }}
-            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.15)"; (e.currentTarget as HTMLElement).style.color = "#fff"; }}
-            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.08)"; (e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.6)"; }}
-          ><X size={16} /></button>
+            cursor: "pointer", color: "rgba(255,255,255,0.5)",
+          }}>
+            <X size={16} />
+          </button>
+        </div>
+
+        {/* 핵심 룰 배너 */}
+        <div style={{
+          background: "rgba(255,215,0,0.07)", border: "1px solid rgba(255,215,0,0.3)",
+          borderRadius: "14px", padding: "14px 20px",
+          display: "flex", alignItems: "center", gap: "12px",
+        }}>
+          <span style={{ fontSize: "22px" }}>⚡</span>
+          <div>
+            <p style={{ fontSize: "13px", fontWeight: 800, color: "#FFD700", margin: 0 }}>직추천 1대에서만 수당 발생</p>
+            <p style={{ fontSize: "11px", color: "rgba(255,255,255,0.4)", margin: 0 }}>
+              내가 직접 추천한 창업자 창업비에서만 · 그 이하 조직은 각자 수령
+            </p>
+          </div>
         </div>
 
         {loading ? (
           <div style={{ textAlign: "center", padding: "60px", color: "rgba(255,255,255,0.4)" }}>불러오는 중...</div>
-        ) : (
-          <>
-            {/* 직급 카드 3개 */}
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: "16px" }}>
-              {plans.map((p) => {
-                const s = STYLES[p.level] ?? STYLES[1];
-                const total = p.salesRate + p.refRate + p.overRate;
-                return (
-                  <div key={p.level} style={{
-                    background: s.grad,
-                    border: `1px solid ${s.main}44`,
-                    borderRadius: "24px", padding: "28px 24px",
-                    position: "relative", overflow: "hidden",
-                    boxShadow: `0 0 40px ${s.glow}`,
-                  }}>
-                    {/* 배경 글로우 */}
-                    <div style={{ position: "absolute", top: -60, right: -60, width: 200, height: 200, borderRadius: "50%", background: s.main, opacity: 0.08, pointerEvents: "none" }} />
-                    <div style={{ position: "absolute", bottom: -40, left: -40, width: 140, height: 140, borderRadius: "50%", background: s.dark, opacity: 0.15, pointerEvents: "none" }} />
+        ) : (<>
 
-                    {/* 뱃지 + 직급명 */}
-                    <div style={{ position: "relative" }}>
-                      <span style={{ display: "inline-block", padding: "3px 10px", borderRadius: "999px", fontSize: "10px", fontWeight: 800, letterSpacing: "0.12em", color: s.main, background: `${s.main}20`, border: `1px solid ${s.main}44`, marginBottom: "10px" }}>{s.badge}</span>
-                      <h3 style={{ fontFamily: "Syne,sans-serif", fontSize: "26px", fontWeight: 800, color: "#fff", margin: "0 0 20px" }}>{p.name}</h3>
+          {/* 직급 카드 3개 */}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(270px, 1fr))", gap: "16px" }}>
+            {plans.map((p) => {
+              const s = STYLES[p.level] ?? STYLES[1];
+              const fee = FEE[p.level];
+              const base = fee?.base ?? 0;
+              const salesAmt = Math.floor(base * p.salesRate / 100);
+              const refAmt   = Math.floor(base * p.refRate / 100);
+              const fast     = Math.floor(base * 5 / 100);
+              const first    = Math.floor(base * 3 / 100);
 
-                      {/* 합계 % 대형 표시 */}
-                      <div style={{ display: "flex", alignItems: "baseline", gap: "4px", marginBottom: "20px" }}>
-                        <span style={{ fontFamily: "Syne,sans-serif", fontSize: "56px", fontWeight: 900, color: s.main, lineHeight: 1 }}>{total}</span>
-                        <span style={{ fontSize: "24px", fontWeight: 700, color: s.main, opacity: 0.8 }}>%</span>
-                        <span style={{ fontSize: "12px", color: "rgba(255,255,255,0.4)", marginLeft: "8px", alignSelf: "center" }}>총 수당률</span>
-                      </div>
+              return (
+                <div key={p.level} style={{
+                  background: s.grad,
+                  border: `1px solid ${s.main}44`,
+                  borderRadius: "24px", padding: "28px 24px",
+                  position: "relative", overflow: "hidden",
+                  boxShadow: `0 0 40px ${s.glow}`,
+                }}>
+                  <div style={{ position: "absolute", top: -60, right: -60, width: 200, height: 200, borderRadius: "50%", background: s.main, opacity: 0.06, pointerEvents: "none" }} />
 
-                      {/* 수당 항목 */}
-                      <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "22px" }}>
-                        {[
-                          { label: "① 내 판매 수당", val: p.salesRate, color: "#4FA3E8" },
-                          { label: "② 추천 수당",    val: p.refRate,   color: "#F5A623" },
-                          { label: "③ 오버라이딩",  val: p.overRate,  color: "#E8599A", hide: p.level < 2 },
-                        ].map(({ label, val, color, hide }) => hide ? null : (
-                          <div key={label} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "9px 12px", borderRadius: "10px", background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.08)" }}>
-                            <span style={{ fontSize: "12px", color: "rgba(255,255,255,0.65)", fontWeight: 500 }}>{label}</span>
-                            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                              <div style={{ width: `${Math.max(val * 2.5, 4)}px`, height: "4px", borderRadius: "2px", background: color, opacity: 0.7 }} />
-                              <span style={{ fontSize: "16px", fontWeight: 800, color, minWidth: "40px", textAlign: "right" }}>{val > 0 ? `${val}%` : "—"}</span>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-
-                      {/* 승급 조건 */}
-                      <div style={{ padding: "12px 14px", borderRadius: "12px", background: "rgba(0,0,0,0.25)", border: "1px solid rgba(255,255,255,0.07)" }}>
-                        <p style={{ fontSize: "10px", color: "rgba(255,255,255,0.35)", fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: "8px" }}>승급 조건</p>
-                        {p.level === 1 ? (
-                          <p style={{ fontSize: "13px", color: "rgba(255,255,255,0.7)" }}>5만원 이상 구매 후 즉시</p>
-                        ) : (
-                          <div style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
-                            <div style={{ display: "flex", justifyContent: "space-between" }}>
-                              <span style={{ fontSize: "12px", color: "rgba(255,255,255,0.5)" }}>직접 추천</span>
-                              <span style={{ fontSize: "13px", fontWeight: 700, color: s.main }}>{p.minDirect}명 이상</span>
-                            </div>
-                            <div style={{ display: "flex", justifyContent: "space-between" }}>
-                              <span style={{ fontSize: "12px", color: "rgba(255,255,255,0.5)" }}>누적 매출</span>
-                              <span style={{ fontSize: "13px", fontWeight: 700, color: s.main }}>{fmt(p.minGv)}원 달성</span>
-                            </div>
-                          </div>
-                        )}
-                      </div>
+                  {/* 아이콘 + 직급명 */}
+                  <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "6px" }}>
+                    <span style={{ fontSize: "36px" }}>{s.icon}</span>
+                    <div>
+                      <span style={{ display: "inline-block", padding: "2px 8px", borderRadius: "999px", fontSize: "9px", fontWeight: 800, letterSpacing: "0.1em", color: s.main, background: `${s.main}20`, border: `1px solid ${s.main}40` }}>{s.badge}</span>
+                      <h3 style={{ fontFamily: "Syne,sans-serif", fontSize: "22px", fontWeight: 800, color: "#fff", margin: "2px 0 0" }}>{p.name}</h3>
+                    </div>
+                    <div style={{ marginLeft: "auto", textAlign: "right" }}>
+                      <p style={{ fontSize: "11px", color: "rgba(255,255,255,0.4)", margin: 0 }}>창업비</p>
+                      <p style={{ fontSize: "16px", fontWeight: 800, color: s.main, margin: 0 }}>{fee?.label}</p>
                     </div>
                   </div>
-                );
-              })}
-            </div>
 
-            {/* 마케팅 지원비 5% */}
-            <div style={{ background: "rgba(167,139,250,0.07)", border: "1px solid rgba(167,139,250,0.2)", borderRadius: "20px", padding: "22px 24px" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "16px" }}>
-                <div style={{ width: 36, height: 36, borderRadius: "10px", background: "rgba(167,139,250,0.15)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                  <Zap size={18} color="#A78BFA" />
-                </div>
-                <div>
-                  <p style={{ fontSize: "14px", fontWeight: 700, color: "#A78BFA", margin: 0 }}>마케팅 지원비 5%</p>
-                  <p style={{ fontSize: "11px", color: "rgba(255,255,255,0.35)", margin: 0 }}>전체 월 매출에서 별도 적립 — 총 수당 재원 55% 구성</p>
-                </div>
-                <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: "8px" }}>
-                  <span style={{ fontSize: "11px", color: "rgba(255,255,255,0.4)" }}>월매출 기준</span>
-                  <input type="number" value={totalSales} onChange={e => setTotalSales(Number(e.target.value))}
-                    style={{ width: "110px", padding: "6px 10px", borderRadius: "8px", background: "rgba(255,255,255,0.06)", border: "1px solid rgba(167,139,250,0.3)", color: "#A78BFA", fontSize: "13px", fontWeight: 700, outline: "none", textAlign: "right" }} />
-                  <span style={{ fontSize: "12px", color: "rgba(255,255,255,0.4)" }}>원</span>
-                </div>
-              </div>
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "12px" }}>
-                {[
-                  { label: "매니저 풀", pct: 2, color: "#F5A623", icon: "👔", desc: "매니저 전원 N분의1 균등" },
-                  { label: "디렉터 풀", pct: 2, color: "#E8599A", icon: "👑", desc: "디렉터 전원 N분의1 균등" },
-                  { label: "관리자 재량", pct: 1, color: "#A78BFA", icon: "🎯", desc: "추첨·이벤트·특별 지급" },
-                ].map(({ label, pct, color, icon, desc }) => (
-                  <div key={label} style={{ background: "rgba(255,255,255,0.04)", border: `1px solid ${color}33`, borderRadius: "14px", padding: "16px" }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "10px" }}>
-                      <span style={{ fontSize: "20px" }}>{icon}</span>
-                      <span style={{ fontSize: "12px", fontWeight: 700, color }}>{label}</span>
-                      <span style={{ marginLeft: "auto", padding: "2px 8px", borderRadius: "999px", fontSize: "11px", fontWeight: 800, background: `${color}20`, color, border: `1px solid ${color}33` }}>{pct}%</span>
-                    </div>
-                    <p style={{ fontFamily: "Syne,sans-serif", fontSize: "22px", fontWeight: 800, color, marginBottom: "4px" }}>
-                      {(totalSales * pct / 100).toLocaleString()}원
+                  {/* 수당 항목 */}
+                  <div style={{ display: "flex", flexDirection: "column", gap: "8px", margin: "18px 0" }}>
+                    {[
+                      { label: "① 직판 수당",        rate: p.salesRate, amt: salesAmt, color: "#4FA3E8", show: p.level >= 2 },
+                      { label: "② 추천 오버라이드",   rate: p.refRate,   amt: refAmt,   color: "#F5A623", show: true },
+                      { label: "④ 패스트 스타트",     rate: 5,           amt: fast,     color: "#10B981", show: p.level >= 2 },
+                      { label: "⑤ 팀원 첫모집",       rate: 3,           amt: first,    color: "#F472B6", show: p.level >= 2 },
+                    ].filter(i => i.show).map(({ label, rate, amt, color }) => (
+                      <div key={label} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "9px 12px", borderRadius: "10px", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.07)" }}>
+                        <span style={{ fontSize: "11px", color: "rgba(255,255,255,0.6)", fontWeight: 500 }}>{label}</span>
+                        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                          <span style={{ fontSize: "11px", color: "rgba(255,255,255,0.3)" }}>{amt > 0 ? `${amt.toLocaleString()}원` : ""}</span>
+                          <span style={{ fontSize: "15px", fontWeight: 800, color, minWidth: "38px", textAlign: "right" }}>{rate > 0 ? `${rate}%` : "5%"}</span>
+                        </div>
+                      </div>
+                    ))}
+                    {/* 멤버는 소개 수당만 */}
+                    {p.level === 1 && (
+                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "9px 12px", borderRadius: "10px", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.07)" }}>
+                        <span style={{ fontSize: "11px", color: "rgba(255,255,255,0.6)", fontWeight: 500 }}>③ 창업자 소개 수당</span>
+                        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                          <span style={{ fontSize: "11px", color: "rgba(255,255,255,0.3)" }}>매니저 15만 / 디렉터 25만</span>
+                          <span style={{ fontSize: "15px", fontWeight: 800, color: "#F5A623", minWidth: "38px", textAlign: "right" }}>5%</span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* 승급 조건 */}
+                  <div style={{ padding: "12px 14px", borderRadius: "12px", background: "rgba(0,0,0,0.25)", border: "1px solid rgba(255,255,255,0.07)" }}>
+                    <p style={{ fontSize: "10px", color: "rgba(255,255,255,0.3)", fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: "8px" }}>
+                      {p.level === 1 ? "가입 조건" : p.level === 2 ? "가입 조건 (또는 멤버 승급)" : "승급 조건"}
                     </p>
-                    <p style={{ fontSize: "11px", color: "rgba(255,255,255,0.35)", margin: 0 }}>{desc}</p>
+                    {p.level === 1 ? (
+                      <p style={{ fontSize: "13px", color: "rgba(255,255,255,0.7)", margin: 0 }}>5만원 이상 구매 즉시</p>
+                    ) : p.level === 2 ? (
+                      <p style={{ fontSize: "13px", color: "rgba(255,255,255,0.7)", margin: 0 }}>소매 창업 330만원 <span style={{ color: "rgba(255,255,255,0.4)" }}>또는</span> 소개 누적 창업비 1,000만원</p>
+                    ) : (
+                      <div style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
+                        <div style={{ display: "flex", justifyContent: "space-between" }}>
+                          <span style={{ fontSize: "11px", color: "rgba(255,255,255,0.4)" }}>직추천 매니저</span>
+                          <span style={{ fontSize: "13px", fontWeight: 700, color: s.main }}>3명 이상</span>
+                        </div>
+                        <div style={{ display: "flex", justifyContent: "space-between" }}>
+                          <span style={{ fontSize: "11px", color: "rgba(255,255,255,0.4)" }}>산하 전체 누적 매출</span>
+                          <span style={{ fontSize: "13px", fontWeight: 700, color: s.main }}>{fmt(p.minGv)}원</span>
+                        </div>
+                        <div style={{ display: "flex", justifyContent: "space-between" }}>
+                          <span style={{ fontSize: "11px", color: "rgba(255,255,255,0.4)" }}>또는 도매 창업</span>
+                          <span style={{ fontSize: "13px", fontWeight: 700, color: s.main }}>550만원</span>
+                        </div>
+                      </div>
+                    )}
                   </div>
-                ))}
-              </div>
-              <div style={{ marginTop: "12px", display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 14px", borderRadius: "10px", background: "rgba(167,139,250,0.08)", border: "1px solid rgba(167,139,250,0.15)" }}>
-                <span style={{ fontSize: "13px", color: "rgba(255,255,255,0.5)" }}>마케팅 지원비 합계 (5%)</span>
-                <span style={{ fontFamily: "Syne,sans-serif", fontSize: "20px", fontWeight: 800, color: "#A78BFA" }}>{(totalSales * 5 / 100).toLocaleString()}원</span>
-              </div>
-            </div>
+                </div>
+              );
+            })}
+          </div>
 
-            {/* 하단 안내 */}
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "8px" }}>
-              <p style={{ fontSize: "11px", color: "rgba(255,255,255,0.25)", margin: 0 }}>
-                추천 수당 · 오버라이딩은 직접 추천한 사람의 판매분에서만 발생 &nbsp;|&nbsp; 직급 미활동 3개월 지속 시 하위 직급 조정
-              </p>
-              <div style={{ display: "flex", alignItems: "center", gap: "6px", padding: "6px 14px", borderRadius: "999px", background: "rgba(201,168,76,0.1)", border: "1px solid rgba(201,168,76,0.2)" }}>
-                <span style={{ fontSize: "12px", color: "rgba(201,168,76,0.8)" }}>총 수당 재원</span>
-                <span style={{ fontFamily: "Syne,sans-serif", fontSize: "16px", fontWeight: 800, color: "#C9A84C" }}>55%</span>
+          {/* 수당 플랜 배분 바 */}
+          <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: "20px", padding: "22px 24px" }}>
+            <p style={{ fontSize: "12px", color: "rgba(255,255,255,0.35)", fontWeight: 700, marginBottom: "14px", letterSpacing: "0.08em" }}>창업비 100% 배분 구조</p>
+            <div style={{ display: "flex", height: "28px", borderRadius: "8px", overflow: "hidden", gap: "2px", marginBottom: "10px" }}>
+              {[
+                { label: "직판 32%", w: 32, color: "#4FA3E8" },
+                { label: "추천 10%", w: 10, color: "#F5A623" },
+                { label: "패스트 5%", w: 5,  color: "#10B981" },
+                { label: "팀원 3%",  w: 3,  color: "#F472B6" },
+                { label: "풀 5%",   w: 5,  color: "#A78BFA" },
+                { label: "회사 45%", w: 45, color: "rgba(255,255,255,0.06)" },
+              ].map(({ label, w, color }) => (
+                <div key={label} style={{ width: `${w}%`, background: color, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "9px", fontWeight: 800, color: color.startsWith("rgba") ? "rgba(255,255,255,0.25)" : "#fff", whiteSpace: "nowrap", overflow: "hidden" }}>
+                  {w >= 5 ? label : ""}
+                </div>
+              ))}
+            </div>
+            <div style={{ display: "flex", justifyContent: "space-between" }}>
+              <span style={{ fontSize: "11px", fontWeight: 700, color: "#C9A84C" }}>수당 합계 55%</span>
+              <span style={{ fontSize: "11px", color: "rgba(255,255,255,0.3)" }}>회사 수익 45%</span>
+            </div>
+          </div>
+
+          {/* 5% 풀 */}
+          <div style={{ background: "rgba(167,139,250,0.06)", border: "1px solid rgba(167,139,250,0.2)", borderRadius: "20px", padding: "22px 24px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "16px" }}>
+              <Zap size={18} color="#A78BFA" />
+              <div>
+                <p style={{ fontSize: "14px", fontWeight: 700, color: "#A78BFA", margin: 0 }}>전체 창업비 매출 5% 풀</p>
+                <p style={{ fontSize: "11px", color: "rgba(255,255,255,0.35)", margin: 0 }}>매달 전체 창업비 합계에서 별도 적립</p>
+              </div>
+              <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: "6px" }}>
+                <span style={{ fontSize: "11px", color: "rgba(255,255,255,0.35)" }}>월 창업비 총액</span>
+                <input type="number" value={totalSales} onChange={e => setTotalSales(Number(e.target.value))}
+                  style={{ width: "120px", padding: "6px 10px", borderRadius: "8px", background: "rgba(255,255,255,0.06)", border: "1px solid rgba(167,139,250,0.3)", color: "#A78BFA", fontSize: "13px", fontWeight: 700, outline: "none", textAlign: "right" }} />
+                <span style={{ fontSize: "11px", color: "rgba(255,255,255,0.35)" }}>원</span>
               </div>
             </div>
-          </>
-        )}
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: "12px" }}>
+              {[
+                { label: "매니저 풀", pct: 2, color: "#378ADD", icon: "👔", desc: "매니저 전원 N분의1 균등" },
+                { label: "디렉터 풀", pct: 2, color: "#E8599A", icon: "👑", desc: "디렉터 전원 N분의1 균등" },
+                { label: "회사 재량", pct: 1, color: "#A78BFA", icon: "🎯", desc: "이벤트·포상·특별 지급" },
+              ].map(({ label, pct, color, icon, desc }) => (
+                <div key={label} style={{ background: "rgba(255,255,255,0.04)", border: `1px solid ${color}30`, borderRadius: "14px", padding: "16px" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "10px" }}>
+                    <span style={{ fontSize: "20px" }}>{icon}</span>
+                    <span style={{ fontSize: "12px", fontWeight: 700, color }}>{label}</span>
+                    <span style={{ marginLeft: "auto", padding: "2px 8px", borderRadius: "999px", fontSize: "11px", fontWeight: 800, background: `${color}20`, color, border: `1px solid ${color}30` }}>{pct}%</span>
+                  </div>
+                  <p style={{ fontFamily: "Syne,sans-serif", fontSize: "22px", fontWeight: 800, color, marginBottom: "4px" }}>
+                    {Math.floor(totalSales * pct / 100).toLocaleString()}원
+                  </p>
+                  <p style={{ fontSize: "11px", color: "rgba(255,255,255,0.35)", margin: 0 }}>{desc}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* 하단 */}
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "8px" }}>
+            <p style={{ fontSize: "11px", color: "rgba(255,255,255,0.2)", margin: 0 }}>
+              수당은 직접 추천한 창업자 1대에서만 발생 · 승급은 산하 전체 볼륨 합산
+            </p>
+            <div style={{ display: "flex", alignItems: "center", gap: "6px", padding: "6px 14px", borderRadius: "999px", background: "rgba(201,168,76,0.1)", border: "1px solid rgba(201,168,76,0.25)" }}>
+              <span style={{ fontSize: "12px", color: "rgba(201,168,76,0.7)" }}>총 수당 재원</span>
+              <span style={{ fontFamily: "Syne,sans-serif", fontSize: "16px", fontWeight: 800, color: "#C9A84C" }}>55%</span>
+            </div>
+          </div>
+
+        </>)}
       </div>
     </div>
   );
