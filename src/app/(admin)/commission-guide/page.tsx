@@ -70,14 +70,16 @@ function MoneyBadge({ amount, color, label }: { amount: string; color: string; l
 
 const SCENARIOS = [
   {
-    title: "🌱 입문 — 매니저 첫 달",
+    title: "🌱 입문 — 본인 창업 후 첫 모집",
     color: "#378ADD",
     basis: "매니저 창업 (300만원)",
     items: [
-      { label: "판권 25% (소개수수료)",   amount:  750000, note: "300만 × 25% (1회)" },
-      { label: "패스트 스타트 3%",        amount:   90000, note: "90일 미션 달성 시" },
+      { label: "① 내 창업 판권 25%",           amount: 750000, note: "본인 창업 시 1회 수령" },
+      { label: "② 첫 창업자 모집 판권 25%",     amount: 750000, note: "매니저 1명 소개 → 300만 × 25%" },
+      { label: "③ 관리비용 (팀원 판권×10%)",    amount:  75000, note: "팀원이 판권 받을 때마다 지속" },
+      { label: "④ 패스트 스타트 3%",            amount:  90000, note: "90일 미션 달성 시" },
     ],
-    total: 840000,
+    total: 1665000,
   },
   {
     title: "📈 성장 — 매니저 3명 소개",
@@ -528,6 +530,14 @@ export default function CommissionGuidePage() {
                 <p style={{ fontSize: "11px", color: "var(--text-muted)", marginTop: "10px", textAlign: "right" }}>
                   실수령 약 {Math.floor(s.total * 0.967).toLocaleString()}원 (세후)
                 </p>
+                {activeScenario === 0 && (
+                  <div style={{ display: "flex", alignItems: "center", gap: "8px", marginTop: "12px", padding: "12px 14px", borderRadius: "12px", background: "rgba(255,215,0,0.07)", border: "1px solid rgba(255,215,0,0.3)" }}>
+                    <span style={{ fontSize: "16px" }}>💡</span>
+                    <p style={{ fontSize: "12px", fontWeight: 700, color: "#C9A84C", margin: 0 }}>
+                      창업만 하면 1회성 수입 — 창업자를 모집해야 관리비용이 매달 지속됩니다
+                    </p>
+                  </div>
+                )}
               </div>
             </div>
           ))}

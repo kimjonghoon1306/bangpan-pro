@@ -69,13 +69,16 @@ const COMMISSIONS = [
 
 const SCENARIOS = [
   {
-    title: "🌱 입문 — 매니저 첫 달",
+    title: "🌱 입문 — 매니저 창업 후 첫 모집",
     color: "#378ADD", rank: "매니저", basis: "창업비 300만원 기준",
     items: [
-      { label: "판권 25%",          amount:  750000, note: "300만 × 25% (1회)" },
-      { label: "패스트 스타트 3%",  amount:   90000, note: "90일 미션 달성 시" },
+      { label: "① 내 창업 판권 25%",          amount: 750000, note: "내가 창업 시 1회 수령" },
+      { label: "② 첫 창업자 모집 판권 25%",    amount: 750000, note: "매니저 1명 소개 → 300만 × 25%" },
+      { label: "③ 관리비용 (모집자 판권×10%)", amount:  75000, note: "팀원이 판권 받을 때마다 지속" },
+      { label: "④ 패스트 스타트 3%",           amount:  90000, note: "90일 미션 달성 시" },
     ],
-    total: 840000,
+    total: 1665000,
+    tip: "창업만 하면 1회성 — 모집해야 관리비용이 계속 들어옵니다",
   },
   {
     title: "📈 성장 — 매니저 3명 소개",
@@ -331,6 +334,12 @@ export default function CommissionGuideModal({ onClose }: { onClose: () => void 
                     <p style={{ fontSize: "11px", color: "var(--text-muted)", margin: 0 }}>원</p>
                   </div>
                 </div>
+                {(s as any).tip && (
+                  <div style={{ display: "flex", alignItems: "center", gap: "8px", padding: "10px 12px", borderRadius: "10px", background: "rgba(255,215,0,0.07)", border: "1px solid rgba(255,215,0,0.25)" }}>
+                    <span style={{ fontSize: "14px" }}>💡</span>
+                    <p style={{ fontSize: "11px", fontWeight: 700, color: "#C9A84C", margin: 0 }}>{(s as any).tip}</p>
+                  </div>
+                )}
               </div>
             ))}
           </div>
