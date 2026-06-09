@@ -72,7 +72,7 @@ export default function AdminLoginPage() {
           <h1 style={{ fontFamily: "Syne, sans-serif", fontSize: "22px", fontWeight: 800, color: "var(--text-primary)" }}>
             관리자 로그인
           </h1>
-          <p style={{ fontSize: "13px", color: "var(--text-muted)", marginTop: "4px" }}>BangpanPRO Admin</p>
+          <p style={{ fontSize: "13px", color: "var(--text-muted)", marginTop: "4px" }}>온종일 프로젝트 Admin</p>
         </div>
 
         <div className="animate-slide-up delay-100" style={{

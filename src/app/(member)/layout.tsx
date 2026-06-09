@@ -73,7 +73,7 @@ export default function MemberLayout({ children }: { children: React.ReactNode }
                 <polyline points="16,7 22,7 22,13" stroke="var(--gold)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
             </div>
-            <span style={{ fontFamily: "Syne,sans-serif", fontWeight: 800, fontSize: "14px", color: "var(--text-primary)" }}>BangpanPRO</span>
+            <span style={{ fontFamily: "Syne,sans-serif", fontWeight: 800, fontSize: "14px", color: "var(--text-primary)" }}>온종일 프로젝트</span>
           </div>
 
           {/* PC 네비 */}

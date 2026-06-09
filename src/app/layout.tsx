@@ -4,8 +4,8 @@ import ToasterProvider from "@/components/ui/ToasterProvider";
 
 export const metadata: Metadata = {
   title: {
-    template: "%s | BangpanPRO",
-    default: "BangpanPRO — 방문판매 수당전산",
+    template: "%s | 온종일 프로젝트",
+    default: "온종일 프로젝트 — 방문판매 수당전산",
   },
   description: "고성능 방문판매 수당 관리 플랫폼",
 };

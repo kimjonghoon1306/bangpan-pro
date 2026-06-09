@@ -93,7 +93,7 @@ export default function LoginPage() {
           <div style={{ width:60,height:60,borderRadius:"16px",margin:"0 auto 16px",background:"rgba(201,168,76,0.1)",border:"1px solid rgba(201,168,76,0.2)",display:"flex",alignItems:"center",justifyContent:"center" }}>
             <TrendingUp size={28} color="var(--gold)" />
           </div>
-          <h1 style={{ fontFamily:"Syne,sans-serif",fontSize:"26px",fontWeight:800,color:"var(--text-primary)" }}>BangpanPRO</h1>
+          <h1 style={{ fontFamily:"Syne,sans-serif",fontSize:"26px",fontWeight:800,color:"var(--text-primary)" }}>온종일 프로젝트</h1>
           <p style={{ fontSize:"13px",color:"var(--text-muted)",marginTop:"4px" }}>방문판매 수당 관리 플랫폼</p>
         </div>
 
@@ -138,7 +138,7 @@ export default function LoginPage() {
             <button style={{ background:"none",border:"none",cursor:"pointer",fontSize:"13px",color:"var(--text-muted)" }}>비밀번호 찾기</button>
           </div>
         </div>
-        <p style={{ textAlign:"center",fontSize:"12px",color:"var(--text-muted)",marginTop:"24px" }}>© 2024 BangpanPRO. All rights reserved.</p>
+        <p style={{ textAlign:"center",fontSize:"12px",color:"var(--text-muted)",marginTop:"24px" }}>© 2024 온종일 프로젝트. All rights reserved.</p>
       </div>
     </div>
   );

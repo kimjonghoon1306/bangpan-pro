@@ -126,7 +126,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 </svg>
               </div>
               <div>
-                <p style={{ fontFamily: "Syne,sans-serif", fontWeight: 800, fontSize: "14px", color: "var(--text-primary)", lineHeight: 1.2 }}>BangpanPRO</p>
+                <p style={{ fontFamily: "Syne,sans-serif", fontWeight: 800, fontSize: "14px", color: "var(--text-primary)", lineHeight: 1.2 }}>온종일 프로젝트</p>
                 <p style={{ fontSize: "10px", color: "var(--text-muted)", letterSpacing: "0.05em" }}>ADMIN</p>
               </div>
             </div>
