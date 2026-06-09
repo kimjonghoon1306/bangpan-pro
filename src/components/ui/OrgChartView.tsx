@@ -6,7 +6,7 @@ export interface OrgChartNode {
   name: string;
   rankLabel: string;
   color: string;
-  sub?: string;        // 보조 텍스트 (예: "산하GV 2,000만")
+  sub?: string;        // 보조 텍스트 (예: "그룹실적 2,000만")
   badge?: string;      // 우상단 뱃지 (예: "판권 30만")
   badgeColor?: string;
   isSelf?: boolean;

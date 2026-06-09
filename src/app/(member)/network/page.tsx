@@ -10,7 +10,7 @@ function toChartNode(n: TreeMember): OrgChartNode {
   const fmtGv = (g: number) => g >= 10000000 ? `${(g/10000000).toFixed(1)}천만` : g >= 10000 ? `${(g/10000).toFixed(0)}만` : `${g.toLocaleString()}`;
   return {
     id: n.id, name: n.name, rankLabel: n.rank, color: n.rank_color,
-    sub: `GV ${fmtGv(n.group_gv)}`, isSelf: n.isSelf,
+    sub: `그룹실적 ${fmtGv(n.group_gv)}`, isSelf: n.isSelf,
     children: n.children?.map(toChartNode),
   };
 }
@@ -127,7 +127,7 @@ function TreeNode({ node, depth = 0, isDemo = false }: { node: TreeMember; depth
               창업비 <strong style={{ color: "var(--text-secondary)" }}>{node.personal_pv >= 1000000 ? `${(node.personal_pv/10000).toFixed(0)}만` : `${(node.personal_pv/10000)}만`}</strong>
             </span>
             <span style={{ fontSize: "10px", color: "var(--text-muted)" }}>
-              산하GV <strong style={{ color: "var(--emerald)" }}>{node.group_gv >= 10000000 ? `${(node.group_gv/10000000).toFixed(1)}천만` : `${(node.group_gv/10000).toFixed(0)}만`}</strong>
+              그룹실적 <strong style={{ color: "var(--emerald)" }}>{node.group_gv >= 10000000 ? `${(node.group_gv/10000000).toFixed(1)}천만` : `${(node.group_gv/10000).toFixed(0)}만`}</strong>
             </span>
           </div>
         </div>
@@ -168,12 +168,12 @@ function DemoModal({ onClose }: { onClose: () => void }) {
           </button>
         </div>
 
-        {/* GV 설명 */}
+        {/* 그룹실적 설명 */}
         <div style={{ background: "rgba(16,185,129,0.07)", border: "1px solid rgba(16,185,129,0.25)", borderRadius: "14px", padding: "14px 16px" }}>
-          <p style={{ fontSize: "13px", fontWeight: 800, color: "#10B981", margin: "0 0 8px" }}>📊 산하 GV(그룹볼륨)란?</p>
+          <p style={{ fontSize: "13px", fontWeight: 800, color: "#10B981", margin: "0 0 8px" }}>📊 그룹실적(산하볼륨)이란?</p>
           <p style={{ fontSize: "12px", color: "var(--text-secondary)", margin: 0, lineHeight: 1.6 }}>
             나 + 내 하위 조직 전체의 창업비 합산 금액입니다.<br/>
-            승급 조건에 사용되며, 팀이 클수록 GV가 높아집니다.
+            승급 조건에 사용되며, 팀이 클수록 그룹실적이 높아집니다.
           </p>
         </div>
 
@@ -182,7 +182,7 @@ function DemoModal({ onClose }: { onClose: () => void }) {
           {[
             { label: "직접 추천", value: `${DEMO_STATS.direct}명`, color: "#C9A84C", desc: "내가 직접 모집" },
             { label: "전체 하위", value: `${DEMO_STATS.total}명`, color: "#4FA3E8", desc: "모든 산하 인원" },
-            { label: "산하 GV", value: "2,155만", color: "#10B981", desc: "전체 볼륨 합계" },
+            { label: "그룹실적", value: "2,155만", color: "#10B981", desc: "전체 볼륨 합계" },
           ].map(s => (
             <div key={s.label} style={{ background: "var(--bg-elevated)", border: "1px solid var(--bg-border)", borderRadius: "12px", padding: "12px", textAlign: "center" }}>
               <p style={{ fontSize: "10px", color: "var(--text-muted)", margin: 0 }}>{s.label}</p>
@@ -393,7 +393,7 @@ export default function NetworkPage() {
         {[
           { label: "직접 추천", value: `${stats.direct}명`, icon: Users, color: "var(--gold)" },
           { label: "전체 하위", value: `${stats.total}명`, icon: GitBranch, color: "#4F8EF7" },
-          { label: "그룹 GV", value: stats.gv >= 10000000 ? `${(stats.gv/10000000).toFixed(1)}천만` : stats.gv >= 10000 ? `${(stats.gv/10000).toFixed(0)}만` : stats.gv.toLocaleString(), icon: TrendingUp, color: "var(--emerald)" },
+          { label: "그룹실적", value: stats.gv >= 10000000 ? `${(stats.gv/10000000).toFixed(1)}천만` : stats.gv >= 10000 ? `${(stats.gv/10000).toFixed(0)}만` : stats.gv.toLocaleString(), icon: TrendingUp, color: "var(--emerald)" },
         ].map((s) => (
           <div key={s.label} style={{ background: "var(--bg-elevated)", border: "1px solid var(--bg-border)", borderRadius: "14px", padding: "14px 12px", display: "flex", alignItems: "center", gap: "10px" }}>
             <s.icon size={18} color={s.color} />

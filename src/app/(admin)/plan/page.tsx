@@ -17,7 +17,7 @@ const GUIDE_ITEMS = [
     desc: "멤버·매니저·디렉터 3개 카드에서 각 직급의 수당 비율을 한눈에 확인합니다.",
     steps: [
       "수정하기 버튼 클릭 → 해당 카드가 활성화됩니다",
-      "① 직판 수당 / ② 추천 오버라이드(1대) % 숫자를 직접 수정",
+      "① 판권(소개수수료) / ② 관리비용(오버라이드) % 숫자를 직접 수정",
       "승급 조건(직추천 수, 누적 매출)도 같은 화면에서 수정 가능",
       "저장 버튼 클릭 → DB에 즉시 반영",
     ],
@@ -29,9 +29,9 @@ const GUIDE_ITEMS = [
     title: "수당 구조 한눈에 보기",
     desc: "모든 직급의 수당 항목과 승급 조건을 표 형태로 비교합니다.",
     steps: [
-      "직급별 직판수당·추천오버라이드·패스트스타트·팀원첫모집 비율 한 번에 확인",
+      "직급별 판권·관리비용·패스트스타트·팀원첫모집 비율 한 번에 확인",
       "합계 % 와 승급 조건(직추천·누적매출)도 표시",
-      "총 수당 재원이 54%를 초과하면 경고 표시",
+      "총 수당 재원: 관리자 55% / 회원 표시 54% (회사재량 1% 차이)",
     ],
   },
   {
@@ -176,8 +176,8 @@ const RANK_STYLE: Record<number, { main: string; bg: string; border: string; sha
 };
 
 const ITEM_COLORS = {
-  sales: { main: "#378ADD", bg: "rgba(55,138,221,0.10)", label: "① 직판 수당 (본인)" },
-  ref:   { main: "#EF9F27", bg: "rgba(239,159,39,0.10)",  label: "② 추천 오버라이드 (1대)" },
+  sales: { main: "#4FA3E8", bg: "rgba(79,163,232,0.10)", label: "① 판권 (소개수수료)" },
+  ref:   { main: "#EF9F27", bg: "rgba(239,159,39,0.10)",  label: "② 관리비용 (오버라이드)" },
   over:  { main: "#D4537E", bg: "rgba(212,83,126,0.10)", label: "③ 오버라이딩" },
 };
 
@@ -238,14 +238,17 @@ export default function PlanPage() {
     ]);
 
     const ruleList = (rules as any[]) ?? [];
-    const salesRule = ruleList.find(r => r.rule_type === "REFERRAL" && r.target_depth_from === 0 && !r.is_volume_only);
-    const refRule   = ruleList.find(r => r.rule_type === "REFERRAL" && r.target_depth_from === 1 && !r.is_volume_only);
-    const overRule  = null; // 1대 구조 — 오버라이딩 없음
+    // ① 판권(소개수수료) = REFERRAL depth1 (멤버5/매니저25/디렉터32)
+    const salesRule = ruleList.find(r => r.rule_type === "REFERRAL" && r.target_depth_from === 1 && !r.is_volume_only)
+                   ?? ruleList.find(r => r.rule_type === "REFERRAL" && !r.is_volume_only);
+    // ② 관리비용(오버라이드) = MATCHING 중 이름에 '관리비용/오버' 포함 (10%)
+    const refRule   = ruleList.find(r => r.rule_type === "MATCHING" && (String(r.name).includes("관리비용") || String(r.name).includes("오버")))
+                   ?? ruleList.find(r => r.rule_type === "MATCHING");
 
-    // 기본값 (DB 없어도 동작)
+    // 기본값 (DB 없어도 동작) — s:판권 / r:관리비용
     const DEFAULT_RATES: Record<number, {s:number,r:number,o:number}> = {
-      1: { s: 0,  r: 5,  o: 0 },
-      2: { s: 32, r: 10, o: 0 },
+      1: { s: 5,  r: 0,  o: 0 },
+      2: { s: 25, r: 10, o: 0 },
       3: { s: 32, r: 10, o: 0 },
     };
     const rankList = (ranks && ranks.length > 0) ? ranks : [
@@ -257,11 +260,13 @@ export default function PlanPage() {
       const def = DEFAULT_RATES[r.level] ?? { s: 0, r: 0, o: 0 };
       const sTier = salesRule?.tiers?.find((t: any) => t.rank_level === r.level);
       const rTier = refRule?.tiers?.find((t: any)   => t.rank_level === r.level);
+      // 관리비용은 멤버(level 1)는 없음. 매니저 이상만 value(10%) 적용
+      const refVal = r.level >= 2 ? (rTier?.rate ?? refRule?.value ?? def.r) : 0;
       return {
         rankId: r.id, rankCode: r.code, rankName: r.name,
         rankLevel: r.level, rankColor: r.color,
         salesRate: sTier?.rate ?? def.s,
-        refRate:   rTier?.rate ?? def.r,
+        refRate:   refVal,
         overRate:  0,
         minGv:     r.min_gv ?? 0,
         minDirect: r.min_direct_referral ?? 0,
@@ -339,7 +344,9 @@ export default function PlanPage() {
   const dirCount = plans.filter(p => p.rankLevel === 3).length || 1;
 
   const [showGuide, setShowGuide] = useState(false);
-  const totalBudget = plans.length > 0 ? (plans[plans.length - 1].salesRate + plans[plans.length - 1].refRate + plans[plans.length - 1].overRate) : 0;
+  // 총 수당 재원 = 회사가 창업비에서 배분하는 전체 비율 (관리자 기준 55%)
+  // 판권 + 관리비용 + 패스트스타트 + 팀원첫모집 + 풀5% + 회사재량1%
+  const totalBudget = 55;
 
   if (loading) return (
     <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "60vh", flexDirection: "column", gap: "12px" }}>
@@ -401,9 +408,9 @@ export default function PlanPage() {
           <div style={{ display: "flex", alignItems: "center", gap: "8px", padding: "8px 16px", borderRadius: "12px", background: "rgba(201,168,76,0.08)", border: "1px solid rgba(201,168,76,0.25)" }}>
           <span style={{ fontSize: "12px", color: "var(--text-muted)" }}>총 수당 재원</span>
           <span style={{ fontFamily: "Syne,sans-serif", fontSize: "20px", fontWeight: 800, color: "var(--gold)" }}>{totalBudget}%</span>
-          <span style={{ fontSize: "11px", color: "var(--text-muted)" }}>/ 54%</span>
+          <span style={{ fontSize: "11px", color: "var(--text-muted)" }}>관리자 / 회원 54%</span>
           <div style={{ width: "80px", height: "6px", background: "var(--bg-border)", borderRadius: "3px", overflow: "hidden" }}>
-            <div style={{ height: "100%", width: `${Math.min((totalBudget / 55) * 100, 100)}%`, background: totalBudget > 55 ? "#F87171" : "var(--gold)", borderRadius: "3px", transition: "width 0.3s" }} />
+            <div style={{ height: "100%", width: "100%", background: "var(--gold)", borderRadius: "3px", transition: "width 0.3s" }} />
           </div>
           </div>
         </div>
@@ -541,8 +548,8 @@ export default function PlanPage() {
             </thead>
             <tbody>
               {[
-                { label: "① 직판 수당 (본인)", key: "salesRate" as const, color: "#378ADD" },
-                { label: "② 추천 오버라이드 (1대)", key: "refRate" as const, color: "#EF9F27" },
+                { label: "① 판권 (소개수수료)", key: "salesRate" as const, color: "#4FA3E8" },
+                { label: "② 관리비용 (오버라이드)", key: "refRate" as const, color: "#EF9F27" },
               ].map(({ label, key, color }) => (
                 <tr key={label} style={{ borderBottom: "1px solid var(--bg-border)" }}>
                   <td style={{ padding: "12px 18px", fontSize: "13px", fontWeight: 500, color: "var(--text-primary)" }}>

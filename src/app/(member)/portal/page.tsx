@@ -290,7 +290,7 @@ export default function PortalPage() {
               <div key={s.side}>
                 <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "5px" }}>
                   <span style={{ fontSize: "11px", color: "var(--text-muted)" }}>{s.side}</span>
-                  <span style={{ fontSize: "12px", fontWeight: 700, color: "var(--text-primary)" }}>{s.vol.toLocaleString()} GV</span>
+                  <span style={{ fontSize: "12px", fontWeight: 700, color: "var(--text-primary)" }}>{s.vol.toLocaleString()} 실적</span>
                 </div>
                 <div style={{ height: "7px", background: "var(--bg)", borderRadius: "4px", overflow: "hidden" }}>
                   <div style={{

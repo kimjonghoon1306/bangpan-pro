@@ -99,7 +99,7 @@ export default function MembersPage() {
           <table style={{ width: "100%", borderCollapse: "collapse" }}>
             <thead>
               <tr style={{ borderBottom: "1px solid var(--bg-border)" }}>
-                {["회원번호","이름","직급","추천인","개인PV","그룹GV","가입일","상태"].map(h => (
+                {["회원번호","이름","직급","추천인","개인실적","그룹실적","가입일","상태"].map(h => (
                   <th key={h} style={{ padding: "11px 14px", textAlign: "left", fontSize: "11px", color: "var(--text-muted)", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em", whiteSpace: "nowrap" }}>{h}</th>
                 ))}
               </tr>

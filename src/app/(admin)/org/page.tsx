@@ -10,7 +10,7 @@ function toChartNode(n: Node): OrgChartNode {
   const fmtGv = (g: number) => g >= 10000000 ? `${(g/10000000).toFixed(1)}천만` : g >= 10000 ? `${(g/10000).toFixed(0)}만` : `${g.toLocaleString()}`;
   return {
     id: n.id, name: n.name, rankLabel: n.rank, color: n.rankColor,
-    sub: `GV ${fmtGv(n.gv)}`,
+    sub: `그룹실적 ${fmtGv(n.gv)}`,
     children: n.children?.map(toChartNode),
   };
 }
@@ -56,7 +56,7 @@ const DEMO_ROOT: Node = {
 };
 
 const DEMO_TIPS: Record<string, string> = {
-  d0:  "✦ 최상위 디렉터 — 전체 GV 합산",
+  d0:  "✦ 최상위 디렉터 — 전체 그룹실적 합산",
   d1:  "직추천 → 판권 수당 발생",
   d2:  "직추천 디렉터 → 판권 수당 발생",
   d3:  "직추천 → 판권 수당 발생",
@@ -116,7 +116,7 @@ function TreeNode({ node, depth = 0, search, isDemo = false }: { node: Node; dep
               </span>
             </span>
             <span style={{ fontSize: "11px", color: "var(--text-muted)" }}>
-              산하GV <span style={{ color: "var(--emerald)", fontWeight: 700 }}>
+              그룹실적 <span style={{ color: "var(--emerald)", fontWeight: 700 }}>
                 {node.gv >= 10000000 ? `${(node.gv / 10000000).toFixed(2)}천만` : node.gv >= 10000 ? `${(node.gv / 10000).toFixed(0)}만` : node.gv.toLocaleString()}
               </span>
             </span>
@@ -156,12 +156,12 @@ function DemoModal({ onClose }: { onClose: () => void }) {
           </button>
         </div>
 
-        {/* GV 설명 */}
+        {/* 그룹실적 설명 */}
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "10px" }}>
           {[
             { label: "전체 회원", value: `${total}명`, color: "#C9A84C", desc: "예시 조직 전체" },
             { label: "최대 깊이", value: `${depth}단계`, color: "#4FA3E8", desc: "뿌리에서 말단까지" },
-            { label: "최상위 GV", value: "4,555만", color: "#10B981", desc: "전체 산하 볼륨" },
+            { label: "최상위 그룹실적", value: "4,555만", color: "#10B981", desc: "전체 산하 볼륨" },
           ].map(s => (
             <div key={s.label} style={{ background: "var(--bg-elevated)", border: "1px solid var(--bg-border)", borderRadius: "12px", padding: "12px", textAlign: "center" }}>
               <p style={{ fontSize: "10px", color: "var(--text-muted)", margin: 0 }}>{s.label}</p>
@@ -171,9 +171,9 @@ function DemoModal({ onClose }: { onClose: () => void }) {
           ))}
         </div>
 
-        {/* GV 계산 원리 */}
+        {/* 그룹실적 계산 원리 */}
         <div style={{ background: "rgba(16,185,129,0.07)", border: "1px solid rgba(16,185,129,0.25)", borderRadius: "14px", padding: "14px 16px" }}>
-          <p style={{ fontSize: "13px", fontWeight: 800, color: "#10B981", margin: "0 0 8px" }}>📊 산하 GV 계산 원리</p>
+          <p style={{ fontSize: "13px", fontWeight: 800, color: "#10B981", margin: "0 0 8px" }}>📊 그룹실적(산하볼륨) 계산 원리</p>
           <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
             {[
               { name: "홍길동 (디렉터)", gv: "4,555만", desc: "본인 + 산하 전체 합산", color: "#E8599A" },
@@ -235,7 +235,7 @@ function DemoModal({ onClose }: { onClose: () => void }) {
           <div style={{ display: "flex", flexDirection: "column", gap: "7px" }}>
             {[
               { label: "직추천 매니저 3명 이상", check: true,  val: "직추천 4명 (매니저 3명 포함)" },
-              { label: "산하 전체 누적 2,000만원", check: true, val: "산하 GV 4,555만원 ✓" },
+              { label: "산하 전체 누적 2,000만원", check: true, val: "그룹실적 4,555만원 ✓" },
               { label: "→ 디렉터 유지 조건 충족", check: true, val: "" },
               { label: "직추천 디렉터 3명 + 산하 1억", check: false, val: "현재 디렉터 1명 (본부장 조건 미달)" },
             ].map((r, i) => (
