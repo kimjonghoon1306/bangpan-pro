@@ -255,13 +255,19 @@ CREATE TABLE system_settings (
 
 -- 기본 시스템 설정 삽입
 INSERT INTO system_settings (key, value, description) VALUES
-  ('company_name', '회사명', '회사명'),
+  ('company_name', '', '회사명'),
+  ('company_ceo', '', '대표자'),
+  ('company_biz_no', '', '사업자등록번호'),
+  ('company_mailorder_no', '', '통신판매업 신고번호'),
+  ('company_phone', '', '대표 연락처'),
+  ('company_email', '', '이메일'),
+  ('company_address', '', '주소'),
+  ('company_intro', '', '회사 소개'),
   ('active_plan_id', '', '현재 활성 수당 플랜 ID'),
   ('settlement_day', '25', '정산 기준일'),
   ('payout_day', '10', '지급일'),
   ('tax_rate', '0.033', '원천징수 세율'),
   ('min_payout', '10000', '최소 지급액 (원)'),
-  ('sponsor_depth_limit', '2', '수당 지급 최대 단계 (공유수당형)'),
   ('currency', 'KRW', '통화');
 
 -- =============================================

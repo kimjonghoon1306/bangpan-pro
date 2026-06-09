@@ -64,7 +64,9 @@ export default function SettingsPage() {
           }
         }
       } else {
-        const keys = tab === "company" ? ["company_name"] : ["settlement_day", "payout_day", "tax_rate", "min_payout", "sponsor_depth_limit"];
+        const keys = tab === "company"
+          ? ["company_name", "company_ceo", "company_biz_no", "company_mailorder_no", "company_phone", "company_email", "company_address", "company_intro"]
+          : ["settlement_day", "payout_day", "tax_rate", "min_payout"];
         for (const key of keys) {
           if (settings[key] !== undefined) {
             await supabase.from("system_settings").upsert({ key, value: settings[key], updated_at: new Date().toISOString() }, { onConflict: "key" });
@@ -78,11 +80,21 @@ export default function SettingsPage() {
 
   async function handlePasswordChange() {
     setError("");
+    if (!pw.current) { setError("현재 비밀번호를 입력해주세요."); return; }
     if (!pw.next || !pw.confirm) { setError("새 비밀번호를 입력해주세요."); return; }
     if (pw.next !== pw.confirm) { setError("새 비밀번호가 일치하지 않습니다."); return; }
     if (pw.next.length < 8) { setError("비밀번호는 8자 이상이어야 합니다."); return; }
+    if (pw.next === pw.current) { setError("새 비밀번호가 현재 비밀번호와 같습니다."); return; }
     setPwLoading(true);
     const supabase = createBrowserSupabaseClient();
+
+    // 1) 현재 비밀번호 재인증
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user?.email) { setPwLoading(false); setError("세션이 만료되었습니다. 다시 로그인해주세요."); return; }
+    const { error: signInErr } = await supabase.auth.signInWithPassword({ email: user.email, password: pw.current });
+    if (signInErr) { setPwLoading(false); setError("현재 비밀번호가 일치하지 않습니다."); return; }
+
+    // 2) 새 비밀번호로 변경
     const { error: err } = await supabase.auth.updateUser({ password: pw.next });
     setPwLoading(false);
     if (err) { setError(err.message); return; }
@@ -119,8 +131,33 @@ export default function SettingsPage() {
         <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "14px" }}>
           {tab === "company" && (
             <div style={{ background: "var(--bg-elevated)", border: "1px solid var(--bg-border)", borderRadius: "16px", padding: "20px", display: "flex", flexDirection: "column", gap: "14px" }}>
-              <h3 style={{ fontSize: "14px", fontWeight: 700, color: "var(--text-primary)" }}>회사 기본 정보</h3>
-              <div><label style={labelStyle}>회사명</label><input className="input-base" style={inputStyle} value={settings.company_name ?? ""} onChange={(e) => setSetting("company_name", e.target.value)} /></div>
+              <div>
+                <h3 style={{ fontSize: "14px", fontWeight: 700, color: "var(--text-primary)" }}>회사 정보</h3>
+                <p style={{ fontSize: "11px", color: "var(--text-muted)", marginTop: "2px" }}>입력한 정보는 회원 화면 하단·로그인 화면에 사업자 정보로 표시됩니다. 비워둔 항목은 자동으로 숨겨집니다.</p>
+              </div>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "12px" }}>
+                {[
+                  { key: "company_name", label: "회사명", ph: "예) 온종일 프로젝트" },
+                  { key: "company_ceo", label: "대표자", ph: "예) 홍길동" },
+                  { key: "company_biz_no", label: "사업자등록번호", ph: "예) 123-45-67890" },
+                  { key: "company_mailorder_no", label: "통신판매업 신고번호", ph: "예) 2026-서울강남-01234" },
+                  { key: "company_phone", label: "대표 연락처", ph: "예) 02-1234-5678" },
+                  { key: "company_email", label: "이메일", ph: "예) help@company.com" },
+                ].map(f => (
+                  <div key={f.key}>
+                    <label style={labelStyle}>{f.label}</label>
+                    <input className="input-base" style={inputStyle} value={settings[f.key] ?? ""} onChange={(e) => setSetting(f.key, e.target.value)} placeholder={f.ph} />
+                  </div>
+                ))}
+              </div>
+              <div>
+                <label style={labelStyle}>주소</label>
+                <input className="input-base" style={inputStyle} value={settings.company_address ?? ""} onChange={(e) => setSetting("company_address", e.target.value)} placeholder="예) 서울특별시 강남구 테헤란로 123, 5층" />
+              </div>
+              <div>
+                <label style={labelStyle}>회사 소개</label>
+                <textarea className="input-base" style={{ ...inputStyle, minHeight: "80px", resize: "vertical", fontFamily: "inherit" }} value={settings.company_intro ?? ""} onChange={(e) => setSetting("company_intro", e.target.value)} placeholder="회사 소개 문구를 입력하면 회원 화면 하단에 표시됩니다. (선택)" />
+              </div>
             </div>
           )}
 
@@ -132,7 +169,6 @@ export default function SettingsPage() {
                 <div><label style={labelStyle}>지급일</label><input type="number" className="input-base" style={inputStyle} value={settings.payout_day ?? "10"} onChange={(e) => setSetting("payout_day", e.target.value)} min={1} max={31} /></div>
                 <div><label style={labelStyle}>원천징수 세율 (%)</label><input type="number" className="input-base" style={inputStyle} value={parseFloat(settings.tax_rate ?? "0.033") * 100} onChange={(e) => setSetting("tax_rate", String(parseFloat(e.target.value) / 100))} step={0.1} /></div>
                 <div><label style={labelStyle}>최소 지급액 (원)</label><input type="number" className="input-base" style={inputStyle} value={settings.min_payout ?? "10000"} onChange={(e) => setSetting("min_payout", e.target.value)} /></div>
-                <div><label style={labelStyle}>수당 지급 최대 단계</label><input type="number" className="input-base" style={inputStyle} value={settings.sponsor_depth_limit ?? "2"} onChange={(e) => setSetting("sponsor_depth_limit", e.target.value)} min={1} /></div>
               </div>
             </div>
           )}
@@ -172,11 +208,11 @@ export default function SettingsPage() {
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px", alignItems: "start" }} className="max-md:block max-md:space-y-4">
               <div style={{ background: "var(--bg-elevated)", border: "1px solid var(--bg-border)", borderRadius: "16px", padding: "20px", display: "flex", flexDirection: "column", gap: "14px" }}>
                 <h3 style={{ fontSize: "14px", fontWeight: 700, color: "var(--text-primary)" }}>비밀번호 변경</h3>
-                {["next", "confirm"].map((key) => (
+                {["current", "next", "confirm"].map((key) => (
                   <div key={key}>
-                    <label style={labelStyle}>{key === "next" ? "새 비밀번호" : "새 비밀번호 확인"}</label>
+                    <label style={labelStyle}>{key === "current" ? "현재 비밀번호" : key === "next" ? "새 비밀번호" : "새 비밀번호 확인"}</label>
                     <div style={{ position: "relative" }}>
-                      <input type={showPw[key as keyof typeof showPw] ? "text" : "password"} className="input-base" style={{ ...inputStyle, paddingRight: "40px" }} value={pw[key as keyof typeof pw]} onChange={(e) => setPw(p => ({ ...p, [key]: e.target.value }))} placeholder="8자 이상" />
+                      <input type={showPw[key as keyof typeof showPw] ? "text" : "password"} className="input-base" style={{ ...inputStyle, paddingRight: "40px" }} value={pw[key as keyof typeof pw]} onChange={(e) => setPw(p => ({ ...p, [key]: e.target.value }))} placeholder={key === "current" ? "현재 비밀번호 입력" : "8자 이상"} />
                       <button onClick={() => setShowPw(s => ({ ...s, [key]: !s[key as keyof typeof s] }))} style={{ position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: "var(--text-muted)" }}>
                         {showPw[key as keyof typeof showPw] ? <EyeOff size={15} /> : <Eye size={15} />}
                       </button>

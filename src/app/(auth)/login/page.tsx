@@ -6,6 +6,7 @@ import { Eye, EyeOff, Lock, Mail, TrendingUp, Settings } from "lucide-react";
 import Link from "next/link";
 import ThemeToggle from "@/components/ui/ThemeToggle";
 import { createBrowserSupabaseClient } from "@/lib/supabase";
+import CompanyFooter from "@/components/ui/CompanyFooter";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -138,7 +139,7 @@ export default function LoginPage() {
             <button style={{ background:"none",border:"none",cursor:"pointer",fontSize:"13px",color:"var(--text-muted)" }}>비밀번호 찾기</button>
           </div>
         </div>
-        <p style={{ textAlign:"center",fontSize:"12px",color:"var(--text-muted)",marginTop:"24px" }}>© 2024 온종일 프로젝트. All rights reserved.</p>
+        <CompanyFooter variant="login" />
       </div>
     </div>
   );

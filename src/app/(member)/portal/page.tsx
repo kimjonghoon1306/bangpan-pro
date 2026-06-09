@@ -10,6 +10,7 @@ import CommissionPlanModal from "@/components/ui/CommissionPlanModal";
 import CommissionGuideModal from "@/components/ui/CommissionGuideModal";
 import NextActionCard from "@/components/ui/NextActionCard";
 import RankProgressCard from "@/components/ui/RankProgressCard";
+import CompanyFooter from "@/components/ui/CompanyFooter";
 
 const QUICK_MENU = [
   { label: "내 조직",   href: "/network",  icon: Users,       color: "#6C47FF", bg: "rgba(108,71,255,0.10)" },  // violet — 사람
@@ -360,6 +361,9 @@ export default function PortalPage() {
           )}
         </div>
       </div>
+
+      {/* 회사 정보 푸터 */}
+      <CompanyFooter variant="portal" />
     </div>
   );
 }
