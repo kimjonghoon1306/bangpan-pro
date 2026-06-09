@@ -1,8 +1,19 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Search, Users, GitBranch, TrendingUp, ChevronDown, ChevronRight, BookOpen, X } from "lucide-react";
+import { Search, Users, GitBranch, TrendingUp, ChevronDown, ChevronRight, BookOpen, X, List, Network } from "lucide-react";
 import { createBrowserSupabaseClient } from "@/lib/supabase";
+import OrgChartView, { OrgChartNode } from "@/components/ui/OrgChartView";
+
+// TreeMember → OrgChartNode 변환
+function toChartNode(n: TreeMember): OrgChartNode {
+  const fmtGv = (g: number) => g >= 10000000 ? `${(g/10000000).toFixed(1)}천만` : g >= 10000 ? `${(g/10000).toFixed(0)}만` : `${g.toLocaleString()}`;
+  return {
+    id: n.id, name: n.name, rankLabel: n.rank, color: n.rank_color,
+    sub: `GV ${fmtGv(n.group_gv)}`, isSelf: n.isSelf,
+    children: n.children?.map(toChartNode),
+  };
+}
 
 interface TreeMember {
   id: string;
@@ -133,6 +144,7 @@ function TreeNode({ node, depth = 0, isDemo = false }: { node: TreeMember; depth
 
 // ─── 데모 모달 ──────────────────────────────────────
 function DemoModal({ onClose }: { onClose: () => void }) {
+  const [demoView, setDemoView] = useState<"list" | "chart">("list");
   return (
     <div style={{
       position: "fixed", inset: 0, zIndex: 9999,
@@ -202,8 +214,16 @@ function DemoModal({ onClose }: { onClose: () => void }) {
 
         {/* 조직도 트리 */}
         <div style={{ background: "var(--bg-elevated)", border: "1px solid var(--bg-border)", borderRadius: "16px", padding: "12px" }}>
-          <p style={{ fontSize: "11px", color: "var(--text-muted)", fontWeight: 700, marginBottom: "10px", letterSpacing: "0.05em" }}>조직도 (예시)</p>
-          <TreeNode node={DEMO_TREE} depth={0} isDemo={true} />
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "10px" }}>
+            <p style={{ fontSize: "11px", color: "var(--text-muted)", fontWeight: 700, letterSpacing: "0.05em", margin: 0 }}>조직도 (예시)</p>
+            <div style={{ display: "flex", background: "var(--bg)", border: "1px solid var(--bg-border)", borderRadius: "8px", padding: "2px" }}>
+              <button onClick={() => setDemoView("list")} style={{ display: "flex", alignItems: "center", gap: "3px", padding: "4px 8px", borderRadius: "6px", cursor: "pointer", fontSize: "11px", fontWeight: 700, border: "none", background: demoView === "list" ? "var(--gold)" : "transparent", color: demoView === "list" ? "#1a1400" : "var(--text-muted)" }}><List size={11} /> 리스트</button>
+              <button onClick={() => setDemoView("chart")} style={{ display: "flex", alignItems: "center", gap: "3px", padding: "4px 8px", borderRadius: "6px", cursor: "pointer", fontSize: "11px", fontWeight: 700, border: "none", background: demoView === "chart" ? "var(--gold)" : "transparent", color: demoView === "chart" ? "#1a1400" : "var(--text-muted)" }}><Network size={11} /> 계층도</button>
+            </div>
+          </div>
+          {demoView === "chart"
+            ? <OrgChartView root={toChartNode(DEMO_TREE)} />
+            : <TreeNode node={DEMO_TREE} depth={0} isDemo={true} />}
         </div>
 
         {/* 수당 흐름 설명 */}
@@ -244,6 +264,7 @@ export default function NetworkPage() {
   const [loading, setLoading]   = useState(true);
   const [stats, setStats]       = useState({ direct: 0, total: 0, gv: 0 });
   const [showDemo, setShowDemo] = useState(false);
+  const [viewMode, setViewMode] = useState<"list" | "chart">("list");
 
   useEffect(() => {
     async function load() {
@@ -333,7 +354,20 @@ export default function NetworkPage() {
           <h2 style={{ fontFamily: "Syne,sans-serif", fontSize: "20px", fontWeight: 800, color: "var(--text-primary)" }}>내 조직</h2>
           <p style={{ fontSize: "12px", color: "var(--text-muted)", marginTop: "1px" }}>나의 추천 네트워크</p>
         </div>
-        <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+        <div style={{ display: "flex", gap: "8px", alignItems: "center", flexWrap: "wrap" }}>
+          {/* 보기 전환 토글 */}
+          <div style={{ display: "flex", background: "var(--bg-elevated)", border: "1px solid var(--bg-border)", borderRadius: "10px", padding: "2px" }}>
+            <button onClick={() => setViewMode("list")} title="리스트형" style={{
+              display: "flex", alignItems: "center", gap: "4px", padding: "6px 10px", borderRadius: "8px", cursor: "pointer", fontSize: "12px", fontWeight: 700, border: "none",
+              background: viewMode === "list" ? "var(--gold)" : "transparent",
+              color: viewMode === "list" ? "#1a1400" : "var(--text-muted)",
+            }}><List size={13} /> 리스트</button>
+            <button onClick={() => setViewMode("chart")} title="계층도" style={{
+              display: "flex", alignItems: "center", gap: "4px", padding: "6px 10px", borderRadius: "8px", cursor: "pointer", fontSize: "12px", fontWeight: 700, border: "none",
+              background: viewMode === "chart" ? "var(--gold)" : "transparent",
+              color: viewMode === "chart" ? "#1a1400" : "var(--text-muted)",
+            }}><Network size={13} /> 계층도</button>
+          </div>
           {/* 예시 보기 버튼 */}
           <button onClick={() => setShowDemo(true)} style={{
             display: "flex", alignItems: "center", gap: "6px",
@@ -376,7 +410,9 @@ export default function NetworkPage() {
         {loading ? (
           <div style={{ padding: "32px", textAlign: "center", color: "var(--text-muted)", fontSize: "13px" }}>불러오는 중...</div>
         ) : displayTree ? (
-          <TreeNode node={displayTree} />
+          viewMode === "chart"
+            ? <OrgChartView root={toChartNode(displayTree)} />
+            : <TreeNode node={displayTree} />
         ) : (
           <div style={{ padding: "32px", textAlign: "center" }}>
             <p style={{ color: "var(--text-muted)", fontSize: "13px", marginBottom: "12px" }}>
