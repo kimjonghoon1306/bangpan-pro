@@ -57,24 +57,26 @@ export default function SettingsPage() {
     try {
       if (tab === "rank") {
         for (const rank of ranks) {
-          if (rank.id) {
-            await supabase.from("ranks").update({ code: rank.code, name: rank.name, level: rank.level, min_pv: rank.min_pv, min_gv: rank.min_gv, min_direct_referral: rank.min_direct_referral, color: rank.color }).eq("id", rank.id);
-          } else {
-            await supabase.from("ranks").insert({ code: rank.code, name: rank.name, level: rank.level, min_pv: rank.min_pv, min_gv: rank.min_gv, min_direct_referral: rank.min_direct_referral, color: rank.color });
-          }
+          const { error } = rank.id
+            ? await supabase.from("ranks").update({ code: rank.code, name: rank.name, level: rank.level, min_pv: rank.min_pv, min_gv: rank.min_gv, min_direct_referral: rank.min_direct_referral, color: rank.color }).eq("id", rank.id)
+            : await supabase.from("ranks").insert({ code: rank.code, name: rank.name, level: rank.level, min_pv: rank.min_pv, min_gv: rank.min_gv, min_direct_referral: rank.min_direct_referral, color: rank.color });
+          if (error) throw new Error(`직급 저장 실패: ${error.message}`);
         }
       } else {
         const keys = tab === "company"
           ? ["company_name", "company_ceo", "company_biz_no", "company_mailorder_no", "company_phone", "company_email", "company_address", "company_intro"]
           : ["settlement_day", "payout_day", "tax_rate", "min_payout"];
-        for (const key of keys) {
-          if (settings[key] !== undefined) {
-            await supabase.from("system_settings").upsert({ key, value: settings[key], updated_at: new Date().toISOString() }, { onConflict: "key" });
-          }
-        }
+        // 회사정보는 빈 값도 저장(지우기 가능), 정산은 입력된 것만
+        const rows = keys
+          .map(key => ({ key, value: settings[key] ?? "" }))
+          .filter(r => tab === "company" || settings[r.key] !== undefined);
+        const { error } = await supabase
+          .from("system_settings")
+          .upsert(rows.map(r => ({ key: r.key, value: r.value, updated_at: new Date().toISOString() })), { onConflict: "key" });
+        if (error) throw new Error(`저장 실패: ${error.message}`);
       }
       setSaved(true); setTimeout(() => setSaved(false), 2000);
-    } catch (e: any) { setError(e.message); }
+    } catch (e: any) { setError(e.message || "저장 중 오류가 발생했습니다"); }
     setSaving(false);
   }
 
