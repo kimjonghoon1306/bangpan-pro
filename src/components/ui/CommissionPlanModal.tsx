@@ -264,7 +264,6 @@ export default function CommissionPlanModal({ onClose }: { onClose: () => void }
               {[
                 { label: "매니저 풀", pct: 2, color: "#378ADD", icon: "👔", desc: "매니저 전원 N분의1 균등" },
                 { label: "디렉터 풀", pct: 2, color: "#E8599A", icon: "👑", desc: "디렉터 전원 N분의1 균등" },
-                { label: "회사 재량", pct: 1, color: "#A78BFA", icon: "🎯", desc: "이벤트·포상·특별 지급" },
               ].map(({ label, pct, color, icon, desc }) => (
                 <div key={label} style={{ background: "var(--bg-elevated)", border: `1px solid ${color}30`, borderRadius: "14px", padding: "16px" }}>
                   <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "10px" }}>
