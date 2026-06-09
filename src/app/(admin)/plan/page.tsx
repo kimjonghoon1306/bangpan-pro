@@ -155,17 +155,23 @@ interface RankPlan {
   rankName: string;
   rankLevel: number;
   rankColor: string;
-  salesRate: number;   // 내 판매 수당 %
-  refRate: number;     // 추천 수당 %
-  overRate: number;    // 오버라이딩 %
+  salesRate: number;   // 판권(소개수수료) %
+  refRate: number;     // 관리비용(오버라이드) %
+  fastRate: number;    // 패스트스타트 %
+  firstRate: number;   // 팀원첫모집 %
+  overRate: number;    // (미사용)
   minGv: number;       // 승급 최소 누적 GV
   minDirect: number;   // 승급 직추천 최소 수
   // rule id refs
   salesRuleId: string;
   refRuleId: string;
+  fastRuleId: string;
+  firstRuleId: string;
   overRuleId: string;
   salesTierId: string;
   refTierId: string;
+  fastTierId: string;
+  firstTierId: string;
   overTierId: string;
 }
 
@@ -178,7 +184,8 @@ const RANK_STYLE: Record<number, { main: string; bg: string; border: string; sha
 const ITEM_COLORS = {
   sales: { main: "#4FA3E8", bg: "rgba(79,163,232,0.10)", label: "① 판권 (소개수수료)" },
   ref:   { main: "#EF9F27", bg: "rgba(239,159,39,0.10)",  label: "② 관리비용 (오버라이드)" },
-  over:  { main: "#D4537E", bg: "rgba(212,83,126,0.10)", label: "③ 오버라이딩" },
+  fast:  { main: "#10B981", bg: "rgba(16,185,129,0.10)",  label: "③ 패스트 스타트" },
+  first: { main: "#F472B6", bg: "rgba(244,114,182,0.10)", label: "④ 팀원 첫모집" },
 };
 
 // ─── 수치 입력 인라인 컴포넌트 ──────────────────────────
@@ -230,12 +237,16 @@ export default function PlanPage() {
     // ② 관리비용(오버라이드) = MATCHING 중 이름에 '관리비용/오버' 포함 (10%)
     const refRule   = ruleList.find(r => r.rule_type === "MATCHING" && (String(r.name).includes("관리비용") || String(r.name).includes("오버")))
                    ?? ruleList.find(r => r.rule_type === "MATCHING");
+    // ③ 패스트스타트 = RANK_BONUS (매니저3/디렉터5)
+    const fastRule  = ruleList.find(r => r.rule_type === "RANK_BONUS");
+    // ④ 팀원첫모집 = MATCHING 중 이름에 '첫모집' 포함 (매니저2/디렉터3)
+    const firstRule = ruleList.find(r => r.rule_type === "MATCHING" && String(r.name).includes("첫모집"));
 
-    // 기본값 (DB 없어도 동작) — s:판권 / r:관리비용
-    const DEFAULT_RATES: Record<number, {s:number,r:number,o:number}> = {
-      1: { s: 5,  r: 0,  o: 0 },
-      2: { s: 25, r: 10, o: 0 },
-      3: { s: 32, r: 10, o: 0 },
+    // 기본값 (DB 없어도 동작) — s:판권 / r:관리비용 / fast:패스트 / first:첫모집
+    const DEFAULT_RATES: Record<number, {s:number,r:number,fast:number,first:number}> = {
+      1: { s: 5,  r: 0,  fast: 0, first: 0 },
+      2: { s: 25, r: 10, fast: 3, first: 2 },
+      3: { s: 32, r: 10, fast: 5, first: 3 },
     };
     const rankList = (ranks && ranks.length > 0) ? ranks : [
       { id: "default-1", code: "MEMBER",   name: "멤버",   level: 1, color: "#6B7280", min_gv: 50000,     min_direct_referral: 0 },
@@ -243,21 +254,29 @@ export default function PlanPage() {
       { id: "default-3", code: "DIRECTOR", name: "디렉터", level: 3, color: "#D4537E", min_gv: 20000000,  min_direct_referral: 3 },
     ];
     const result: RankPlan[] = rankList.map((r: any) => {
-      const def = DEFAULT_RATES[r.level] ?? { s: 0, r: 0, o: 0 };
+      const def = DEFAULT_RATES[r.level] ?? { s: 0, r: 0, fast: 0, first: 0 };
       const sTier = salesRule?.tiers?.find((t: any) => t.rank_level === r.level);
       const rTier = refRule?.tiers?.find((t: any)   => t.rank_level === r.level);
-      // 관리비용은 멤버(level 1)는 없음. 매니저 이상만 value(10%) 적용
-      const refVal = r.level >= 2 ? (rTier?.rate ?? refRule?.value ?? def.r) : 0;
+      const fTier = fastRule?.tiers?.find((t: any)  => t.rank_level === r.level);
+      const ftTier = firstRule?.tiers?.find((t: any) => t.rank_level === r.level);
+      // 멤버(level 1)는 판권만. 매니저 이상만 관리비용/패스트/첫모집 적용
+      const refVal   = r.level >= 2 ? (rTier?.rate  ?? refRule?.value ?? def.r) : 0;
+      const fastVal  = r.level >= 2 ? (fTier?.rate  ?? def.fast) : 0;
+      const firstVal = r.level >= 2 ? (ftTier?.rate ?? def.first) : 0;
       return {
         rankId: r.id, rankCode: r.code, rankName: r.name,
         rankLevel: r.level, rankColor: r.color,
         salesRate: sTier?.rate ?? def.s,
         refRate:   refVal,
+        fastRate:  fastVal,
+        firstRate: firstVal,
         overRate:  0,
         minGv:     r.min_gv ?? 0,
         minDirect: r.min_direct_referral ?? 0,
-        salesRuleId: salesRule?.id ?? "", refRuleId: refRule?.id ?? "", overRuleId: "",
-        salesTierId: sTier?.id ?? "", refTierId: rTier?.id ?? "", overTierId: "",
+        salesRuleId: salesRule?.id ?? "", refRuleId: refRule?.id ?? "",
+        fastRuleId: fastRule?.id ?? "", firstRuleId: firstRule?.id ?? "", overRuleId: "",
+        salesTierId: sTier?.id ?? "", refTierId: rTier?.id ?? "",
+        fastTierId: fTier?.id ?? "", firstTierId: ftTier?.id ?? "", overTierId: "",
       };
     });
 
@@ -280,7 +299,8 @@ export default function PlanPage() {
     const tierUpdates = [
       { id: draft.salesTierId, rule_id: draft.salesRuleId, rank_level: draft.rankLevel, rate: draft.salesRate },
       { id: draft.refTierId,   rule_id: draft.refRuleId,   rank_level: draft.rankLevel, rate: draft.refRate },
-      { id: draft.overTierId,  rule_id: draft.overRuleId,  rank_level: draft.rankLevel, rate: draft.overRate },
+      { id: draft.fastTierId,  rule_id: draft.fastRuleId,  rank_level: draft.rankLevel, rate: draft.fastRate },
+      { id: draft.firstTierId, rule_id: draft.firstRuleId, rank_level: draft.rankLevel, rate: draft.firstRate },
     ].filter(t => t.rule_id);
 
     for (const t of tierUpdates) {
@@ -383,7 +403,7 @@ export default function PlanPage() {
           const rs = RANK_STYLE[p.rankLevel] ?? RANK_STYLE[1];
           const isEditing = editing === p.rankLevel;
           const cur = isEditing && draft ? draft : p;
-          const total = cur.salesRate + cur.refRate + cur.overRate;
+          const total = cur.salesRate + cur.refRate + cur.fastRate + cur.firstRate;
 
           return (
             <div key={p.rankId} style={{
@@ -417,8 +437,11 @@ export default function PlanPage() {
               <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginBottom: "18px" }}>
                 {[
                   { key: "salesRate" as const, ...ITEM_COLORS.sales },
-                  { key: "refRate"   as const, ...ITEM_COLORS.ref },
-                  ...(p.rankLevel >= 2 ? [{ key: "overRate" as const, ...ITEM_COLORS.over }] : []),
+                  ...(p.rankLevel >= 2 ? [
+                    { key: "refRate"   as const, ...ITEM_COLORS.ref },
+                    { key: "fastRate"  as const, ...ITEM_COLORS.fast },
+                    { key: "firstRate" as const, ...ITEM_COLORS.first },
+                  ] : []),
                 ].map(({ key, main, bg, label }) => (
                   <div key={key} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 14px", borderRadius: "12px", background: bg, border: `1px solid ${main}22` }}>
                     <span style={{ fontSize: "13px", fontWeight: 600, color: "var(--text-primary)" }}>{label}</span>
@@ -509,6 +532,8 @@ export default function PlanPage() {
               {[
                 { label: "① 판권 (소개수수료)", key: "salesRate" as const, color: "#4FA3E8" },
                 { label: "② 관리비용 (오버라이드)", key: "refRate" as const, color: "#EF9F27" },
+                { label: "③ 패스트 스타트", key: "fastRate" as const, color: "#10B981" },
+                { label: "④ 팀원 첫모집", key: "firstRate" as const, color: "#F472B6" },
               ].map(({ label, key, color }) => (
                 <tr key={label} style={{ borderBottom: "1px solid var(--bg-border)" }}>
                   <td style={{ padding: "12px 18px", fontSize: "13px", fontWeight: 500, color: "var(--text-primary)" }}>
@@ -536,7 +561,7 @@ export default function PlanPage() {
               <tr style={{ background: "rgba(201,168,76,0.04)" }}>
                 <td style={{ padding: "14px 18px", fontSize: "13px", fontWeight: 700, color: "var(--text-primary)" }}>합계</td>
                 {plans.map(p => {
-                  const total = p.salesRate + p.refRate + p.overRate;
+                  const total = p.salesRate + p.refRate + p.fastRate + p.firstRate;
                   const rs = RANK_STYLE[p.rankLevel] ?? RANK_STYLE[1];
                   return (
                     <td key={p.rankId} style={{ padding: "14px 18px", textAlign: "center" }}>
