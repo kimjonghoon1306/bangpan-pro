@@ -26,8 +26,16 @@ export async function POST(req: NextRequest) {
       sponsorId = sponsor?.id ?? null;
     }
 
-    const { count } = await supabaseAdmin.from("members").select("*", { count: "exact", head: true });
-    const memberCode = `M-${String((count ?? 0) + 1).padStart(6, "0")}`;
+    // 중복 방지: 타임스탬프 + 랜덤으로 고유 코드 생성 후 충돌 시 재시도
+    let memberCode = "";
+    for (let attempt = 0; attempt < 5; attempt++) {
+      const ts = Date.now().toString(36).toUpperCase();
+      const rand = Math.random().toString(36).substring(2, 5).toUpperCase();
+      const candidate = `M-${ts}${rand}`;
+      const { data: existing } = await supabaseAdmin.from("members").select("id").eq("member_code", candidate).maybeSingle();
+      if (!existing) { memberCode = candidate; break; }
+    }
+    if (!memberCode) return NextResponse.json({ error: "회원코드 생성 실패. 다시 시도해주세요." }, { status: 500 });
 
     const { error: memberErr } = await supabaseAdmin.from("members").insert({
       id: userId, member_code: memberCode,

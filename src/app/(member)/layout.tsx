@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
@@ -21,12 +22,31 @@ const NAV = [
 export default function MemberLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
+  const [authChecked, setAuthChecked] = useState(false);
+
+  useEffect(() => {
+    const supabase = createBrowserSupabaseClient();
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!session?.user) {
+        router.replace("/login");
+        return;
+      }
+      setAuthChecked(true);
+    });
+  }, [router]);
 
   async function handleLogout() {
     const supabase = createBrowserSupabaseClient();
     await supabase.auth.signOut();
     router.push("/login");
   }
+
+  if (!authChecked) return (
+    <div style={{ display: "flex", height: "100vh", alignItems: "center", justifyContent: "center", background: "var(--bg)" }}>
+      <div style={{ width: 28, height: 28, borderRadius: "50%", border: "3px solid var(--gold)", borderTopColor: "transparent", animation: "spin 0.8s linear infinite" }} />
+      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+    </div>
+  );
 
   return (
     <div style={{ minHeight: "100vh", background: "var(--bg)" }}>

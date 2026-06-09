@@ -61,11 +61,25 @@ export async function POST(req: NextRequest) {
 
 export async function GET(req: NextRequest) {
   try {
+    // 관리자 세션 확인
+    const cookieStore = cookies();
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      { cookies: { getAll: () => cookieStore.getAll(), setAll: () => {} } }
+    );
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.user) return NextResponse.json({ error: "인증 필요" }, { status: 401 });
+
     const supabaseAdmin = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!,
       { auth: { autoRefreshToken: false, persistSession: false } }
     );
+
+    // 관리자 권한 확인
+    const { data: me } = await supabaseAdmin.from("members").select("is_admin").eq("id", session.user.id).single();
+    if (!me?.is_admin) return NextResponse.json({ error: "관리자 권한 필요" }, { status: 403 });
 
     const memberId = req.nextUrl.searchParams.get("member_id");
     if (!memberId) return NextResponse.json({ error: "member_id 필요" }, { status: 400 });
@@ -73,10 +87,14 @@ export async function GET(req: NextRequest) {
     const { data } = await supabaseAdmin.from("members").select("resident_number_enc").eq("id", memberId).single();
     if (!data?.resident_number_enc) return NextResponse.json({ error: "주민번호 없음" }, { status: 404 });
 
-    const decrypted = decrypt(data.resident_number_enc);
-    const masked = decrypted.slice(0,6) + "-" + decrypted[6] + "******";
-
-    return NextResponse.json({ masked, full: decrypted });
+    try {
+      const decrypted = decrypt(data.resident_number_enc);
+      // 마스킹만 반환 — 평문 주민번호는 절대 반환하지 않음
+      const masked = decrypted.slice(0, 6) + "-" + decrypted[6] + "******";
+      return NextResponse.json({ masked });
+    } catch {
+      return NextResponse.json({ error: "복호화 실패. 암호화 키를 확인해주세요." }, { status: 500 });
+    }
   } catch (e: any) {
     return NextResponse.json({ error: e.message }, { status: 500 });
   }

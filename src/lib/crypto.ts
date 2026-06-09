@@ -1,6 +1,12 @@
 import { createCipheriv, createDecipheriv, randomBytes } from "crypto";
 
-const ENC_KEY = process.env.RESIDENT_ENC_KEY ?? "bangpan-pro-32byte-secret-key!!";
+const ENC_KEY = (() => {
+  if (process.env.RESIDENT_ENC_KEY) return process.env.RESIDENT_ENC_KEY;
+  if (process.env.NODE_ENV === "production")
+    throw new Error("RESIDENT_ENC_KEY 환경변수가 설정되지 않았습니다. .env.local을 확인해주세요.");
+  console.warn("[보안 경고] RESIDENT_ENC_KEY 미설정 — 개발 환경 기본값 사용 중. 반드시 .env.local에 설정하세요.");
+  return "bangpan-pro-32byte-secret-key!!";
+})();
 const ALGO = "aes-256-cbc";
 
 export function encrypt(text: string): string {

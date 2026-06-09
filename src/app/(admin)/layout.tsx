@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { createBrowserSupabaseClient } from "@/lib/supabase";
 import {
   LayoutDashboard, Users, ShoppingBag, Calculator,
   Settings, TrendingUp, LogOut, GitBranch,
@@ -33,6 +34,38 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [showPlan, setShowPlan] = useState(false);
+  const [adminEmail, setAdminEmail] = useState("");
+  const [authChecked, setAuthChecked] = useState(false);
+
+  useEffect(() => {
+    const supabase = createBrowserSupabaseClient();
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
+      if (!session?.user) {
+        router.replace("/admin-login");
+        return;
+      }
+      // is_admin 확인
+      const { data: member } = await supabase
+        .from("members")
+        .select("is_admin")
+        .eq("id", session.user.id)
+        .single();
+      if (!member?.is_admin) {
+        await supabase.auth.signOut();
+        router.replace("/admin-login");
+        return;
+      }
+      setAdminEmail(session.user.email ?? "");
+      setAuthChecked(true);
+    });
+  }, [router]);
+
+  if (!authChecked) return (
+    <div style={{ display: "flex", height: "100vh", alignItems: "center", justifyContent: "center", background: "var(--bg)" }}>
+      <div style={{ width: 32, height: 32, borderRadius: "50%", border: "3px solid var(--gold)", borderTopColor: "transparent", animation: "spin 0.8s linear infinite" }} />
+      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+    </div>
+  );
 
   return (
     <div style={{ display: "flex", height: "100vh", background: "var(--bg)" }}>
@@ -124,11 +157,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               <>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <p style={{ fontSize: "12px", fontWeight: 600, color: "var(--text-primary)" }}>관리자</p>
-                  <p style={{ fontSize: "10px", color: "var(--text-muted)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>admin@company.com</p>
+                  <p style={{ fontSize: "10px", color: "var(--text-muted)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{adminEmail}</p>
                 </div>
                 <button
                   onClick={async () => {
-                    const { createBrowserSupabaseClient } = await import("@/lib/supabase");
                     const supabase = createBrowserSupabaseClient();
                     await supabase.auth.signOut();
                     window.location.href = "/admin-login";
