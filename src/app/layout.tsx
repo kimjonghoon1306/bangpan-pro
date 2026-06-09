@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
-import { Toaster } from "react-hot-toast";
 import "./globals.css";
+import ToasterProvider from "@/components/ui/ToasterProvider";
 
 export const metadata: Metadata = {
   title: {
@@ -18,25 +18,17 @@ export default function RootLayout({
   return (
     <html lang="ko">
       <head>
+        {/* Syne — 숫자·제목 전용 */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet" />
+        <link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800;900&display=swap" rel="stylesheet" />
+        {/* Pretendard — 한글 본문 */}
         <link rel="preconnect" href="https://cdn.jsdelivr.net" />
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css" />
       </head>
       <body className="bg-bg text-text-primary font-body antialiased">
         {children}
-        <Toaster
-          position="top-right"
-          toastOptions={{
-            style: {
-              background: "#161625",
-              color: "#F0F0F8",
-              border: "1px solid #1E1E30",
-              borderRadius: "8px",
-            },
-          }}
-        />
+        <ToasterProvider />
       </body>
     </html>
   );

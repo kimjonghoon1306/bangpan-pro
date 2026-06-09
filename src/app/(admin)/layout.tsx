@@ -13,20 +13,47 @@ import {
 import ThemeToggle from "@/components/ui/ThemeToggle";
 import CommissionPlanModal from "@/components/ui/CommissionPlanModal";
 
-const NAV = [
-  { label: "대시보드",   href: "/dashboard",   icon: LayoutDashboard },
-  { label: "회원 관리",  href: "/members",      icon: Users },
-  { label: "조직도",     href: "/org",          icon: GitBranch },
-  { label: "매출 관리",  href: "/sales",        icon: TrendingUp },
-  { label: "주문 관리",  href: "/orders",       icon: ShoppingBag },
-  { label: "상품 관리",  href: "/products",     icon: Package },
-  { label: "수당 플랜",  href: "/plan",         icon: Calculator, highlight: true },
-  { label: "정산 관리",  href: "/settlement",   icon: Wallet },
-  { label: "마감 · 정산", href: "/closing",      icon: CheckCircle, highlight: true },
-  { label: "지급 캘린더",  href: "/calendar",     icon: CalendarIcon, highlight: true },
-  { label: "출금 신청",    href: "/withdrawals",  icon: BanknoteIcon },
-  { label: "시스템 설정",href: "/settings",     icon: Settings },
+const NAV_GROUPS = [
+  {
+    items: [
+      { label: "대시보드", href: "/dashboard", icon: LayoutDashboard },
+    ],
+  },
+  {
+    label: "회원",
+    items: [
+      { label: "회원 관리", href: "/members",  icon: Users },
+      { label: "조직도",    href: "/org",      icon: GitBranch },
+    ],
+  },
+  {
+    label: "영업",
+    items: [
+      { label: "매출 관리", href: "/sales",    icon: TrendingUp },
+      { label: "주문 관리", href: "/orders",   icon: ShoppingBag },
+      { label: "상품 관리", href: "/products", icon: Package },
+    ],
+  },
+  {
+    label: "정산",
+    items: [
+      { label: "수당 플랜",   href: "/plan",        icon: Calculator,  highlight: true },
+      { label: "정산 관리",   href: "/settlement",  icon: Wallet },
+      { label: "마감 · 정산", href: "/closing",     icon: CheckCircle, highlight: true },
+      { label: "지급 캘린더", href: "/calendar",    icon: CalendarIcon,highlight: true },
+      { label: "출금 신청",   href: "/withdrawals", icon: BanknoteIcon },
+    ],
+  },
+  {
+    label: "설정",
+    items: [
+      { label: "시스템 설정", href: "/settings", icon: Settings },
+    ],
+  },
 ];
+
+// 단일 배열 (기존 코드와의 호환 유지)
+const NAV = NAV_GROUPS.flatMap(g => g.items);
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -112,41 +139,48 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </div>
 
         {/* 네비 */}
-        <nav style={{ flex: 1, padding: "10px 8px", overflowY: "auto" }}>
-          {NAV.map((item) => {
-            const active = pathname === item.href || pathname.startsWith(item.href + "/");
-            const isSimulation = item.href === "/simulation";
-            const isCalendar = item.href === "/calendar";
-            return (
-              <Link key={item.href} href={item.href} onClick={() => setMobileOpen(false)}
-                style={{
-                  display: "flex", alignItems: "center", gap: collapsed ? 0 : "10px",
-                  justifyContent: collapsed ? "center" : "flex-start",
-                  padding: collapsed ? "11px 0" : "9px 10px",
-                  borderRadius: "10px", marginBottom: "2px",
-                  background: active
-                    ? isCalendar ? "rgba(255,45,120,0.12)" : isSimulation ? "rgba(167,139,250,0.12)" : "rgba(201,168,76,0.1)"
-                    : "transparent",
-                  border: active
-                    ? isSimulation ? "1px solid rgba(167,139,250,0.3)" : "1px solid rgba(201,168,76,0.2)"
-                    : "1px solid transparent",
-                  color: active
-                    ? isCalendar ? "#FF2D78" : isSimulation ? "#A78BFA" : "var(--gold)"
-                    : "var(--text-secondary)",
-                  textDecoration: "none", transition: "all 0.15s", position: "relative",
-                }}
-                onMouseEnter={e => { if (!active) { (e.currentTarget as HTMLElement).style.background = isSimulation ? "rgba(167,139,250,0.06)" : "rgba(201,168,76,0.05)"; (e.currentTarget as HTMLElement).style.color = "var(--text-primary)"; }}}
-                onMouseLeave={e => { if (!active) { (e.currentTarget as HTMLElement).style.background = "transparent"; (e.currentTarget as HTMLElement).style.color = "var(--text-secondary)"; }}}
-              >
-                {active && <span style={{ position: "absolute", left: 0, top: "50%", transform: "translateY(-50%)", width: "3px", height: "60%", borderRadius: "0 2px 2px 0", background: isCalendar ? "#FF2D78" : isSimulation ? "#A78BFA" : "var(--gold)" }} />}
-                <item.icon size={17} style={{ flexShrink: 0, color: active ? (isCalendar ? "#FF2D78" : isSimulation ? "#A78BFA" : "var(--gold)") : "var(--text-muted)" }} />
-                {!collapsed && <span style={{ fontSize: "13px", fontWeight: active ? 600 : 500 }}>{item.label}</span>}
-                {!collapsed && item.highlight && !active && (
-                  <span style={{ marginLeft: "auto", width: 6, height: 6, borderRadius: "50%", background: isCalendar ? "#FF2D78" : isSimulation ? "#A78BFA" : "var(--gold)", animation: "glowPulse 2s infinite" }} />
-                )}
-              </Link>
-            );
-          })}
+        <nav style={{ flex: 1, padding: "8px 8px", overflowY: "auto" }}>
+          {NAV_GROUPS.map((group, gi) => (
+            <div key={gi} style={{ marginBottom: gi < NAV_GROUPS.length - 1 ? "4px" : 0 }}>
+              {/* 그룹 레이블 */}
+              {group.label && !collapsed && (
+                <div style={{ padding: "8px 10px 4px", fontSize: "10px", fontWeight: 700, color: "var(--text-muted)", letterSpacing: "0.08em", textTransform: "uppercase" }}>
+                  {group.label}
+                </div>
+              )}
+              {group.label && collapsed && gi > 0 && (
+                <div style={{ height: "1px", background: "var(--bg-border)", margin: "6px 8px" }} />
+              )}
+              {group.items.map((item) => {
+                const active = pathname === item.href || pathname.startsWith(item.href + "/");
+                const isCalendar = item.href === "/calendar";
+                return (
+                  <Link key={item.href} href={item.href} onClick={() => setMobileOpen(false)}
+                    title={collapsed ? item.label : undefined}
+                    style={{
+                      display: "flex", alignItems: "center", gap: collapsed ? 0 : "10px",
+                      justifyContent: collapsed ? "center" : "flex-start",
+                      padding: collapsed ? "10px 0" : "8px 10px",
+                      borderRadius: "10px", marginBottom: "1px",
+                      background: active ? "rgba(201,168,76,0.1)" : "transparent",
+                      border: active ? "1px solid rgba(201,168,76,0.2)" : "1px solid transparent",
+                      color: active ? "var(--gold)" : "var(--text-secondary)",
+                      textDecoration: "none", transition: "all 0.15s", position: "relative",
+                    }}
+                    onMouseEnter={e => { if (!active) { (e.currentTarget as HTMLElement).style.background = "rgba(201,168,76,0.05)"; (e.currentTarget as HTMLElement).style.color = "var(--text-primary)"; }}}
+                    onMouseLeave={e => { if (!active) { (e.currentTarget as HTMLElement).style.background = "transparent"; (e.currentTarget as HTMLElement).style.color = "var(--text-secondary)"; }}}
+                  >
+                    {active && <span style={{ position: "absolute", left: 0, top: "50%", transform: "translateY(-50%)", width: "3px", height: "60%", borderRadius: "0 2px 2px 0", background: "var(--gold)" }} />}
+                    <item.icon size={16} style={{ flexShrink: 0, color: active ? "var(--gold)" : "var(--text-muted)" }} />
+                    {!collapsed && <span style={{ fontSize: "13px", fontWeight: active ? 600 : 500, flex: 1 }}>{item.label}</span>}
+                    {!collapsed && item.highlight && !active && (
+                      <span style={{ width: 6, height: 6, borderRadius: "50%", background: "var(--gold)", flexShrink: 0, animation: "glowPulse 2s infinite" }} />
+                    )}
+                  </Link>
+                );
+              })}
+            </div>
+          ))}
         </nav>
 
         {/* 하단 유저 */}
