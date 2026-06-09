@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { X, Zap } from "lucide-react";
 import { createBrowserSupabaseClient } from "@/lib/supabase";
+import ThemeToggle from "@/components/ui/ThemeToggle";
 
 interface PlanData {
   name: string; level: number; color: string;
@@ -95,14 +96,17 @@ export default function CommissionPlanModal({ onClose }: { onClose: () => void }
             </p>
             <h2 style={{ fontFamily: "Syne,sans-serif", fontSize: "26px", fontWeight: 800, color: "#fff", margin: 0 }}>수당 플랜</h2>
           </div>
-          <button onClick={onClose} style={{
-            width: 40, height: 40, borderRadius: "50%",
-            background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.12)",
-            display: "flex", alignItems: "center", justifyContent: "center",
-            cursor: "pointer", color: "rgba(255,255,255,0.5)",
-          }}>
-            <X size={16} />
-          </button>
+          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+            <ThemeToggle size="sm" />
+            <button onClick={onClose} style={{
+              width: 40, height: 40, borderRadius: "50%",
+              background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.12)",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              cursor: "pointer", color: "rgba(255,255,255,0.5)",
+            }}>
+              <X size={16} />
+            </button>
+          </div>
         </div>
 
         {/* 핵심 룰 배너 */}

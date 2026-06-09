@@ -5,6 +5,7 @@ import { createBrowserSupabaseClient } from "@/lib/supabase";
 import { formatKRW } from "@/lib/utils";
 import { Save, Check, Edit3, X, Users, TrendingUp, Zap, Award, ChevronRight, BarChart2, HelpCircle, BookOpen, Settings2, Calculator, Shield, FileText } from "lucide-react";
 import Link from "next/link";
+import ThemeToggle from "@/components/ui/ThemeToggle";
 
 // ─── 사용 가이드 팝업 ─────────────────────────────────
 const GUIDE_ITEMS = [
@@ -394,13 +395,16 @@ export default function PlanPage() {
             }
           `}</style>
         </div>
-        {/* 총 재원 뱃지 */}
-        <div style={{ display: "flex", alignItems: "center", gap: "8px", padding: "8px 16px", borderRadius: "12px", background: "rgba(201,168,76,0.08)", border: "1px solid rgba(201,168,76,0.25)" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+          <ThemeToggle size="sm" />
+          {/* 총 재원 뱃지 */}
+          <div style={{ display: "flex", alignItems: "center", gap: "8px", padding: "8px 16px", borderRadius: "12px", background: "rgba(201,168,76,0.08)", border: "1px solid rgba(201,168,76,0.25)" }}>
           <span style={{ fontSize: "12px", color: "var(--text-muted)" }}>총 수당 재원</span>
           <span style={{ fontFamily: "Syne,sans-serif", fontSize: "20px", fontWeight: 800, color: "var(--gold)" }}>{totalBudget}%</span>
           <span style={{ fontSize: "11px", color: "var(--text-muted)" }}>/ 55%</span>
           <div style={{ width: "80px", height: "6px", background: "var(--bg-border)", borderRadius: "3px", overflow: "hidden" }}>
             <div style={{ height: "100%", width: `${Math.min((totalBudget / 55) * 100, 100)}%`, background: totalBudget > 55 ? "#F87171" : "var(--gold)", borderRadius: "3px", transition: "width 0.3s" }} />
+          </div>
           </div>
         </div>
       </div>

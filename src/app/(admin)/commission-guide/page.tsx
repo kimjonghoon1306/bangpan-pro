@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import ThemeToggle from "@/components/ui/ThemeToggle";
 
 const C = {
   member:   { main: "#6B7280", bg: "rgba(107,114,128,0.10)", border: "rgba(107,114,128,0.30)", label: "MEMBER" },
@@ -44,9 +45,9 @@ function PersonCard({
           background: s.bg, border: `1px solid ${s.border}`,
           fontSize: small ? "10px" : "11px", fontWeight: 800, color: s.main, marginBottom: "2px",
         }}>{s.label}</div>
-        <p style={{ fontSize: small ? "12px" : "14px", fontWeight: 700, color: "#fff", margin: 0 }}>{name}</p>
+        <p style={{ fontSize: small ? "12px" : "14px", fontWeight: 700, color: "var(--text-primary)", margin: 0 }}>{name}</p>
         {fee && <p style={{ fontSize: "11px", color: s.main, margin: 0, fontWeight: 700 }}>{fee}</p>}
-        {sub && <p style={{ fontSize: "10px", color: "rgba(255,255,255,0.4)", margin: 0 }}>{sub}</p>}
+        {sub && <p style={{ fontSize: "10px", color: "var(--text-muted)", margin: 0 }}>{sub}</p>}
       </div>
     </div>
   );
@@ -57,7 +58,7 @@ function MoneyBadge({ amount, color, label }: { amount: string; color: string; l
     <div style={{
       display: "flex", flexDirection: "column", alignItems: "center", gap: "2px",
     }}>
-      {label && <span style={{ fontSize: "9px", color: "rgba(255,255,255,0.4)", fontWeight: 600 }}>{label}</span>}
+      {label && <span style={{ fontSize: "9px", color: "var(--text-muted)", fontWeight: 600 }}>{label}</span>}
       <div style={{
         padding: "4px 10px", borderRadius: "999px",
         background: `${color}22`, border: `1px solid ${color}66`,
@@ -175,12 +176,15 @@ export default function CommissionGuidePage() {
         <span style={{ display: "inline-block", padding: "4px 16px", borderRadius: "999px", fontSize: "11px", fontWeight: 800, letterSpacing: "0.1em", background: "rgba(201,168,76,0.15)", border: "1px solid rgba(201,168,76,0.4)", color: "#C9A84C", marginBottom: "10px" }}>
           COMMISSION STRUCTURE
         </span>
-        <h1 style={{ fontFamily: "Syne, sans-serif", fontSize: "32px", fontWeight: 900, color: "#fff", margin: "0 0 6px" }}>
+        <h1 style={{ fontFamily: "Syne, sans-serif", fontSize: "32px", fontWeight: 900, color: "var(--text-primary)", margin: "0 0 6px" }}>
           수당 플랜 설명서
         </h1>
-        <p style={{ fontSize: "14px", color: "rgba(255,255,255,0.5)", margin: 0 }}>
+        <p style={{ fontSize: "14px", color: "var(--text-muted)", margin: 0 }}>
           농축수산물 방판 · 1대 오버라이드 구조 · 총 수당 재원 55%
         </p>
+      </div>
+      <div style={{ position: "absolute", top: "20px", right: "20px" }}>
+        <ThemeToggle size="sm" />
       </div>
 
       {/* 탭 */}
@@ -189,9 +193,9 @@ export default function CommissionGuidePage() {
           <button key={t.key} onClick={() => setActiveTab(t.key)} style={{
             padding: "10px 20px", borderRadius: "12px", cursor: "pointer",
             fontSize: "13px", fontWeight: 700, transition: "all 0.2s",
-            background: activeTab === t.key ? "rgba(201,168,76,0.2)" : "rgba(255,255,255,0.05)",
-            border: `1.5px solid ${activeTab === t.key ? "rgba(201,168,76,0.6)" : "rgba(255,255,255,0.1)"}`,
-            color: activeTab === t.key ? "#C9A84C" : "rgba(255,255,255,0.5)",
+            background: activeTab === t.key ? "rgba(201,168,76,0.2)" : "var(--bg-elevated)",
+            border: `1.5px solid ${activeTab === t.key ? "rgba(201,168,76,0.6)" : "var(--bg-border)"}`,
+            color: activeTab === t.key ? "#C9A84C" : "var(--text-muted)",
           }}>
             {t.label}
           </button>
@@ -213,7 +217,7 @@ export default function CommissionGuidePage() {
               <p style={{ fontSize: "16px", fontWeight: 800, color: "#FFD700", margin: 0 }}>
                 핵심 규칙 — 수당은 직추천 1대에서만 발생
               </p>
-              <p style={{ fontSize: "13px", color: "rgba(255,255,255,0.6)", margin: 0 }}>
+              <p style={{ fontSize: "13px", color: "var(--text-secondary)", margin: 0 }}>
                 내가 직접 추천한 사람의 창업비에서만 수당을 받습니다. 그 이하는 각자가 받습니다.
               </p>
             </div>
@@ -221,7 +225,7 @@ export default function CommissionGuidePage() {
 
           {/* 조직도 */}
           <div style={{
-            background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)",
+            background: "var(--bg-elevated)", border: "1px solid var(--bg-border)",
             borderRadius: "24px", padding: "40px 24px", overflow: "auto",
           }}>
             {/* 상단: 나 (디렉터) */}
@@ -248,7 +252,7 @@ export default function CommissionGuidePage() {
                   <PersonCard rank="manager" name="매니저 A" fee="소매창업 330만원" />
 
                   {/* 매니저A의 팀원들 (나는 수당 없음) */}
-                  <div style={{ fontSize: "10px", color: "rgba(255,255,255,0.3)", fontWeight: 600, marginTop: "4px" }}>
+                  <div style={{ fontSize: "10px", color: "var(--text-muted)", fontWeight: 600, marginTop: "4px" }}>
                     ↓ 나는 수당 없음
                   </div>
                   <div style={{ display: "flex", gap: "12px" }}>
@@ -270,7 +274,7 @@ export default function CommissionGuidePage() {
                     수당 30만원 ↑
                   </div>
                   <PersonCard rank="manager" name="매니저 B" fee="소매창업 330만원" />
-                  <div style={{ fontSize: "10px", color: "rgba(255,255,255,0.3)", fontWeight: 600, marginTop: "4px" }}>↓ 나는 수당 없음</div>
+                  <div style={{ fontSize: "10px", color: "var(--text-muted)", fontWeight: 600, marginTop: "4px" }}>↓ 나는 수당 없음</div>
                   <div style={{ display: "flex", gap: "12px" }}>
                     <div style={{ opacity: 0.5 }}>
                       <PersonCard rank="member" name="멤버 E" fee="5만원+" small />
@@ -306,7 +310,7 @@ export default function CommissionGuidePage() {
               </div>
               <ul style={{ margin: 0, padding: "0 0 0 16px", display: "flex", flexDirection: "column", gap: "8px" }}>
                 {["내가 직접 창업 → 직판 수당 32%", "내가 직추천한 사람 창업 → 오버라이드 10%", "가입 90일 내 미션 달성 → 패스트스타트 5%", "내 팀원의 첫 모집 성공 → 3% 보너스", "매니저/디렉터 풀 월 배분"].map(t => (
-                  <li key={t} style={{ fontSize: "13px", color: "rgba(255,255,255,0.7)" }}>{t}</li>
+                  <li key={t} style={{ fontSize: "13px", color: "var(--text-secondary)" }}>{t}</li>
                 ))}
               </ul>
             </div>
@@ -317,7 +321,7 @@ export default function CommissionGuidePage() {
               </div>
               <ul style={{ margin: 0, padding: "0 0 0 16px", display: "flex", flexDirection: "column", gap: "8px" }}>
                 {["내 팀원이 추천한 사람의 창업비", "2단계 이하 조직 창업비", "상대방이 스스로 가입한 경우", "기존 회원 이동/재등록"].map(t => (
-                  <li key={t} style={{ fontSize: "13px", color: "rgba(255,255,255,0.5)" }}>{t}</li>
+                  <li key={t} style={{ fontSize: "13px", color: "var(--text-muted)" }}>{t}</li>
                 ))}
               </ul>
             </div>
@@ -330,8 +334,8 @@ export default function CommissionGuidePage() {
         <div className="fade-up" style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
 
           {/* 총 재원 배분 바 */}
-          <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: "16px", padding: "20px" }}>
-            <p style={{ fontSize: "12px", fontWeight: 700, color: "rgba(255,255,255,0.4)", marginBottom: "12px", letterSpacing: "0.08em" }}>창업비 100% 배분</p>
+          <div style={{ background: "var(--bg-elevated)", border: "1px solid var(--bg-border)", borderRadius: "16px", padding: "20px" }}>
+            <p style={{ fontSize: "12px", fontWeight: 700, color: "var(--text-muted)", marginBottom: "12px", letterSpacing: "0.08em" }}>창업비 100% 배분</p>
             <div style={{ display: "flex", height: "32px", borderRadius: "8px", overflow: "hidden", gap: "2px" }}>
               {[
                 { label: "직판32%", w: 32, color: "#4FA3E8" },
@@ -352,8 +356,8 @@ export default function CommissionGuidePage() {
               ))}
             </div>
             <div style={{ display: "flex", justifyContent: "space-between", marginTop: "8px" }}>
-              <span style={{ fontSize: "11px", color: "rgba(255,255,255,0.4)" }}>수당 합계 55%</span>
-              <span style={{ fontSize: "11px", color: "rgba(255,255,255,0.4)" }}>회사 45%</span>
+              <span style={{ fontSize: "11px", color: "var(--text-muted)" }}>수당 합계 55%</span>
+              <span style={{ fontSize: "11px", color: "var(--text-muted)" }}>회사 45%</span>
             </div>
           </div>
 
@@ -370,7 +374,7 @@ export default function CommissionGuidePage() {
                     <div>
                       <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
                         <span style={{ fontSize: "11px", fontWeight: 800, color: c.color, opacity: 0.7 }}>{c.no}</span>
-                        <span style={{ fontSize: "15px", fontWeight: 800, color: "#fff" }}>{c.name}</span>
+                        <span style={{ fontSize: "15px", fontWeight: 800, color: "var(--text-primary)" }}>{c.name}</span>
                       </div>
                     </div>
                   </div>
@@ -382,25 +386,25 @@ export default function CommissionGuidePage() {
                     {c.rate}
                   </div>
                 </div>
-                <p style={{ fontSize: "13px", color: "rgba(255,255,255,0.65)", lineHeight: 1.6, margin: "0 0 10px" }}>{c.desc}</p>
-                <div style={{ background: "rgba(0,0,0,0.2)", borderRadius: "10px", padding: "10px 12px" }}>
+                <p style={{ fontSize: "13px", color: "var(--text-secondary)", lineHeight: 1.6, margin: "0 0 10px" }}>{c.desc}</p>
+                <div style={{ background: "var(--bg)", borderRadius: "10px", padding: "10px 12px" }}>
                   <span style={{ fontSize: "10px", color: c.color, fontWeight: 700 }}>예시 </span>
-                  <span style={{ fontSize: "12px", color: "rgba(255,255,255,0.5)" }}>{c.example}</span>
+                  <span style={{ fontSize: "12px", color: "var(--text-muted)" }}>{c.example}</span>
                 </div>
               </div>
             ))}
           </div>
 
           {/* 수당표 (창업비별) */}
-          <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: "18px", overflow: "hidden" }}>
-            <div style={{ padding: "16px 20px", borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
-              <p style={{ fontSize: "14px", fontWeight: 700, color: "#fff", margin: 0 }}>창업비별 수당 금액표</p>
+          <div style={{ background: "var(--bg-elevated)", border: "1px solid var(--bg-border)", borderRadius: "18px", overflow: "hidden" }}>
+            <div style={{ padding: "16px 20px", borderBottom: "1px solid var(--bg-border)" }}>
+              <p style={{ fontSize: "14px", fontWeight: 700, color: "var(--text-primary)", margin: 0 }}>창업비별 수당 금액표</p>
             </div>
             <div style={{ overflowX: "auto" }}>
               <table style={{ width: "100%", borderCollapse: "collapse", minWidth: "500px" }}>
                 <thead>
-                  <tr style={{ borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
-                    <th style={{ padding: "12px 16px", textAlign: "left", fontSize: "11px", color: "rgba(255,255,255,0.4)", fontWeight: 600 }}>수당 항목</th>
+                  <tr style={{ borderBottom: "1px solid var(--bg-border)" }}>
+                    <th style={{ padding: "12px 16px", textAlign: "left", fontSize: "11px", color: "var(--text-muted)", fontWeight: 600 }}>수당 항목</th>
                     <th style={{ padding: "12px 16px", textAlign: "center", fontSize: "13px", fontWeight: 700, color: "#6B7280" }}>멤버<br/><span style={{ fontSize: "10px", fontWeight: 600 }}>5만원+</span></th>
                     <th style={{ padding: "12px 16px", textAlign: "center", fontSize: "13px", fontWeight: 700, color: "#378ADD" }}>매니저<br/><span style={{ fontSize: "10px", fontWeight: 600 }}>330만원</span></th>
                     <th style={{ padding: "12px 16px", textAlign: "center", fontSize: "13px", fontWeight: 700, color: "#E8599A" }}>디렉터<br/><span style={{ fontSize: "10px", fontWeight: 600 }}>550만원</span></th>
@@ -415,11 +419,11 @@ export default function CommissionGuidePage() {
                     { label: "매니저 풀 (2%)",   member: "—", manager: "균등배분", director: "—", color: "#EF9F27" },
                     { label: "디렉터 풀 (2%)",   member: "—", manager: "—", director: "균등배분", color: "#E8599A" },
                   ].map(({ label, member, manager, director, color }) => (
-                    <tr key={label} style={{ borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
+                    <tr key={label} style={{ borderBottom: "1px solid var(--bg-border)" }}>
                       <td style={{ padding: "12px 16px" }}>
                         <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
                           <div style={{ width: 8, height: 8, borderRadius: "2px", background: color, flexShrink: 0 }} />
-                          <span style={{ fontSize: "12px", color: "rgba(255,255,255,0.7)" }}>{label}</span>
+                          <span style={{ fontSize: "12px", color: "var(--text-secondary)" }}>{label}</span>
                         </div>
                       </td>
                       {[member, manager, director].map((v, i) => (
@@ -445,9 +449,9 @@ export default function CommissionGuidePage() {
               <button key={i} onClick={() => setActiveScenario(i)} style={{
                 padding: "12px 20px", borderRadius: "14px", cursor: "pointer",
                 fontSize: "13px", fontWeight: 700, transition: "all 0.2s",
-                background: activeScenario === i ? `${s.color}20` : "rgba(255,255,255,0.04)",
-                border: `2px solid ${activeScenario === i ? s.color : "rgba(255,255,255,0.08)"}`,
-                color: activeScenario === i ? s.color : "rgba(255,255,255,0.5)",
+                background: activeScenario === i ? `${s.color}20` : "var(--bg-elevated)",
+                border: `2px solid ${activeScenario === i ? s.color : "var(--bg-border)"}`,
+                color: activeScenario === i ? s.color : "var(--text-muted)",
               }}>
                 {s.title}
               </button>
@@ -484,7 +488,7 @@ export default function CommissionGuidePage() {
                           {i === 2 ? "↑ 50만원" : "↑ 30만원"}
                         </div>
                         <div style={{ width: 44, height: 44, borderRadius: "50%", background: "#378ADD", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "22px" }}>👔</div>
-                        <span style={{ fontSize: "10px", color: "rgba(255,255,255,0.6)" }}>{name}</span>
+                        <span style={{ fontSize: "10px", color: "var(--text-secondary)" }}>{name}</span>
                       </div>
                     ))}
                   </div>
@@ -492,14 +496,14 @@ export default function CommissionGuidePage() {
               </div>
 
               {/* 수당 계산 */}
-              <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: "18px", padding: "24px" }}>
-                <p style={{ fontSize: "12px", color: "rgba(255,255,255,0.4)", fontWeight: 700, marginBottom: "16px", letterSpacing: "0.08em" }}>수당 계산 ({s.basis})</p>
+              <div style={{ background: "var(--bg-elevated)", border: "1px solid var(--bg-border)", borderRadius: "18px", padding: "24px" }}>
+                <p style={{ fontSize: "12px", color: "var(--text-muted)", fontWeight: 700, marginBottom: "16px", letterSpacing: "0.08em" }}>수당 계산 ({s.basis})</p>
                 <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginBottom: "20px" }}>
                   {s.items.map((item, j) => (
-                    <div key={j} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 16px", borderRadius: "12px", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
+                    <div key={j} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 16px", borderRadius: "12px", background: "var(--bg-elevated)", border: "1px solid var(--bg-border)" }}>
                       <div>
-                        <span style={{ fontSize: "13px", fontWeight: 700, color: "rgba(255,255,255,0.8)" }}>{item.label}</span>
-                        <p style={{ fontSize: "11px", color: "rgba(255,255,255,0.35)", margin: 0 }}>{item.note}</p>
+                        <span style={{ fontSize: "13px", fontWeight: 700, color: "var(--text-primary)" }}>{item.label}</span>
+                        <p style={{ fontSize: "11px", color: "var(--text-muted)", margin: 0 }}>{item.note}</p>
                       </div>
                       <span style={{ fontSize: "16px", fontWeight: 800, color: s.color }}>
                         {item.amount.toLocaleString()}원
@@ -510,17 +514,17 @@ export default function CommissionGuidePage() {
                 {/* 합계 */}
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "18px 20px", borderRadius: "14px", background: `${s.color}15`, border: `2px solid ${s.color}40` }}>
                   <div>
-                    <p style={{ fontSize: "12px", color: "rgba(255,255,255,0.5)", margin: 0 }}>예상 월 수당 합계</p>
-                    <p style={{ fontSize: "11px", color: "rgba(255,255,255,0.3)", margin: 0 }}>세금 3.3% 공제 전</p>
+                    <p style={{ fontSize: "12px", color: "var(--text-muted)", margin: 0 }}>예상 월 수당 합계</p>
+                    <p style={{ fontSize: "11px", color: "var(--text-muted)", margin: 0 }}>세금 3.3% 공제 전</p>
                   </div>
                   <div style={{ textAlign: "right" }}>
                     <p style={{ fontFamily: "Syne, sans-serif", fontSize: "36px", fontWeight: 900, color: s.color, margin: 0, lineHeight: 1 }}>
                       {s.total.toLocaleString()}
                     </p>
-                    <p style={{ fontSize: "13px", color: "rgba(255,255,255,0.5)", margin: 0 }}>원</p>
+                    <p style={{ fontSize: "13px", color: "var(--text-muted)", margin: 0 }}>원</p>
                   </div>
                 </div>
-                <p style={{ fontSize: "11px", color: "rgba(255,255,255,0.25)", marginTop: "10px", textAlign: "right" }}>
+                <p style={{ fontSize: "11px", color: "var(--text-muted)", marginTop: "10px", textAlign: "right" }}>
                   실수령 약 {Math.floor(s.total * 0.967).toLocaleString()}원 (세후)
                 </p>
               </div>
@@ -544,12 +548,12 @@ export default function CommissionGuidePage() {
                   <div style={{ padding: "3px 12px", borderRadius: "999px", background: "rgba(107,114,128,0.2)", fontSize: "10px", fontWeight: 800, color: "#9CA3AF", marginBottom: "6px", display: "inline-block" }}>MEMBER</div>
                   <h3 style={{ fontSize: "20px", fontWeight: 800, color: "#9CA3AF", margin: 0 }}>멤버</h3>
                 </div>
-                <div style={{ background: "rgba(0,0,0,0.2)", borderRadius: "12px", padding: "14px", width: "100%", textAlign: "left" }}>
-                  <p style={{ fontSize: "11px", color: "rgba(255,255,255,0.4)", fontWeight: 700, marginBottom: "8px" }}>가입 조건</p>
-                  <p style={{ fontSize: "13px", color: "rgba(255,255,255,0.8)", margin: 0 }}>5만원 이상 구매</p>
+                <div style={{ background: "var(--bg)", borderRadius: "12px", padding: "14px", width: "100%", textAlign: "left" }}>
+                  <p style={{ fontSize: "11px", color: "var(--text-muted)", fontWeight: 700, marginBottom: "8px" }}>가입 조건</p>
+                  <p style={{ fontSize: "13px", color: "var(--text-primary)", margin: 0 }}>5만원 이상 구매</p>
                 </div>
-                <div style={{ background: "rgba(0,0,0,0.2)", borderRadius: "12px", padding: "14px", width: "100%", textAlign: "left" }}>
-                  <p style={{ fontSize: "11px", color: "rgba(255,255,255,0.4)", fontWeight: 700, marginBottom: "8px" }}>수당</p>
+                <div style={{ background: "var(--bg)", borderRadius: "12px", padding: "14px", width: "100%", textAlign: "left" }}>
+                  <p style={{ fontSize: "11px", color: "var(--text-muted)", fontWeight: 700, marginBottom: "8px" }}>수당</p>
                   <p style={{ fontSize: "13px", color: "#9CA3AF", fontWeight: 700, margin: 0 }}>창업자 소개 5%</p>
                 </div>
               </div>
@@ -558,7 +562,7 @@ export default function CommissionGuidePage() {
             {/* 화살표 */}
             <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "0 8px", minWidth: "80px" }}>
               <div style={{ background: "rgba(55,138,221,0.15)", border: "1px solid rgba(55,138,221,0.3)", borderRadius: "12px", padding: "8px 12px", textAlign: "center" }}>
-                <p style={{ fontSize: "9px", color: "rgba(255,255,255,0.4)", margin: "0 0 4px", fontWeight: 600 }}>승급 조건</p>
+                <p style={{ fontSize: "9px", color: "var(--text-muted)", margin: "0 0 4px", fontWeight: 600 }}>승급 조건</p>
                 <p style={{ fontSize: "11px", color: "#378ADD", fontWeight: 800, margin: 0 }}>소개 누적<br/>창업비 합계</p>
                 <p style={{ fontSize: "14px", color: "#378ADD", fontWeight: 900, margin: "4px 0 0" }}>1,000만원</p>
               </div>
@@ -572,17 +576,17 @@ export default function CommissionGuidePage() {
                 <div>
                   <div style={{ padding: "3px 12px", borderRadius: "999px", background: "rgba(55,138,221,0.2)", fontSize: "10px", fontWeight: 800, color: "#378ADD", marginBottom: "6px", display: "inline-block" }}>MANAGER</div>
                   <h3 style={{ fontSize: "20px", fontWeight: 800, color: "#378ADD", margin: 0 }}>매니저</h3>
-                  <p style={{ fontSize: "12px", color: "rgba(255,255,255,0.4)", margin: "4px 0 0" }}>소매창업 330만원</p>
+                  <p style={{ fontSize: "12px", color: "var(--text-muted)", margin: "4px 0 0" }}>소매창업 330만원</p>
                 </div>
-                <div style={{ background: "rgba(0,0,0,0.2)", borderRadius: "12px", padding: "14px", width: "100%", textAlign: "left" }}>
-                  <p style={{ fontSize: "11px", color: "rgba(255,255,255,0.4)", fontWeight: 700, marginBottom: "8px" }}>창업비 수당 (300만원 기준)</p>
+                <div style={{ background: "var(--bg)", borderRadius: "12px", padding: "14px", width: "100%", textAlign: "left" }}>
+                  <p style={{ fontSize: "11px", color: "var(--text-muted)", fontWeight: 700, marginBottom: "8px" }}>창업비 수당 (300만원 기준)</p>
                   {[
                     { label: "직판 수당", val: "96만원" },
                     { label: "추천 오버라이드", val: "30만원/명" },
                     { label: "패스트 스타트", val: "+15만원" },
                   ].map(({ label, val }) => (
                     <div key={label} style={{ display: "flex", justifyContent: "space-between", marginBottom: "4px" }}>
-                      <span style={{ fontSize: "11px", color: "rgba(255,255,255,0.5)" }}>{label}</span>
+                      <span style={{ fontSize: "11px", color: "var(--text-muted)" }}>{label}</span>
                       <span style={{ fontSize: "12px", fontWeight: 700, color: "#378ADD" }}>{val}</span>
                     </div>
                   ))}
@@ -593,10 +597,10 @@ export default function CommissionGuidePage() {
             {/* 화살표 */}
             <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "0 8px", minWidth: "80px" }}>
               <div style={{ background: "rgba(232,89,154,0.15)", border: "1px solid rgba(232,89,154,0.3)", borderRadius: "12px", padding: "8px 12px", textAlign: "center" }}>
-                <p style={{ fontSize: "9px", color: "rgba(255,255,255,0.4)", margin: "0 0 4px", fontWeight: 600 }}>승급 조건</p>
+                <p style={{ fontSize: "9px", color: "var(--text-muted)", margin: "0 0 4px", fontWeight: 600 }}>승급 조건</p>
                 <p style={{ fontSize: "11px", color: "#E8599A", fontWeight: 800, margin: 0 }}>직추천 매니저</p>
                 <p style={{ fontSize: "14px", color: "#E8599A", fontWeight: 900, margin: "4px 0 0" }}>3명 이상</p>
-                <p style={{ fontSize: "9px", color: "rgba(255,255,255,0.3)", margin: "4px 0 0" }}>+산하 누적 2,000만원</p>
+                <p style={{ fontSize: "9px", color: "var(--text-muted)", margin: "4px 0 0" }}>+산하 누적 2,000만원</p>
               </div>
               <div style={{ fontSize: "24px", marginTop: "8px" }}>→</div>
             </div>
@@ -608,17 +612,17 @@ export default function CommissionGuidePage() {
                 <div>
                   <div style={{ padding: "3px 12px", borderRadius: "999px", background: "rgba(232,89,154,0.2)", fontSize: "10px", fontWeight: 800, color: "#E8599A", marginBottom: "6px", display: "inline-block" }}>DIRECTOR</div>
                   <h3 style={{ fontSize: "20px", fontWeight: 800, color: "#E8599A", margin: 0 }}>디렉터</h3>
-                  <p style={{ fontSize: "12px", color: "rgba(255,255,255,0.4)", margin: "4px 0 0" }}>도매창업 550만원</p>
+                  <p style={{ fontSize: "12px", color: "var(--text-muted)", margin: "4px 0 0" }}>도매창업 550만원</p>
                 </div>
-                <div style={{ background: "rgba(0,0,0,0.2)", borderRadius: "12px", padding: "14px", width: "100%", textAlign: "left" }}>
-                  <p style={{ fontSize: "11px", color: "rgba(255,255,255,0.4)", fontWeight: 700, marginBottom: "8px" }}>창업비 수당 (500만원 기준)</p>
+                <div style={{ background: "var(--bg)", borderRadius: "12px", padding: "14px", width: "100%", textAlign: "left" }}>
+                  <p style={{ fontSize: "11px", color: "var(--text-muted)", fontWeight: 700, marginBottom: "8px" }}>창업비 수당 (500만원 기준)</p>
                   {[
                     { label: "직판 수당", val: "160만원" },
                     { label: "추천 오버라이드", val: "50만원/명" },
                     { label: "디렉터 풀", val: "균등배분" },
                   ].map(({ label, val }) => (
                     <div key={label} style={{ display: "flex", justifyContent: "space-between", marginBottom: "4px" }}>
-                      <span style={{ fontSize: "11px", color: "rgba(255,255,255,0.5)" }}>{label}</span>
+                      <span style={{ fontSize: "11px", color: "var(--text-muted)" }}>{label}</span>
                       <span style={{ fontSize: "12px", fontWeight: 700, color: "#E8599A" }}>{val}</span>
                     </div>
                   ))}
@@ -640,10 +644,10 @@ export default function CommissionGuidePage() {
                 { step: "STEP 2", title: "매니저 → 디렉터", desc: "직추천 매니저 3명 + 산하 전체 누적 2,000만원 = 디렉터 승급", color: "#E8599A" },
                 { step: "TIP", title: "패스트 스타트 활용", desc: "가입 90일 내 집중 활동으로 +5% 추가 수당. 첫 달이 가장 중요!", color: "#10B981" },
               ].map(({ step, title, desc, color }) => (
-                <div key={step} style={{ background: "rgba(0,0,0,0.2)", borderRadius: "14px", padding: "16px" }}>
+                <div key={step} style={{ background: "var(--bg)", borderRadius: "14px", padding: "16px" }}>
                   <div style={{ display: "inline-block", padding: "2px 8px", borderRadius: "6px", background: `${color}20`, fontSize: "10px", fontWeight: 800, color, marginBottom: "8px" }}>{step}</div>
-                  <p style={{ fontSize: "13px", fontWeight: 700, color: "#fff", margin: "0 0 6px" }}>{title}</p>
-                  <p style={{ fontSize: "12px", color: "rgba(255,255,255,0.5)", margin: 0, lineHeight: 1.6 }}>{desc}</p>
+                  <p style={{ fontSize: "13px", fontWeight: 700, color: "var(--text-primary)", margin: "0 0 6px" }}>{title}</p>
+                  <p style={{ fontSize: "12px", color: "var(--text-muted)", margin: 0, lineHeight: 1.6 }}>{desc}</p>
                 </div>
               ))}
             </div>

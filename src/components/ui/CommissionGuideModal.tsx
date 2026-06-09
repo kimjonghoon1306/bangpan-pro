@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import { X } from "lucide-react";
+import ThemeToggle from "@/components/ui/ThemeToggle";
 
 const TABS = [
   { key: "structure", label: "📊 조직도" },
@@ -57,9 +58,12 @@ export default function CommissionGuideModal({ onClose }: { onClose: () => void 
             <p style={{ fontSize: "10px", color: "rgba(255,255,255,0.35)", letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: "3px" }}>1대 오버라이드 · 총 수당 재원 55%</p>
             <h2 style={{ fontFamily: "Syne,sans-serif", fontSize: "22px", fontWeight: 800, color: "#fff", margin: 0 }}>수당 플랜 설명서</h2>
           </div>
-          <button onClick={onClose} style={{ width: 38, height: 38, borderRadius: "50%", background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.12)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "rgba(255,255,255,0.5)", flexShrink: 0 }}>
-            <X size={15} />
-          </button>
+          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+            <ThemeToggle size="sm" />
+            <button onClick={onClose} style={{ width: 38, height: 38, borderRadius: "50%", background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.12)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "rgba(255,255,255,0.5)" }}>
+              <X size={15} />
+            </button>
+          </div>
         </div>
 
         {/* 탭 */}
