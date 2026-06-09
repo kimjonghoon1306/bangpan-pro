@@ -80,29 +80,30 @@ export default function CommissionPlanModal({ onClose }: { onClose: () => void }
   return (
     <div style={{
       position: "fixed", inset: 0, zIndex: 9999,
-      background: "rgba(0,0,0,0.88)", backdropFilter: "blur(14px)",
+      background: "rgba(0,0,0,0.7)", backdropFilter: "blur(14px)",
       overflowY: "auto", padding: "20px",
     }} onClick={onClose}>
       <div onClick={e => e.stopPropagation()} style={{
         width: "100%", maxWidth: "1000px", margin: "0 auto",
-        display: "flex", flexDirection: "column", gap: "20px", paddingBottom: "20px",
+        background: "var(--bg-surface)", borderRadius: "24px", padding: "24px",
+        display: "flex", flexDirection: "column", gap: "20px",
       }}>
 
         {/* 헤더 */}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <div>
-            <p style={{ fontSize: "11px", color: "rgba(255,255,255,0.35)", letterSpacing: "0.15em", textTransform: "uppercase", marginBottom: "4px" }}>
+            <p style={{ fontSize: "11px", color: "var(--text-muted)", letterSpacing: "0.15em", textTransform: "uppercase", marginBottom: "4px" }}>
               1대 오버라이드 구조 · 총 수당 재원 55%
             </p>
-            <h2 style={{ fontFamily: "Syne,sans-serif", fontSize: "26px", fontWeight: 800, color: "#fff", margin: 0 }}>수당 플랜</h2>
+            <h2 style={{ fontFamily: "Syne,sans-serif", fontSize: "26px", fontWeight: 800, color: "var(--text-primary)", margin: 0 }}>수당 플랜</h2>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
             <ThemeToggle size="sm" />
             <button onClick={onClose} style={{
               width: 40, height: 40, borderRadius: "50%",
-              background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.12)",
+              background: "var(--bg-elevated)", border: "1px solid var(--bg-border)",
               display: "flex", alignItems: "center", justifyContent: "center",
-              cursor: "pointer", color: "rgba(255,255,255,0.5)",
+              cursor: "pointer", color: "var(--text-muted)",
             }}>
               <X size={16} />
             </button>
@@ -118,14 +119,14 @@ export default function CommissionPlanModal({ onClose }: { onClose: () => void }
           <span style={{ fontSize: "22px" }}>⚡</span>
           <div>
             <p style={{ fontSize: "13px", fontWeight: 800, color: "#FFD700", margin: 0 }}>직추천 1대에서만 수당 발생</p>
-            <p style={{ fontSize: "11px", color: "rgba(255,255,255,0.4)", margin: 0 }}>
+            <p style={{ fontSize: "11px", color: "var(--text-muted)", margin: 0 }}>
               내가 직접 추천한 창업자 창업비에서만 · 그 이하 조직은 각자 수령
             </p>
           </div>
         </div>
 
         {loading ? (
-          <div style={{ textAlign: "center", padding: "60px", color: "rgba(255,255,255,0.4)" }}>불러오는 중...</div>
+          <div style={{ textAlign: "center", padding: "60px", color: "var(--text-muted)" }}>불러오는 중...</div>
         ) : (<>
 
           {/* 직급 카드 3개 */}
@@ -157,7 +158,7 @@ export default function CommissionPlanModal({ onClose }: { onClose: () => void }
                       <h3 style={{ fontFamily: "Syne,sans-serif", fontSize: "22px", fontWeight: 800, color: "#fff", margin: "2px 0 0" }}>{p.name}</h3>
                     </div>
                     <div style={{ marginLeft: "auto", textAlign: "right" }}>
-                      <p style={{ fontSize: "11px", color: "rgba(255,255,255,0.4)", margin: 0 }}>창업비</p>
+                      <p style={{ fontSize: "11px", color: "var(--text-muted)", margin: 0 }}>창업비</p>
                       <p style={{ fontSize: "16px", fontWeight: 800, color: s.main, margin: 0 }}>{fee?.label}</p>
                     </div>
                   </div>
@@ -170,20 +171,20 @@ export default function CommissionPlanModal({ onClose }: { onClose: () => void }
                       { label: "④ 패스트 스타트",     rate: 5,           amt: fast,     color: "#10B981", show: p.level >= 2 },
                       { label: "⑤ 팀원 첫모집",       rate: 3,           amt: first,    color: "#F472B6", show: p.level >= 2 },
                     ].filter(i => i.show).map(({ label, rate, amt, color }) => (
-                      <div key={label} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "9px 12px", borderRadius: "10px", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.07)" }}>
-                        <span style={{ fontSize: "11px", color: "rgba(255,255,255,0.6)", fontWeight: 500 }}>{label}</span>
+                      <div key={label} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "9px 12px", borderRadius: "10px", background: "var(--bg-elevated)", border: "1px solid var(--bg-border)" }}>
+                        <span style={{ fontSize: "11px", color: "var(--text-secondary)", fontWeight: 500 }}>{label}</span>
                         <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                          <span style={{ fontSize: "11px", color: "rgba(255,255,255,0.3)" }}>{amt > 0 ? `${amt.toLocaleString()}원` : ""}</span>
+                          <span style={{ fontSize: "11px", color: "var(--text-muted)" }}>{amt > 0 ? `${amt.toLocaleString()}원` : ""}</span>
                           <span style={{ fontSize: "15px", fontWeight: 800, color, minWidth: "38px", textAlign: "right" }}>{rate > 0 ? `${rate}%` : "5%"}</span>
                         </div>
                       </div>
                     ))}
                     {/* 멤버는 소개 수당만 */}
                     {p.level === 1 && (
-                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "9px 12px", borderRadius: "10px", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.07)" }}>
-                        <span style={{ fontSize: "11px", color: "rgba(255,255,255,0.6)", fontWeight: 500 }}>③ 창업자 소개 수당</span>
+                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "9px 12px", borderRadius: "10px", background: "var(--bg-elevated)", border: "1px solid var(--bg-border)" }}>
+                        <span style={{ fontSize: "11px", color: "var(--text-secondary)", fontWeight: 500 }}>③ 창업자 소개 수당</span>
                         <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                          <span style={{ fontSize: "11px", color: "rgba(255,255,255,0.3)" }}>매니저 15만 / 디렉터 25만</span>
+                          <span style={{ fontSize: "11px", color: "var(--text-muted)" }}>매니저 15만 / 디렉터 25만</span>
                           <span style={{ fontSize: "15px", fontWeight: 800, color: "#F5A623", minWidth: "38px", textAlign: "right" }}>5%</span>
                         </div>
                       </div>
@@ -191,26 +192,26 @@ export default function CommissionPlanModal({ onClose }: { onClose: () => void }
                   </div>
 
                   {/* 승급 조건 */}
-                  <div style={{ padding: "12px 14px", borderRadius: "12px", background: "rgba(0,0,0,0.25)", border: "1px solid rgba(255,255,255,0.07)" }}>
-                    <p style={{ fontSize: "10px", color: "rgba(255,255,255,0.3)", fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: "8px" }}>
+                  <div style={{ padding: "12px 14px", borderRadius: "12px", background: "var(--bg)", border: "1px solid var(--bg-border)" }}>
+                    <p style={{ fontSize: "10px", color: "var(--text-muted)", fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: "8px" }}>
                       {p.level === 1 ? "가입 조건" : p.level === 2 ? "가입 조건 (또는 멤버 승급)" : "승급 조건"}
                     </p>
                     {p.level === 1 ? (
-                      <p style={{ fontSize: "13px", color: "rgba(255,255,255,0.7)", margin: 0 }}>5만원 이상 구매 즉시</p>
+                      <p style={{ fontSize: "13px", color: "var(--text-secondary)", margin: 0 }}>5만원 이상 구매 즉시</p>
                     ) : p.level === 2 ? (
-                      <p style={{ fontSize: "13px", color: "rgba(255,255,255,0.7)", margin: 0 }}>소매 창업 330만원 <span style={{ color: "rgba(255,255,255,0.4)" }}>또는</span> 소개 누적 창업비 1,000만원</p>
+                      <p style={{ fontSize: "13px", color: "var(--text-secondary)", margin: 0 }}>소매 창업 330만원 <span style={{ color: "var(--text-muted)" }}>또는</span> 소개 누적 창업비 1,000만원</p>
                     ) : (
                       <div style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
                         <div style={{ display: "flex", justifyContent: "space-between" }}>
-                          <span style={{ fontSize: "11px", color: "rgba(255,255,255,0.4)" }}>직추천 매니저</span>
+                          <span style={{ fontSize: "11px", color: "var(--text-muted)" }}>직추천 매니저</span>
                           <span style={{ fontSize: "13px", fontWeight: 700, color: s.main }}>3명 이상</span>
                         </div>
                         <div style={{ display: "flex", justifyContent: "space-between" }}>
-                          <span style={{ fontSize: "11px", color: "rgba(255,255,255,0.4)" }}>산하 전체 누적 매출</span>
+                          <span style={{ fontSize: "11px", color: "var(--text-muted)" }}>산하 전체 누적 매출</span>
                           <span style={{ fontSize: "13px", fontWeight: 700, color: s.main }}>{fmt(p.minGv)}원</span>
                         </div>
                         <div style={{ display: "flex", justifyContent: "space-between" }}>
-                          <span style={{ fontSize: "11px", color: "rgba(255,255,255,0.4)" }}>또는 도매 창업</span>
+                          <span style={{ fontSize: "11px", color: "var(--text-muted)" }}>또는 도매 창업</span>
                           <span style={{ fontSize: "13px", fontWeight: 700, color: s.main }}>550만원</span>
                         </div>
                       </div>
@@ -222,8 +223,8 @@ export default function CommissionPlanModal({ onClose }: { onClose: () => void }
           </div>
 
           {/* 수당 플랜 배분 바 */}
-          <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: "20px", padding: "22px 24px" }}>
-            <p style={{ fontSize: "12px", color: "rgba(255,255,255,0.35)", fontWeight: 700, marginBottom: "14px", letterSpacing: "0.08em" }}>창업비 100% 배분 구조</p>
+          <div style={{ background: "var(--bg-elevated)", border: "1px solid var(--bg-border)", borderRadius: "20px", padding: "22px 24px" }}>
+            <p style={{ fontSize: "12px", color: "var(--text-muted)", fontWeight: 700, marginBottom: "14px", letterSpacing: "0.08em" }}>창업비 100% 배분 구조</p>
             <div style={{ display: "flex", height: "28px", borderRadius: "8px", overflow: "hidden", gap: "2px", marginBottom: "10px" }}>
               {[
                 { label: "직판 32%", w: 32, color: "#4FA3E8" },
@@ -240,7 +241,7 @@ export default function CommissionPlanModal({ onClose }: { onClose: () => void }
             </div>
             <div style={{ display: "flex", justifyContent: "space-between" }}>
               <span style={{ fontSize: "11px", fontWeight: 700, color: "#C9A84C" }}>수당 합계 55%</span>
-              <span style={{ fontSize: "11px", color: "rgba(255,255,255,0.3)" }}>회사 수익 45%</span>
+              <span style={{ fontSize: "11px", color: "var(--text-muted)" }}>회사 수익 45%</span>
             </div>
           </div>
 
@@ -250,13 +251,13 @@ export default function CommissionPlanModal({ onClose }: { onClose: () => void }
               <Zap size={18} color="#A78BFA" />
               <div>
                 <p style={{ fontSize: "14px", fontWeight: 700, color: "#A78BFA", margin: 0 }}>전체 창업비 매출 5% 풀</p>
-                <p style={{ fontSize: "11px", color: "rgba(255,255,255,0.35)", margin: 0 }}>매달 전체 창업비 합계에서 별도 적립</p>
+                <p style={{ fontSize: "11px", color: "var(--text-muted)", margin: 0 }}>매달 전체 창업비 합계에서 별도 적립</p>
               </div>
               <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: "6px" }}>
-                <span style={{ fontSize: "11px", color: "rgba(255,255,255,0.35)" }}>월 창업비 총액</span>
+                <span style={{ fontSize: "11px", color: "var(--text-muted)" }}>월 창업비 총액</span>
                 <input type="number" value={totalSales} onChange={e => setTotalSales(Number(e.target.value))}
-                  style={{ width: "120px", padding: "6px 10px", borderRadius: "8px", background: "rgba(255,255,255,0.06)", border: "1px solid rgba(167,139,250,0.3)", color: "#A78BFA", fontSize: "13px", fontWeight: 700, outline: "none", textAlign: "right" }} />
-                <span style={{ fontSize: "11px", color: "rgba(255,255,255,0.35)" }}>원</span>
+                  style={{ width: "120px", padding: "6px 10px", borderRadius: "8px", background: "var(--bg-elevated)", border: "1px solid rgba(167,139,250,0.3)", color: "#A78BFA", fontSize: "13px", fontWeight: 700, outline: "none", textAlign: "right" }} />
+                <span style={{ fontSize: "11px", color: "var(--text-muted)" }}>원</span>
               </div>
             </div>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: "12px" }}>
@@ -265,7 +266,7 @@ export default function CommissionPlanModal({ onClose }: { onClose: () => void }
                 { label: "디렉터 풀", pct: 2, color: "#E8599A", icon: "👑", desc: "디렉터 전원 N분의1 균등" },
                 { label: "회사 재량", pct: 1, color: "#A78BFA", icon: "🎯", desc: "이벤트·포상·특별 지급" },
               ].map(({ label, pct, color, icon, desc }) => (
-                <div key={label} style={{ background: "rgba(255,255,255,0.04)", border: `1px solid ${color}30`, borderRadius: "14px", padding: "16px" }}>
+                <div key={label} style={{ background: "var(--bg-elevated)", border: `1px solid ${color}30`, borderRadius: "14px", padding: "16px" }}>
                   <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "10px" }}>
                     <span style={{ fontSize: "20px" }}>{icon}</span>
                     <span style={{ fontSize: "12px", fontWeight: 700, color }}>{label}</span>
@@ -274,7 +275,7 @@ export default function CommissionPlanModal({ onClose }: { onClose: () => void }
                   <p style={{ fontFamily: "Syne,sans-serif", fontSize: "22px", fontWeight: 800, color, marginBottom: "4px" }}>
                     {Math.floor(totalSales * pct / 100).toLocaleString()}원
                   </p>
-                  <p style={{ fontSize: "11px", color: "rgba(255,255,255,0.35)", margin: 0 }}>{desc}</p>
+                  <p style={{ fontSize: "11px", color: "var(--text-muted)", margin: 0 }}>{desc}</p>
                 </div>
               ))}
             </div>

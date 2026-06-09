@@ -32,7 +32,7 @@ function Person({ emoji, label, badge, color, me, sub, small }: {
       <div style={{ textAlign: "center" }}>
         <div style={{ display: "inline-block", padding: "1px 7px", borderRadius: "999px", fontSize: "9px", fontWeight: 800, background: `${color}22`, color, border: `1px solid ${color}44`, marginBottom: "2px" }}>{badge}</div>
         <p style={{ fontSize: small ? "11px" : "12px", fontWeight: 600, color: "#fff", margin: 0 }}>{label}</p>
-        {sub && <p style={{ fontSize: "10px", color: "rgba(255,255,255,0.4)", margin: 0 }}>{sub}</p>}
+        {sub && <p style={{ fontSize: "10px", color: "var(--text-muted)", margin: 0 }}>{sub}</p>}
       </div>
     </div>
   );
@@ -44,23 +44,24 @@ export default function CommissionGuideModal({ onClose }: { onClose: () => void 
   return (
     <div style={{
       position: "fixed", inset: 0, zIndex: 9999,
-      background: "rgba(0,0,0,0.88)", backdropFilter: "blur(14px)",
+      background: "rgba(0,0,0,0.7)", backdropFilter: "blur(14px)",
       overflowY: "auto", padding: "16px",
     }} onClick={onClose}>
       <div onClick={e => e.stopPropagation()} style={{
         width: "100%", maxWidth: "680px", margin: "0 auto",
-        display: "flex", flexDirection: "column", gap: "16px", paddingBottom: "20px",
+        background: "var(--bg-surface)", borderRadius: "24px", padding: "20px",
+        display: "flex", flexDirection: "column", gap: "16px",
       }}>
 
         {/* 헤더 */}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <div>
-            <p style={{ fontSize: "10px", color: "rgba(255,255,255,0.35)", letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: "3px" }}>1대 오버라이드 · 총 수당 재원 55%</p>
+            <p style={{ fontSize: "10px", color: "var(--text-muted)", letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: "3px" }}>1대 오버라이드 · 총 수당 재원 55%</p>
             <h2 style={{ fontFamily: "Syne,sans-serif", fontSize: "22px", fontWeight: 800, color: "#fff", margin: 0 }}>수당 플랜 설명서</h2>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
             <ThemeToggle size="sm" />
-            <button onClick={onClose} style={{ width: 38, height: 38, borderRadius: "50%", background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.12)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "rgba(255,255,255,0.5)" }}>
+            <button onClick={onClose} style={{ width: 38, height: 38, borderRadius: "50%", background: "var(--bg-elevated)", border: "1px solid var(--bg-border)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "var(--text-muted)" }}>
               <X size={15} />
             </button>
           </div>
@@ -86,12 +87,12 @@ export default function CommissionGuideModal({ onClose }: { onClose: () => void 
               <span style={{ fontSize: "20px" }}>⚡</span>
               <div>
                 <p style={{ fontSize: "13px", fontWeight: 800, color: "#FFD700", margin: 0 }}>직추천 1대에서만 수당 발생</p>
-                <p style={{ fontSize: "11px", color: "rgba(255,255,255,0.5)", margin: 0 }}>내가 직접 추천한 창업자 창업비에서만 수당을 받습니다</p>
+                <p style={{ fontSize: "11px", color: "var(--text-muted)", margin: 0 }}>내가 직접 추천한 창업자 창업비에서만 수당을 받습니다</p>
               </div>
             </div>
 
             {/* 조직도 */}
-            <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: "18px", padding: "28px 20px" }}>
+            <div style={{ background: "var(--bg-elevated)", border: "1px solid var(--bg-border)", borderRadius: "18px", padding: "28px 20px" }}>
               <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "12px" }}>
 
                 <Person emoji="👑" label="나 (디렉터)" badge="DIRECTOR" color="#E8599A" me sub="도매창업 550만원" />
@@ -109,7 +110,7 @@ export default function CommissionGuideModal({ onClose }: { onClose: () => void 
                         ↑ 수당 30만원
                       </div>
                       <Person emoji="👔" label={name} badge="MANAGER" color="#378ADD" sub="소매창업 330만원" />
-                      <div style={{ fontSize: "9px", color: "rgba(255,255,255,0.25)", fontWeight: 600 }}>↓ 나는 수당 없음</div>
+                      <div style={{ fontSize: "9px", color: "var(--text-muted)", fontWeight: 600 }}>↓ 나는 수당 없음</div>
                       <div style={{ display: "flex", gap: "8px" }}>
                         {[0, 1].map(j => (
                           <div key={j} style={{ opacity: 0.4 }}>
@@ -129,13 +130,13 @@ export default function CommissionGuideModal({ onClose }: { onClose: () => void 
               <div style={{ background: "rgba(55,138,221,0.06)", border: "1px solid rgba(55,138,221,0.2)", borderRadius: "14px", padding: "16px" }}>
                 <p style={{ fontSize: "12px", fontWeight: 800, color: "#378ADD", marginBottom: "10px" }}>✅ 수당 받는 경우</p>
                 {["내가 직접 창업 (직판 32%)", "내 직추천 창업자 (오버 10%)", "90일 미션 달성 (패스트스타트)", "내 팀원 첫모집 성공 (+3%)"].map(t => (
-                  <p key={t} style={{ fontSize: "11px", color: "rgba(255,255,255,0.6)", margin: "0 0 4px" }}>• {t}</p>
+                  <p key={t} style={{ fontSize: "11px", color: "var(--text-secondary)", margin: "0 0 4px" }}>• {t}</p>
                 ))}
               </div>
               <div style={{ background: "rgba(255,60,60,0.05)", border: "1px solid rgba(255,60,60,0.15)", borderRadius: "14px", padding: "16px" }}>
                 <p style={{ fontSize: "12px", fontWeight: 800, color: "#F87171", marginBottom: "10px" }}>❌ 수당 없는 경우</p>
                 {["팀원의 팀원 창업비", "2단계 이하 조직 창업비", "상대방 자발적 가입"].map(t => (
-                  <p key={t} style={{ fontSize: "11px", color: "rgba(255,255,255,0.4)", margin: "0 0 4px" }}>• {t}</p>
+                  <p key={t} style={{ fontSize: "11px", color: "var(--text-muted)", margin: "0 0 4px" }}>• {t}</p>
                 ))}
               </div>
             </div>
@@ -146,8 +147,8 @@ export default function CommissionGuideModal({ onClose }: { onClose: () => void 
         {tab === "commissions" && (
           <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
             {/* 배분 바 */}
-            <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: "14px", padding: "16px" }}>
-              <p style={{ fontSize: "11px", color: "rgba(255,255,255,0.4)", marginBottom: "10px", fontWeight: 600 }}>창업비 100% 배분</p>
+            <div style={{ background: "var(--bg-elevated)", border: "1px solid var(--bg-border)", borderRadius: "14px", padding: "16px" }}>
+              <p style={{ fontSize: "11px", color: "var(--text-muted)", marginBottom: "10px", fontWeight: 600 }}>창업비 100% 배분</p>
               <div style={{ display: "flex", height: "24px", borderRadius: "6px", overflow: "hidden", gap: "2px" }}>
                 {[
                   { label: "직판 32%", w: 32, color: "#4FA3E8" },
@@ -164,7 +165,7 @@ export default function CommissionGuideModal({ onClose }: { onClose: () => void 
               </div>
               <div style={{ display: "flex", justifyContent: "space-between", marginTop: "6px" }}>
                 <span style={{ fontSize: "10px", fontWeight: 700, color: "#C9A84C" }}>수당 합계 55%</span>
-                <span style={{ fontSize: "10px", color: "rgba(255,255,255,0.3)" }}>회사 수익 45%</span>
+                <span style={{ fontSize: "10px", color: "var(--text-muted)" }}>회사 수익 45%</span>
               </div>
             </div>
 
@@ -189,10 +190,10 @@ export default function CommissionGuideModal({ onClose }: { onClose: () => void 
                   </div>
                   <span style={{ padding: "3px 10px", borderRadius: "999px", background: `${c.color}20`, border: `1px solid ${c.color}44`, fontSize: "14px", fontWeight: 900, color: c.color }}>{c.rate}</span>
                 </div>
-                <p style={{ fontSize: "12px", color: "rgba(255,255,255,0.55)", margin: "0 0 6px", lineHeight: 1.5 }}>{c.desc}</p>
-                <div style={{ background: "rgba(0,0,0,0.2)", borderRadius: "8px", padding: "7px 10px" }}>
+                <p style={{ fontSize: "12px", color: "var(--text-secondary)", margin: "0 0 6px", lineHeight: 1.5 }}>{c.desc}</p>
+                <div style={{ background: "var(--bg)", borderRadius: "8px", padding: "7px 10px" }}>
                   <span style={{ fontSize: "10px", color: c.color, fontWeight: 700 }}>예시 </span>
-                  <span style={{ fontSize: "11px", color: "rgba(255,255,255,0.4)" }}>{c.ex}</span>
+                  <span style={{ fontSize: "11px", color: "var(--text-muted)" }}>{c.ex}</span>
                 </div>
               </div>
             ))}
@@ -239,10 +240,10 @@ export default function CommissionGuideModal({ onClose }: { onClose: () => void 
                 <p style={{ fontSize: "13px", fontWeight: 800, color: s.color, marginBottom: "12px" }}>{s.title}</p>
                 <div style={{ display: "flex", flexDirection: "column", gap: "7px", marginBottom: "12px" }}>
                   {s.items.map((item, j) => (
-                    <div key={j} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 12px", borderRadius: "9px", background: "rgba(0,0,0,0.2)" }}>
+                    <div key={j} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 12px", borderRadius: "9px", background: "var(--bg)" }}>
                       <div>
-                        <p style={{ fontSize: "12px", fontWeight: 600, color: "rgba(255,255,255,0.75)", margin: 0 }}>{item.label}</p>
-                        <p style={{ fontSize: "10px", color: "rgba(255,255,255,0.3)", margin: 0 }}>{item.note}</p>
+                        <p style={{ fontSize: "12px", fontWeight: 600, color: "var(--text-primary)", margin: 0 }}>{item.label}</p>
+                        <p style={{ fontSize: "10px", color: "var(--text-muted)", margin: 0 }}>{item.note}</p>
                       </div>
                       <span style={{ fontSize: "13px", fontWeight: 800, color: s.color }}>{item.amount.toLocaleString()}원</span>
                     </div>
@@ -250,12 +251,12 @@ export default function CommissionGuideModal({ onClose }: { onClose: () => void 
                 </div>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px 16px", borderRadius: "12px", background: `${s.color}15`, border: `1.5px solid ${s.color}40` }}>
                   <div>
-                    <p style={{ fontSize: "11px", color: "rgba(255,255,255,0.4)", margin: 0 }}>예상 수당 합계</p>
-                    <p style={{ fontSize: "11px", color: "rgba(255,255,255,0.3)", margin: 0 }}>실수령 약 {Math.floor(s.total * 0.967).toLocaleString()}원 (세후)</p>
+                    <p style={{ fontSize: "11px", color: "var(--text-muted)", margin: 0 }}>예상 수당 합계</p>
+                    <p style={{ fontSize: "11px", color: "var(--text-muted)", margin: 0 }}>실수령 약 {Math.floor(s.total * 0.967).toLocaleString()}원 (세후)</p>
                   </div>
                   <div style={{ textAlign: "right" }}>
                     <p style={{ fontFamily: "Syne, sans-serif", fontSize: "28px", fontWeight: 900, color: s.color, margin: 0, lineHeight: 1 }}>{s.total.toLocaleString()}</p>
-                    <p style={{ fontSize: "11px", color: "rgba(255,255,255,0.4)", margin: 0 }}>원</p>
+                    <p style={{ fontSize: "11px", color: "var(--text-muted)", margin: 0 }}>원</p>
                   </div>
                 </div>
               </div>
@@ -280,7 +281,7 @@ export default function CommissionGuideModal({ onClose }: { onClose: () => void 
                 tip: "또는 도매 창업(550만원)으로 즉시 디렉터",
               },
             ].map((s, i) => (
-              <div key={i} style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: "16px", padding: "20px" }}>
+              <div key={i} style={{ background: "var(--bg-elevated)", border: "1px solid var(--bg-border)", borderRadius: "16px", padding: "20px" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: "12px", flexWrap: "wrap" }}>
                   <Person emoji={s.from.emoji} label={s.from.label} badge={s.from.badge} color={s.from.color} sub={s.from.fee} />
                   <div style={{ flex: 1, minWidth: "120px", textAlign: "center" }}>
@@ -293,20 +294,20 @@ export default function CommissionGuideModal({ onClose }: { onClose: () => void 
                 </div>
                 <div style={{ marginTop: "12px", padding: "9px 12px", borderRadius: "10px", background: "rgba(201,168,76,0.07)", border: "1px solid rgba(201,168,76,0.2)" }}>
                   <span style={{ fontSize: "10px", color: "#C9A84C", fontWeight: 700 }}>💡 TIP </span>
-                  <span style={{ fontSize: "11px", color: "rgba(255,255,255,0.5)" }}>{s.tip}</span>
+                  <span style={{ fontSize: "11px", color: "var(--text-muted)" }}>{s.tip}</span>
                 </div>
               </div>
             ))}
 
             {/* 창업 유형 비교 */}
-            <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: "16px", overflow: "hidden" }}>
-              <div style={{ padding: "14px 16px", borderBottom: "1px solid rgba(255,255,255,0.07)" }}>
+            <div style={{ background: "var(--bg-elevated)", border: "1px solid var(--bg-border)", borderRadius: "16px", overflow: "hidden" }}>
+              <div style={{ padding: "14px 16px", borderBottom: "1px solid var(--bg-border)" }}>
                 <p style={{ fontSize: "13px", fontWeight: 700, color: "#fff", margin: 0 }}>창업 유형 비교</p>
               </div>
               <table style={{ width: "100%", borderCollapse: "collapse" }}>
                 <thead>
-                  <tr style={{ borderBottom: "1px solid rgba(255,255,255,0.07)" }}>
-                    <th style={{ padding: "10px 14px", textAlign: "left", fontSize: "11px", color: "rgba(255,255,255,0.4)", fontWeight: 600 }}>구분</th>
+                  <tr style={{ borderBottom: "1px solid var(--bg-border)" }}>
+                    <th style={{ padding: "10px 14px", textAlign: "left", fontSize: "11px", color: "var(--text-muted)", fontWeight: 600 }}>구분</th>
                     <th style={{ padding: "10px 14px", textAlign: "center", fontSize: "12px", fontWeight: 700, color: "#378ADD" }}>소매창업</th>
                     <th style={{ padding: "10px 14px", textAlign: "center", fontSize: "12px", fontWeight: 700, color: "#E8599A" }}>도매창업</th>
                   </tr>
@@ -320,7 +321,7 @@ export default function CommissionGuideModal({ onClose }: { onClose: () => void 
                     { label: "구매 가격", v1: "소매가", v2: "도매가 (더 저렴)" },
                   ].map(({ label, v1, v2 }) => (
                     <tr key={label} style={{ borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
-                      <td style={{ padding: "9px 14px", fontSize: "12px", color: "rgba(255,255,255,0.5)" }}>{label}</td>
+                      <td style={{ padding: "9px 14px", fontSize: "12px", color: "var(--text-muted)" }}>{label}</td>
                       <td style={{ padding: "9px 14px", textAlign: "center", fontSize: "12px", fontWeight: 700, color: "#378ADD" }}>{v1}</td>
                       <td style={{ padding: "9px 14px", textAlign: "center", fontSize: "12px", fontWeight: 700, color: "#E8599A" }}>{v2}</td>
                     </tr>
