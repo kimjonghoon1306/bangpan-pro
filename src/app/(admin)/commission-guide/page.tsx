@@ -195,7 +195,7 @@ export default function CommissionGuidePage() {
             fontSize: "13px", fontWeight: 700, transition: "all 0.2s",
             background: activeTab === t.key ? "rgba(201,168,76,0.2)" : "var(--bg-elevated)",
             border: `1.5px solid ${activeTab === t.key ? "rgba(201,168,76,0.6)" : "var(--bg-border)"}`,
-            color: activeTab === t.key ? "#C9A84C" : "var(--text-muted)",
+            color: activeTab === t.key ? "#C9A84C" : "var(--text-secondary)",
           }}>
             {t.label}
           </button>
