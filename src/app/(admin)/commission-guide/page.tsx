@@ -724,12 +724,21 @@ export default function CommissionGuidePage() {
             <div style={{ background: "rgba(255,215,0,0.06)", border: "1px solid rgba(255,215,0,0.2)", borderRadius: "12px", padding: "14px 16px" }}>
               <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "8px" }}>
                 <span style={{ fontSize: "16px" }}>👑</span>
-                <p style={{ fontSize: "13px", fontWeight: 700, color: "var(--text-primary)", margin: 0 }}>조건: 디렉터가 디렉터를 3명 배출</p>
+                <p style={{ fontSize: "13px", fontWeight: 700, color: "var(--text-primary)", margin: 0 }}>달성 조건 2가지 동시 충족</p>
               </div>
-              <p style={{ fontSize: "12px", color: "var(--text-secondary)", margin: "0 0 6px", lineHeight: 1.6 }}>
-                디렉터가 직추천으로 디렉터 3명을 배출하면 <strong style={{ color: "#FFD700" }}>본부장</strong> 타이틀이 부여됩니다.
-              </p>
-              <div style={{ display: "flex", alignItems: "center", gap: "8px", padding: "8px 12px", borderRadius: "8px", background: "rgba(255,215,0,0.08)", border: "1px dashed rgba(255,215,0,0.3)" }}>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px", marginBottom: "12px" }}>
+                <div style={{ background: "rgba(255,215,0,0.08)", border: "1px solid rgba(255,215,0,0.25)", borderRadius: "10px", padding: "12px", textAlign: "center" }}>
+                  <p style={{ fontSize: "22px", margin: "0 0 4px" }}>👑</p>
+                  <p style={{ fontSize: "12px", fontWeight: 700, color: "var(--text-primary)", margin: 0 }}>직추천 디렉터</p>
+                  <p style={{ fontFamily: "Syne,sans-serif", fontSize: "24px", fontWeight: 900, color: "#FFD700", margin: "4px 0 0" }}>3명</p>
+                </div>
+                <div style={{ background: "rgba(255,215,0,0.08)", border: "1px solid rgba(255,215,0,0.25)", borderRadius: "10px", padding: "12px", textAlign: "center" }}>
+                  <p style={{ fontSize: "22px", margin: "0 0 4px" }}>📊</p>
+                  <p style={{ fontSize: "12px", fontWeight: 700, color: "var(--text-primary)", margin: 0 }}>산하 전체 누적 매출</p>
+                  <p style={{ fontFamily: "Syne,sans-serif", fontSize: "24px", fontWeight: 900, color: "#FFD700", margin: "4px 0 0" }}>1억원</p>
+                </div>
+              </div>
+              <div style={{ display: "flex", alignItems: "center", gap: "8px", padding: "10px 12px", borderRadius: "8px", background: "rgba(255,215,0,0.06)", border: "1px dashed rgba(255,215,0,0.3)" }}>
                 <span style={{ fontSize: "14px" }}>🔒</span>
                 <p style={{ fontSize: "12px", color: "var(--text-muted)", margin: 0, fontStyle: "italic" }}>추가 혜택은 추후 공개 예정입니다.</p>
               </div>

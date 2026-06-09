@@ -439,8 +439,17 @@ export default function CommissionGuideModal({ onClose }: { onClose: () => void 
                 </div>
               </div>
               <div style={{ padding: "12px 14px", borderRadius: "10px", background: "rgba(255,215,0,0.06)", border: "1px solid rgba(255,215,0,0.2)" }}>
-                <p style={{ fontSize: "12px", fontWeight: 700, color: "var(--text-primary)", margin: "0 0 4px" }}>조건: 디렉터가 디렉터를 3명 배출</p>
-                <p style={{ fontSize: "11px", color: "var(--text-muted)", margin: 0 }}>본부장 타이틀이 부여됩니다. 추가 혜택은 추후 공개 예정입니다.</p>
+                <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                    <span style={{ fontSize: "14px" }}>👑</span>
+                    <p style={{ fontSize: "12px", fontWeight: 700, color: "var(--text-primary)", margin: 0 }}>직추천 디렉터 3명 배출</p>
+                  </div>
+                  <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                    <span style={{ fontSize: "14px" }}>📊</span>
+                    <p style={{ fontSize: "12px", fontWeight: 700, color: "var(--text-primary)", margin: 0 }}>산하 전체 누적 매출 <span style={{ color: "#FFD700" }}>1억원</span> 달성</p>
+                  </div>
+                </div>
+                <p style={{ fontSize: "11px", color: "var(--text-muted)", margin: "8px 0 0" }}>두 조건 동시 충족 시 본부장 타이틀이 부여됩니다. 추가 혜택은 추후 공개 예정입니다.</p>
               </div>
             </div>
 
