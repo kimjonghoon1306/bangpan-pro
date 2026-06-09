@@ -70,84 +70,89 @@ function MoneyBadge({ amount, color, label }: { amount: string; color: string; l
 
 const SCENARIOS = [
   {
-    title: "🌱 입문 — 매니저 활동 첫 달",
+    title: "🌱 입문 — 매니저 첫 달",
     color: "#378ADD",
     basis: "매니저 창업 (300만원)",
     items: [
-      { label: "직판 수당 32%",        amount: 960000,   note: "창업비 300만 × 32%" },
-      { label: "패스트 스타트 5%",     amount: 150000,   note: "90일 미션 달성 시" },
-      { label: "멤버 소개 1명 (5%)",   amount:  25000,   note: "멤버 가입비 5만 × 5%" },
+      { label: "판권 25% (소개수수료)",   amount:  750000, note: "300만 × 25% (1회)" },
+      { label: "패스트 스타트 3%",        amount:   90000, note: "90일 미션 달성 시" },
     ],
-    total: 1135000,
+    total: 840000,
   },
   {
-    title: "📈 성장 — 매니저 3명 추천",
-    color: "#EF9F27",
+    title: "📈 성장 — 매니저 3명 소개",
+    color: "#378ADD",
     basis: "매니저 창업 (300만원)",
     items: [
-      { label: "직판 수당 32%",         amount:  960000, note: "내 창업비 300만 × 32%" },
-      { label: "추천 오버라이드 × 3명", amount:  900000, note: "300만 × 10% × 3명" },
-      { label: "팀원 첫모집 보너스",    amount:  270000, note: "300만 × 3% × 3명" },
-      { label: "패스트 스타트 5%",      amount:  150000, note: "90일 내 달성" },
+      { label: "판권 25% × 3명",            amount: 2250000, note: "300만 × 25% × 3" },
+      { label: "관리비용 (팀원 판권×10%)",  amount:  225000, note: "75만 × 10% × 3명" },
+      { label: "팀원 첫모집 2% × 3건",      amount:  180000, note: "300만 × 2% × 3" },
+      { label: "패스트 스타트 3%",          amount:   90000, note: "조건 달성 시" },
     ],
-    total: 2280000,
+    total: 2745000,
   },
   {
     title: "💎 디렉터 — 팀 완성",
     color: "#E8599A",
     basis: "디렉터 창업 (500만원)",
     items: [
-      { label: "직판 수당 32%",          amount: 1600000, note: "창업비 500만 × 32%" },
-      { label: "추천 오버라이드 × 5명",  amount: 1500000, note: "300만 × 10% × 5명" },
-      { label: "팀원 첫모집 보너스",     amount:  450000, note: "300만 × 3% × 5명" },
-      { label: "디렉터 풀 배분",         amount:  500000, note: "전체 매출 2% 풀 ÷ N명" },
+      { label: "판권 32% × 5명",            amount: 4000000, note: "500만 × 32% × 5" },
+      { label: "관리비용 (팀원 판권×10%)",  amount:  400000, note: "160만 × 10% × 5명" },
+      { label: "팀원 첫모집 3% × 5건",      amount:  250000, note: "500만 × 3% × 5" },
+      { label: "디렉터 풀 배분",             amount:  500000, note: "전체 매출 2% ÷ N명" },
     ],
-    total: 4050000,
+    total: 5150000,
   },
 ];
 
 const COMMISSIONS = [
   {
-    no: "①", name: "직판 수당", rate: "32%", color: "#4FA3E8",
-    desc: "내가 창업할 때 받는 즉시 수당",
-    example: "매니저 창업 300만원 → 즉시 96만원",
+    no: "①", name: "판권 (소개수수료)", rate: "25%/32%", color: "#4FA3E8",
+    desc: "내가 누군가를 소개할 때 받는 1회성 수수료. 내 직급에 따라 비율이 다릅니다.",
+    example: "매니저가 소개 시 → 창업비 × 25% | 디렉터가 소개 시 → 창업비 × 32%",
     icon: "💼",
   },
   {
-    no: "②", name: "추천 오버라이드", rate: "10%", color: "#EF9F27",
-    desc: "내가 직추천한 창업자 창업비에서 받는 수당 (1대만)",
-    example: "매니저 1명 추천 → 30만원 / 디렉터 1명 추천 → 50만원",
-    icon: "🤝",
+    no: "②", name: "관리비용 (오버라이드)", rate: "10%", color: "#EF9F27",
+    desc: "내 직추천 팀원이 판권을 받을 때마다 그 수익의 10%를 관리비용으로 지속 수령합니다.",
+    example: "팀원이 75만원 판권 수령 → 나: 7.5만원 | 팀원이 160만원 판권 → 나: 16만원",
+    icon: "🔄",
   },
   {
     no: "③", name: "멤버 소개 수당", rate: "5%", color: "#6B7280",
-    desc: "멤버가 창업자를 소개할 때만 적용되는 소개 수당",
-    example: "멤버가 매니저 소개 → 15만원 / 디렉터 소개 → 25만원",
+    desc: "멤버가 창업자를 소개할 때만 적용되는 소개 수당입니다.",
+    example: "매니저 소개 → 300만 × 5% = 15만원 | 디렉터 소개 → 500만 × 5% = 25만원",
     icon: "👋",
   },
   {
-    no: "④", name: "패스트 스타트", rate: "+5%", color: "#10B981",
-    desc: "가입 후 90일 내 목표 달성 시 추가 지급",
-    example: "300만원 창업 + 90일 미션 달성 → 추가 15만원",
+    no: "④", name: "패스트 스타트", rate: "+3%/+5%", color: "#10B981",
+    desc: "가입 후 90일 내 목표 달성 시 추가 지급. 매니저와 디렉터 비율이 다릅니다.",
+    example: "매니저: 창업비 × 3% = 9만원 | 디렉터: 창업비 × 5% = 25만원",
     icon: "🚀",
   },
   {
-    no: "⑤", name: "팀원 첫모집 보너스", rate: "+3%", color: "#F472B6",
-    desc: "내가 추천한 팀원이 처음 새 창업자를 모집했을 때 받는 보너스",
-    example: "내 팀원이 첫 매니저 모집 → 나에게 9만원 추가",
+    no: "⑤", name: "팀원 첫모집 보너스", rate: "+2%/+3%", color: "#F472B6",
+    desc: "내 직추천 팀원이 처음으로 새 창업자를 모집했을 때 받는 보너스입니다.",
+    example: "매니저: 창업비 × 2% = 6만원/건 | 디렉터: 창업비 × 3% = 9~15만원/건",
     icon: "🎯",
   },
   {
-    no: "⑥", name: "매니저 풀", rate: "2%", color: "#EF9F27",
-    desc: "전체 창업비 매출의 2%를 매니저 전원이 균등하게 나눔",
-    example: "월 창업비 총액 5,000만원 → 100만원 ÷ 매니저 수",
+    no: "⑥", name: "매니저 풀", rate: "2%", color: "#378ADD",
+    desc: "월 전체 창업비 매출의 2%를 매니저 전원이 N분의1로 균등 배분합니다.",
+    example: "월 총 창업비 5,000만원 → 100만원 ÷ 매니저 수",
     icon: "👔",
   },
   {
     no: "⑦", name: "디렉터 풀", rate: "2%", color: "#E8599A",
-    desc: "전체 창업비 매출의 2%를 디렉터 전원이 균등하게 나눔",
-    example: "월 창업비 총액 5,000만원 → 100만원 ÷ 디렉터 수",
+    desc: "월 전체 창업비 매출의 2%를 디렉터 전원이 N분의1로 균등 배분합니다.",
+    example: "월 총 창업비 5,000만원 → 100만원 ÷ 디렉터 수",
     icon: "👑",
+  },
+  {
+    no: "⑧", name: "회사 재량 지급", rate: "1%", color: "#A78BFA",
+    desc: "월 전체 창업비의 1%를 회사가 성과·포상·이벤트 등으로 임의 지급합니다.",
+    example: "월 총 창업비 5,000만원 → 50만원 (관리자 지정 지급)",
+    icon: "🎯",
   },
 ];
 
@@ -180,7 +185,7 @@ export default function CommissionGuidePage() {
           수당 플랜 설명서
         </h1>
         <p style={{ fontSize: "14px", color: "var(--text-muted)", margin: 0 }}>
-          농축수산물 방판 · 1대 오버라이드 구조 · 총 수당 재원 54%
+          농축수산물 방판 · 판권 + 관리비용 구조 · 총 수당 재원 55%
         </p>
       </div>
       <div style={{ position: "absolute", top: "20px", right: "20px" }}>
@@ -333,32 +338,28 @@ export default function CommissionGuidePage() {
       {activeTab === "commissions" && (
         <div className="fade-up" style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
 
-          {/* 총 재원 배분 바 */}
+          {/* 총 재원 배분 바 — 매니저/디렉터 구분 */}
           <div style={{ background: "var(--bg-elevated)", border: "1px solid var(--bg-border)", borderRadius: "16px", padding: "20px" }}>
-            <p style={{ fontSize: "12px", fontWeight: 700, color: "var(--text-muted)", marginBottom: "12px", letterSpacing: "0.08em" }}>창업비 100% 배분</p>
-            <div style={{ display: "flex", height: "32px", borderRadius: "8px", overflow: "hidden", gap: "2px" }}>
-              {[
-                { label: "직판32%", w: 32, color: "#4FA3E8" },
-                { label: "추천10%", w: 10, color: "#EF9F27" },
-                { label: "패스트5%", w: 5, color: "#10B981" },
-                { label: "팀원3%", w: 3, color: "#F472B6" },
-                { label: "풀5%", w: 5, color: "#A78BFA" },
-                { label: "회사45%", w: 45, color: "rgba(255,255,255,0.08)" },
-              ].map(({ label, w, color }) => (
-                <div key={label} style={{
-                  width: `${w}%`, background: color,
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                  fontSize: "9px", fontWeight: 800, color: color === "rgba(255,255,255,0.08)" ? "rgba(255,255,255,0.3)" : "#fff",
-                  whiteSpace: "nowrap", overflow: "hidden",
-                }}>
-                  {w >= 5 ? label : ""}
+            <p style={{ fontSize: "12px", fontWeight: 700, color: "var(--text-muted)", marginBottom: "14px", letterSpacing: "0.08em" }}>창업비 배분 구조</p>
+            {[
+              { rank: "매니저 (300만원 기준)", bars: [{ l: "판권25%", w: 25, c: "#4FA3E8" }, { l: "패스트3%", w: 3, c: "#10B981" }, { l: "팀원2%", w: 2, c: "#F472B6" }, { l: "풀5%", w: 5, c: "#A78BFA" }, { l: "회사1%", w: 1, c: "#8B5CF6" }, { l: "회사64%", w: 64, c: "var(--bg-border)" }], total: "36%", color: "#378ADD" },
+              { rank: "디렉터 (500만원 기준)", bars: [{ l: "판권32%", w: 32, c: "#4FA3E8" }, { l: "패스트5%", w: 5, c: "#10B981" }, { l: "팀원3%", w: 3, c: "#F472B6" }, { l: "풀5%", w: 5, c: "#A78BFA" }, { l: "회사1%", w: 1, c: "#8B5CF6" }, { l: "회사54%", w: 54, c: "var(--bg-border)" }], total: "46%", color: "#E8599A" },
+            ].map(({ rank, bars, total, color }) => (
+              <div key={rank} style={{ marginBottom: "12px" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "5px" }}>
+                  <span style={{ fontSize: "11px", fontWeight: 700, color }}>{rank}</span>
+                  <span style={{ fontSize: "11px", fontWeight: 700, color: "#C9A84C" }}>수당 {total}</span>
                 </div>
-              ))}
-            </div>
-            <div style={{ display: "flex", justifyContent: "space-between", marginTop: "8px" }}>
-              <span style={{ fontSize: "11px", color: "var(--text-muted)" }}>수당 합계 54%</span>
-              <span style={{ fontSize: "11px", color: "var(--text-muted)" }}>회사 45%</span>
-            </div>
+                <div style={{ display: "flex", height: "24px", borderRadius: "6px", overflow: "hidden", gap: "1px" }}>
+                  {bars.map(({ l, w, c }) => (
+                    <div key={l} style={{ width: `${w}%`, background: c, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "8px", fontWeight: 800, color: c === "var(--bg-border)" ? "var(--text-muted)" : "#fff", whiteSpace: "nowrap", overflow: "hidden" }}>
+                      {w >= 3 ? l : ""}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+            <p style={{ fontSize: "10px", color: "var(--text-muted)", margin: "8px 0 0" }}>※ 관리비용(팀원 판권의 10%)은 별도 산정됩니다</p>
           </div>
 
           {/* 수당 카드 7가지 */}
@@ -630,6 +631,30 @@ export default function CommissionGuidePage() {
               </div>
             </div>
 
+          </div>
+
+          {/* 본부장 타이틀 */}
+          <div style={{ background: "rgba(255,215,0,0.07)", border: "2px solid rgba(255,215,0,0.4)", borderRadius: "18px", padding: "22px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "14px", marginBottom: "14px" }}>
+              <div style={{ width: 60, height: 60, borderRadius: "50%", background: "linear-gradient(135deg, #FFD700, #FFA500)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "30px", flexShrink: 0 }}>🏅</div>
+              <div>
+                <div style={{ display: "inline-block", padding: "2px 10px", borderRadius: "999px", background: "rgba(255,215,0,0.2)", border: "1px solid rgba(255,215,0,0.5)", fontSize: "10px", fontWeight: 800, color: "#FFD700", marginBottom: "4px" }}>SPECIAL TITLE</div>
+                <h3 style={{ fontFamily: "Syne,sans-serif", fontSize: "22px", fontWeight: 900, color: "#FFD700", margin: 0 }}>본부장</h3>
+              </div>
+            </div>
+            <div style={{ background: "rgba(255,215,0,0.06)", border: "1px solid rgba(255,215,0,0.2)", borderRadius: "12px", padding: "14px 16px" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "8px" }}>
+                <span style={{ fontSize: "16px" }}>👑</span>
+                <p style={{ fontSize: "13px", fontWeight: 700, color: "var(--text-primary)", margin: 0 }}>조건: 디렉터가 디렉터를 3명 배출</p>
+              </div>
+              <p style={{ fontSize: "12px", color: "var(--text-secondary)", margin: "0 0 6px", lineHeight: 1.6 }}>
+                디렉터가 직추천으로 디렉터 3명을 배출하면 <strong style={{ color: "#FFD700" }}>본부장</strong> 타이틀이 부여됩니다.
+              </p>
+              <div style={{ display: "flex", alignItems: "center", gap: "8px", padding: "8px 12px", borderRadius: "8px", background: "rgba(255,215,0,0.08)", border: "1px dashed rgba(255,215,0,0.3)" }}>
+                <span style={{ fontSize: "14px" }}>🔒</span>
+                <p style={{ fontSize: "12px", color: "var(--text-muted)", margin: 0, fontStyle: "italic" }}>추가 혜택은 추후 공개 예정입니다.</p>
+              </div>
+            </div>
           </div>
 
           {/* 빠른 승급 팁 */}

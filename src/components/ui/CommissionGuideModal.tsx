@@ -4,12 +4,11 @@ import { X } from "lucide-react";
 import ThemeToggle from "@/components/ui/ThemeToggle";
 
 const TABS = [
-  { key: "structure", label: "📊 조직도" },
-  { key: "commissions", label: "💰 수당 7가지" },
-  { key: "scenarios", label: "📈 수입 예시" },
-  { key: "promotion", label: "🏆 승급 조건" },
+  { key: "structure",   label: "📊 조직도"    },
+  { key: "commissions", label: "💰 수당 구조"  },
+  { key: "scenarios",   label: "📈 수입 예시"  },
+  { key: "promotion",   label: "🏆 승급 조건"  },
 ] as const;
-
 type Tab = typeof TABS[number]["key"];
 
 function Person({ emoji, label, badge, color, me, sub, small }: {
@@ -23,20 +22,84 @@ function Person({ emoji, label, badge, color, me, sub, small }: {
         background: color, display: "flex", alignItems: "center", justifyContent: "center",
         fontSize: small ? "22px" : "28px", position: "relative",
         border: me ? "3px solid #FFD700" : `2px solid ${color}`,
-        boxShadow: me ? "0 0 16px rgba(255,215,0,0.5)" : "none",
-        flexShrink: 0,
+        boxShadow: me ? "0 0 16px rgba(255,215,0,0.5)" : "none", flexShrink: 0,
       }}>
         {emoji}
         {me && <div style={{ position: "absolute", top: -8, right: -8, background: "#FFD700", color: "#000", fontSize: "8px", fontWeight: 900, padding: "2px 5px", borderRadius: "999px" }}>나</div>}
       </div>
       <div style={{ textAlign: "center" }}>
         <div style={{ display: "inline-block", padding: "1px 7px", borderRadius: "999px", fontSize: "9px", fontWeight: 800, background: `${color}22`, color, border: `1px solid ${color}44`, marginBottom: "2px" }}>{badge}</div>
-        <p style={{ fontSize: small ? "11px" : "12px", fontWeight: 600, color: "#fff", margin: 0 }}>{label}</p>
+        <p style={{ fontSize: small ? "11px" : "12px", fontWeight: 600, color: "var(--text-primary)", margin: 0 }}>{label}</p>
         {sub && <p style={{ fontSize: "10px", color: "var(--text-muted)", margin: 0 }}>{sub}</p>}
       </div>
     </div>
   );
 }
+
+const COMMISSIONS = [
+  { no: "①", name: "판권 (소개수수료)", color: "#4FA3E8", icon: "💼",
+    desc: "내가 누군가를 소개할 때 받는 1회성 수수료. 내 직급에 따라 비율이 다릅니다.",
+    ex: "매니저가 소개 시 → 창업비 × 25%\n디렉터가 소개 시 → 창업비 × 32%",
+    rate: "25%/32%" },
+  { no: "②", name: "관리비용 (오버라이드)", color: "#EF9F27", icon: "🔄",
+    desc: "내가 추천한 팀원이 활동하면서 받는 판권 수익의 10%를 관리비용으로 지속 수령합니다.",
+    ex: "팀원이 300만 판권 수령 → 나: 30만원\n팀원이 160만 판권 수령 → 나: 16만원",
+    rate: "10%" },
+  { no: "③", name: "멤버 소개 수당", color: "#6B7280", icon: "👋",
+    desc: "멤버가 창업자를 소개할 때만 적용되는 소개 수당입니다.",
+    ex: "매니저 소개 → 300만 × 5% = 15만원\n디렉터 소개 → 500만 × 5% = 25만원",
+    rate: "5%" },
+  { no: "④", name: "패스트 스타트", color: "#10B981", icon: "🚀",
+    desc: "가입 후 90일 내 목표 달성 시 추가 지급. 매니저와 디렉터 비율이 다릅니다.",
+    ex: "매니저: 창업비 × 3% = 9만원\n디렉터: 창업비 × 5% = 25만원",
+    rate: "+3%/+5%" },
+  { no: "⑤", name: "팀원 첫모집 보너스", color: "#F472B6", icon: "🎯",
+    desc: "내 직추천 팀원이 처음으로 새 창업자를 모집했을 때 받는 보너스입니다.",
+    ex: "매니저: 창업비 × 2% = 6만원/건\n디렉터: 창업비 × 3% = 9~15만원/건",
+    rate: "+2%/+3%" },
+  { no: "⑥", name: "매니저 풀", color: "#378ADD", icon: "👔",
+    desc: "월 전체 창업비 매출의 2%를 매니저 전원이 N분의1로 균등 배분합니다.",
+    ex: "월 총 창업비 5,000만원 → 100만원 ÷ 매니저 수",
+    rate: "2%" },
+  { no: "⑦", name: "디렉터 풀", color: "#E8599A", icon: "👑",
+    desc: "월 전체 창업비 매출의 2%를 디렉터 전원이 N분의1로 균등 배분합니다.",
+    ex: "월 총 창업비 5,000만원 → 100만원 ÷ 디렉터 수",
+    rate: "2%" },
+];
+
+const SCENARIOS = [
+  {
+    title: "🌱 입문 — 매니저 첫 달",
+    color: "#378ADD", rank: "매니저", basis: "창업비 300만원 기준",
+    items: [
+      { label: "판권 25%",          amount:  750000, note: "300만 × 25% (1회)" },
+      { label: "패스트 스타트 3%",  amount:   90000, note: "90일 미션 달성 시" },
+    ],
+    total: 840000,
+  },
+  {
+    title: "📈 성장 — 매니저 3명 소개",
+    color: "#378ADD", rank: "매니저", basis: "창업비 300만원 기준",
+    items: [
+      { label: "판권 25% × 3명",        amount: 2250000, note: "300만 × 25% × 3" },
+      { label: "관리비용 (팀원 판권×10%)", amount:  225000, note: "75만 × 10% × 3명" },
+      { label: "팀원 첫모집 2% × 3건",   amount:  180000, note: "300만 × 2% × 3" },
+      { label: "패스트 스타트 3%",       amount:   90000, note: "조건 달성 시" },
+    ],
+    total: 2745000,
+  },
+  {
+    title: "💎 디렉터 — 팀 완성",
+    color: "#E8599A", rank: "디렉터", basis: "창업비 500만원 기준",
+    items: [
+      { label: "판권 32% × 5명",          amount: 4000000, note: "500만 × 32% × 5" },
+      { label: "관리비용 (팀원 판권×10%)", amount:  400000, note: "160만 × 10% × 5명" },
+      { label: "팀원 첫모집 3% × 5건",    amount:  250000, note: "500만 × 3% × 5" },
+      { label: "디렉터 풀 배분",           amount:  500000, note: "전체 매출 2% ÷ N명" },
+    ],
+    total: 5150000,
+  },
+];
 
 export default function CommissionGuideModal({ onClose }: { onClose: () => void }) {
   const [tab, setTab] = useState<Tab>("structure");
@@ -56,8 +119,8 @@ export default function CommissionGuideModal({ onClose }: { onClose: () => void 
         {/* 헤더 */}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <div>
-            <p style={{ fontSize: "10px", color: "var(--text-muted)", letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: "3px" }}>1대 오버라이드 · 총 수당 재원 54%</p>
-            <h2 style={{ fontFamily: "Syne,sans-serif", fontSize: "22px", fontWeight: 800, color: "#fff", margin: 0 }}>수당 플랜 설명서</h2>
+            <p style={{ fontSize: "10px", color: "var(--text-muted)", letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: "3px" }}>판권 + 관리비용 구조 · 총 수당 재원 54%</p>
+            <h2 style={{ fontFamily: "Syne,sans-serif", fontSize: "22px", fontWeight: 800, color: "var(--text-primary)", margin: 0 }}>수당 플랜 설명서</h2>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
             <ThemeToggle size="sm" />
@@ -74,8 +137,7 @@ export default function CommissionGuideModal({ onClose }: { onClose: () => void 
               padding: "8px 14px", borderRadius: "10px", cursor: "pointer", fontSize: "12px", fontWeight: 700,
               background: tab === t.key ? "rgba(201,168,76,0.2)" : "var(--bg-elevated)",
               border: `1.5px solid ${tab === t.key ? "rgba(201,168,76,0.6)" : "var(--bg-border)"}`,
-              color: tab === t.key ? "#C9A84C" : "var(--text-secondary)",
-              transition: "all 0.15s",
+              color: tab === t.key ? "#C9A84C" : "var(--text-secondary)", transition: "all 0.15s",
             }}>{t.label}</button>
           ))}
         </div>
@@ -83,162 +145,165 @@ export default function CommissionGuideModal({ onClose }: { onClose: () => void 
         {/* ── 조직도 ── */}
         {tab === "structure" && (
           <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
-            <div style={{ background: "rgba(255,215,0,0.07)", border: "1px solid rgba(255,215,0,0.3)", borderRadius: "14px", padding: "14px 18px", display: "flex", alignItems: "center", gap: "10px" }}>
-              <span style={{ fontSize: "20px" }}>⚡</span>
-              <div>
-                <p style={{ fontSize: "13px", fontWeight: 800, color: "#FFD700", margin: 0 }}>직추천 1대에서만 수당 발생</p>
-                <p style={{ fontSize: "11px", color: "var(--text-muted)", margin: 0 }}>내가 직접 추천한 창업자 창업비에서만 수당을 받습니다</p>
+
+            {/* 핵심 규칙 2가지 */}
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
+              <div style={{ background: "rgba(79,163,232,0.08)", border: "1px solid rgba(79,163,232,0.3)", borderRadius: "12px", padding: "14px" }}>
+                <p style={{ fontSize: "12px", fontWeight: 800, color: "#4FA3E8", margin: "0 0 4px" }}>💼 판권</p>
+                <p style={{ fontSize: "11px", color: "var(--text-secondary)", margin: 0, lineHeight: 1.5 }}>내가 소개할 때 <strong>1회</strong> 받는 소개수수료<br/>매니저 <strong>25%</strong> / 디렉터 <strong>32%</strong></p>
+              </div>
+              <div style={{ background: "rgba(239,159,39,0.08)", border: "1px solid rgba(239,159,39,0.3)", borderRadius: "12px", padding: "14px" }}>
+                <p style={{ fontSize: "12px", fontWeight: 800, color: "#EF9F27", margin: "0 0 4px" }}>🔄 관리비용</p>
+                <p style={{ fontSize: "11px", color: "var(--text-secondary)", margin: 0, lineHeight: 1.5 }}>팀원이 판권 받을 때마다<br/>팀원 판권 수익의 <strong>10%</strong> 지속 수령</p>
               </div>
             </div>
 
             {/* 조직도 */}
-            <div style={{ background: "var(--bg-elevated)", border: "1px solid var(--bg-border)", borderRadius: "18px", padding: "28px 20px" }}>
-              <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "12px" }}>
-
-                <Person emoji="👑" label="나 (디렉터)" badge="DIRECTOR" color="#E8599A" me sub="도매창업 550만원" />
+            <div style={{ background: "var(--bg-elevated)", border: "1px solid var(--bg-border)", borderRadius: "18px", padding: "24px 16px" }}>
+              <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "10px" }}>
+                <Person emoji="👑" label="나 (디렉터)" badge="DIRECTOR" color="#E8599A" me sub="판권 32%" />
 
                 <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
-                  <div style={{ width: 2, height: 12, background: "rgba(232,89,154,0.5)" }} />
-                  <div style={{ padding: "3px 12px", borderRadius: "999px", background: "rgba(232,89,154,0.15)", border: "1px solid rgba(232,89,154,0.4)", fontSize: "10px", fontWeight: 800, color: "#E8599A" }}>↓ 직추천에서만 수당</div>
-                  <div style={{ width: 2, height: 12, background: "rgba(232,89,154,0.3)" }} />
+                  <div style={{ width: 2, height: 10, background: "rgba(232,89,154,0.4)" }} />
+                  <div style={{ padding: "2px 10px", borderRadius: "999px", background: "rgba(232,89,154,0.12)", border: "1px solid rgba(232,89,154,0.3)", fontSize: "10px", fontWeight: 700, color: "#E8599A" }}>↓ 직추천 1대만 수당</div>
+                  <div style={{ width: 2, height: 10, background: "rgba(232,89,154,0.2)" }} />
                 </div>
 
-                <div style={{ display: "flex", gap: "24px", justifyContent: "center", flexWrap: "wrap" }}>
-                  {["매니저 A", "매니저 B", "매니저 C"].map((name, i) => (
+                <div style={{ display: "flex", gap: "20px", justifyContent: "center", flexWrap: "wrap" }}>
+                  {["매니저 A", "매니저 B"].map((name) => (
                     <div key={name} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "6px" }}>
-                      <div style={{ padding: "3px 10px", borderRadius: "8px", background: "rgba(55,138,221,0.15)", border: "1px solid rgba(55,138,221,0.3)", fontSize: "10px", fontWeight: 700, color: "#378ADD" }}>
-                        ↑ 수당 30만원
+                      {/* 판권 + 관리비용 */}
+                      <div style={{ display: "flex", flexDirection: "column", gap: "3px", alignItems: "center" }}>
+                        <div style={{ padding: "2px 8px", borderRadius: "6px", background: "rgba(79,163,232,0.12)", border: "1px solid rgba(79,163,232,0.3)", fontSize: "9px", fontWeight: 700, color: "#4FA3E8" }}>
+                          판권 ↑ 창업비×32%
+                        </div>
+                        <div style={{ padding: "2px 8px", borderRadius: "6px", background: "rgba(239,159,39,0.12)", border: "1px solid rgba(239,159,39,0.3)", fontSize: "9px", fontWeight: 700, color: "#EF9F27" }}>
+                          관리비용 ↑ A판권×10%
+                        </div>
                       </div>
-                      <Person emoji="👔" label={name} badge="MANAGER" color="#378ADD" sub="소매창업 330만원" />
+                      <Person emoji="👔" label={name} badge="MANAGER" color="#378ADD" sub="판권 25%" />
+
                       <div style={{ fontSize: "9px", color: "var(--text-muted)", fontWeight: 600 }}>↓ 나는 수당 없음</div>
-                      <div style={{ display: "flex", gap: "8px" }}>
-                        {[0, 1].map(j => (
-                          <div key={j} style={{ opacity: 0.4 }}>
-                            <Person emoji="👤" label="멤버" badge="MEMBER" color="#6B7280" small />
-                          </div>
-                        ))}
+                      <div style={{ display: "flex", gap: "8px", opacity: 0.45 }}>
+                        <Person emoji="👤" label="멤버" badge="MEMBER" color="#6B7280" small />
+                        <Person emoji="👤" label="멤버" badge="MEMBER" color="#6B7280" small />
+                      </div>
+                      <div style={{ padding: "3px 8px", borderRadius: "6px", background: "rgba(239,68,68,0.06)", border: "1px dashed rgba(239,68,68,0.25)", fontSize: "9px", color: "rgba(239,68,68,0.7)", fontWeight: 600 }}>
+                        ✗ 나는 수당 없음
                       </div>
                     </div>
                   ))}
                 </div>
-
               </div>
             </div>
 
-            {/* O/X 요약 */}
+            {/* O/X */}
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
-              <div style={{ background: "rgba(55,138,221,0.06)", border: "1px solid rgba(55,138,221,0.2)", borderRadius: "14px", padding: "16px" }}>
-                <p style={{ fontSize: "12px", fontWeight: 800, color: "#378ADD", marginBottom: "10px" }}>✅ 수당 받는 경우</p>
-                {["내가 직접 창업 (직판 32%)", "내 직추천 창업자 (오버 10%)", "90일 미션 달성 (패스트스타트)", "내 팀원 첫모집 성공 (+3%)"].map(t => (
-                  <p key={t} style={{ fontSize: "11px", color: "var(--text-secondary)", margin: "0 0 4px" }}>• {t}</p>
+              <div style={{ background: "rgba(16,185,129,0.06)", border: "1px solid rgba(16,185,129,0.2)", borderRadius: "12px", padding: "14px" }}>
+                <p style={{ fontSize: "12px", fontWeight: 800, color: "#10B981", marginBottom: "8px" }}>✅ 수당 발생</p>
+                {["내가 소개 → 판권 (1회)", "팀원이 판권 받을 때 → 관리비용 10%", "90일 미션 달성 → 패스트스타트", "팀원 첫모집 성공 → 보너스"].map(t => (
+                  <p key={t} style={{ fontSize: "11px", color: "var(--text-secondary)", margin: "0 0 3px" }}>• {t}</p>
                 ))}
               </div>
-              <div style={{ background: "rgba(255,60,60,0.05)", border: "1px solid rgba(255,60,60,0.15)", borderRadius: "14px", padding: "16px" }}>
-                <p style={{ fontSize: "12px", fontWeight: 800, color: "#F87171", marginBottom: "10px" }}>❌ 수당 없는 경우</p>
-                {["팀원의 팀원 창업비", "2단계 이하 조직 창업비", "상대방 자발적 가입"].map(t => (
-                  <p key={t} style={{ fontSize: "11px", color: "var(--text-muted)", margin: "0 0 4px" }}>• {t}</p>
+              <div style={{ background: "rgba(239,68,68,0.04)", border: "1px solid rgba(239,68,68,0.15)", borderRadius: "12px", padding: "14px" }}>
+                <p style={{ fontSize: "12px", fontWeight: 800, color: "#F87171", marginBottom: "8px" }}>❌ 수당 없음</p>
+                {["팀원의 팀원 창업비", "2단계 이하 조직 수익", "자발적 가입"].map(t => (
+                  <p key={t} style={{ fontSize: "11px", color: "var(--text-muted)", margin: "0 0 3px" }}>• {t}</p>
                 ))}
               </div>
             </div>
           </div>
         )}
 
-        {/* ── 수당 7가지 ── */}
+        {/* ── 수당 구조 ── */}
         {tab === "commissions" && (
           <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-            {/* 배분 바 */}
-            <div style={{ background: "var(--bg-elevated)", border: "1px solid var(--bg-border)", borderRadius: "14px", padding: "16px" }}>
-              <p style={{ fontSize: "11px", color: "var(--text-muted)", marginBottom: "10px", fontWeight: 600 }}>창업비 100% 배분</p>
-              <div style={{ display: "flex", height: "24px", borderRadius: "6px", overflow: "hidden", gap: "2px" }}>
-                {[
-                  { label: "직판 32%", w: 32, color: "#4FA3E8" },
-                  { label: "추천 10%", w: 10, color: "#EF9F27" },
-                  { label: "패스트 5%", w: 5,  color: "#10B981" },
-                  { label: "팀원 3%",  w: 3,  color: "#F472B6" },
-                  { label: "풀 4%",   w: 4,  color: "#A78BFA" },
-                  { label: "회사 46%", w: 46, color: "var(--bg-border)" },
-                ].map(({ label, w, color }) => (
-                  <div key={label} style={{ width: `${w}%`, background: color, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "8px", fontWeight: 800, color: color.startsWith("rgba") ? "rgba(255,255,255,0.2)" : "#fff", whiteSpace: "nowrap", overflow: "hidden" }}>
-                    {w >= 5 ? label : ""}
-                  </div>
-                ))}
-              </div>
-              <div style={{ display: "flex", justifyContent: "space-between", marginTop: "6px" }}>
-                <span style={{ fontSize: "10px", fontWeight: 700, color: "#C9A84C" }}>수당 합계 54%</span>
-                <span style={{ fontSize: "10px", color: "var(--text-muted)" }}>회사 수익 45%</span>
-              </div>
-            </div>
 
-            {/* 수당 카드들 */}
-            {[
-              { no: "①", name: "직판 수당", rate: "32%", color: "#4FA3E8", icon: "💼", desc: "내가 창업할 때 즉시 받는 수당", ex: "매니저 창업 300만원 → 즉시 96만원" },
-              { no: "②", name: "추천 오버라이드", rate: "10%", color: "#EF9F27", icon: "🤝", desc: "내가 직추천한 창업자 창업비에서 수령 (1대만)", ex: "매니저 1명 추천 → 30만원 / 디렉터 → 50만원" },
-              { no: "③", name: "멤버 소개 수당", rate: "5%", color: "#6B7280", icon: "👋", desc: "멤버가 창업자를 소개할 때 받는 수당", ex: "매니저 소개 → 15만원 / 디렉터 소개 → 25만원" },
-              { no: "④", name: "패스트 스타트", rate: "+5%", color: "#10B981", icon: "🚀", desc: "가입 후 90일 내 목표 달성 시 추가 지급", ex: "300만원 창업 + 미션 달성 → 추가 15만원" },
-              { no: "⑤", name: "팀원 첫모집 보너스", rate: "+3%", color: "#F472B6", icon: "🎯", desc: "내 팀원이 처음 새 창업자를 모집했을 때", ex: "팀원이 첫 매니저 모집 → 나에게 9만원" },
-              { no: "⑥", name: "매니저 풀", rate: "2%", color: "#EF9F27", icon: "👔", desc: "전체 창업비 매출의 2%를 매니저 전원 균등 배분", ex: "월 총 창업비 5,000만원 → 100만원 ÷ 매니저 수" },
-              { no: "⑦", name: "디렉터 풀", rate: "2%", color: "#E8599A", icon: "👑", desc: "전체 창업비 매출의 2%를 디렉터 전원 균등 배분", ex: "월 총 창업비 5,000만원 → 100만원 ÷ 디렉터 수" },
-            ].map(c => (
-              <div key={c.no} style={{ background: `${c.color}08`, border: `1px solid ${c.color}25`, borderRadius: "14px", padding: "14px 16px" }}>
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "6px" }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                    <span style={{ fontSize: "22px" }}>{c.icon}</span>
+            {/* 매니저 vs 디렉터 비교 */}
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
+              {[
+                { rank: "매니저", color: "#378ADD", icon: "👔", fee: "300만원",
+                  items: [{ k: "판권", v: "25% = 75만원", c: "#4FA3E8" }, { k: "관리비용", v: "팀원판권 × 10%", c: "#EF9F27" }, { k: "패스트스타트", v: "+3% = 9만원", c: "#10B981" }, { k: "팀원첫모집", v: "+2%/건", c: "#F472B6" }],
+                  total: "40%" },
+                { rank: "디렉터", color: "#E8599A", icon: "👑", fee: "500만원",
+                  items: [{ k: "판권", v: "32% = 160만원", c: "#4FA3E8" }, { k: "관리비용", v: "팀원판권 × 10%", c: "#EF9F27" }, { k: "패스트스타트", v: "+5% = 25만원", c: "#10B981" }, { k: "팀원첫모집", v: "+3%/건", c: "#F472B6" }],
+                  total: "50%" },
+              ].map(r => (
+                <div key={r.rank} style={{ background: `${r.color}08`, border: `1.5px solid ${r.color}30`, borderRadius: "16px", padding: "16px" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "12px" }}>
+                    <span style={{ fontSize: "24px" }}>{r.icon}</span>
                     <div>
-                      <span style={{ fontSize: "10px", color: c.color, fontWeight: 700, opacity: 0.7 }}>{c.no} </span>
-                      <span style={{ fontSize: "14px", fontWeight: 700, color: "#fff" }}>{c.name}</span>
+                      <p style={{ fontSize: "14px", fontWeight: 800, color: r.color, margin: 0 }}>{r.rank}</p>
+                      <p style={{ fontSize: "10px", color: "var(--text-muted)", margin: 0 }}>창업비 {r.fee}</p>
+                    </div>
+                    <div style={{ marginLeft: "auto", padding: "4px 10px", borderRadius: "999px", background: `${r.color}20`, border: `1px solid ${r.color}40` }}>
+                      <span style={{ fontSize: "16px", fontWeight: 900, color: r.color }}>{r.total}</span>
                     </div>
                   </div>
-                  <span style={{ padding: "3px 10px", borderRadius: "999px", background: `${c.color}20`, border: `1px solid ${c.color}44`, fontSize: "14px", fontWeight: 900, color: c.color }}>{c.rate}</span>
+                  {r.items.map(i => (
+                    <div key={i.k} style={{ display: "flex", justifyContent: "space-between", padding: "6px 10px", borderRadius: "8px", background: "var(--bg)", marginBottom: "4px" }}>
+                      <span style={{ fontSize: "11px", color: "var(--text-muted)" }}>{i.k}</span>
+                      <span style={{ fontSize: "11px", fontWeight: 700, color: i.c }}>{i.v}</span>
+                    </div>
+                  ))}
                 </div>
-                <p style={{ fontSize: "12px", color: "var(--text-secondary)", margin: "0 0 6px", lineHeight: 1.5 }}>{c.desc}</p>
+              ))}
+            </div>
+
+            {/* 수당 카드 */}
+            {COMMISSIONS.map(c => (
+              <div key={c.no} style={{ background: `${c.color}07`, border: `1px solid ${c.color}25`, borderRadius: "14px", padding: "14px" }}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "6px" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                    <span style={{ fontSize: "20px" }}>{c.icon}</span>
+                    <div>
+                      <span style={{ fontSize: "10px", color: c.color, fontWeight: 700, opacity: 0.7 }}>{c.no} </span>
+                      <span style={{ fontSize: "13px", fontWeight: 700, color: "var(--text-primary)" }}>{c.name}</span>
+                    </div>
+                  </div>
+                  <span style={{ padding: "2px 8px", borderRadius: "999px", background: `${c.color}18`, border: `1px solid ${c.color}40`, fontSize: "12px", fontWeight: 900, color: c.color }}>{c.rate}</span>
+                </div>
+                <p style={{ fontSize: "11px", color: "var(--text-secondary)", margin: "0 0 6px", lineHeight: 1.5 }}>{c.desc}</p>
                 <div style={{ background: "var(--bg)", borderRadius: "8px", padding: "7px 10px" }}>
                   <span style={{ fontSize: "10px", color: c.color, fontWeight: 700 }}>예시 </span>
-                  <span style={{ fontSize: "11px", color: "var(--text-muted)" }}>{c.ex}</span>
+                  {c.ex.split("\n").map((line, i) => (
+                    <span key={i} style={{ fontSize: "11px", color: "var(--text-muted)", display: "block" }}>{line}</span>
+                  ))}
                 </div>
               </div>
             ))}
+
+            {/* 공동 풀 */}
+            <div style={{ background: "rgba(167,139,250,0.07)", border: "1px solid rgba(167,139,250,0.25)", borderRadius: "14px", padding: "14px" }}>
+              <p style={{ fontSize: "12px", fontWeight: 800, color: "#A78BFA", marginBottom: "8px" }}>⚡ 공동 풀 — 월 전체 창업비의 4%</p>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
+                <div style={{ background: "var(--bg)", borderRadius: "8px", padding: "10px", textAlign: "center" }}>
+                  <span style={{ fontSize: "14px" }}>👔</span>
+                  <p style={{ fontSize: "11px", fontWeight: 700, color: "#378ADD", margin: "4px 0 0" }}>매니저 풀 2%</p>
+                  <p style={{ fontSize: "10px", color: "var(--text-muted)", margin: 0 }}>매니저 전원 균등</p>
+                </div>
+                <div style={{ background: "var(--bg)", borderRadius: "8px", padding: "10px", textAlign: "center" }}>
+                  <span style={{ fontSize: "14px" }}>👑</span>
+                  <p style={{ fontSize: "11px", fontWeight: 700, color: "#E8599A", margin: "4px 0 0" }}>디렉터 풀 2%</p>
+                  <p style={{ fontSize: "10px", color: "var(--text-muted)", margin: 0 }}>디렉터 전원 균등</p>
+                </div>
+              </div>
+            </div>
           </div>
         )}
 
         {/* ── 수입 예시 ── */}
         {tab === "scenarios" && (
           <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-            {[
-              {
-                title: "🌱 첫 달 — 매니저 창업",
-                color: "#378ADD", base: "창업비 300만원 기준",
-                items: [
-                  { label: "직판 수당 32%", amount: 960000, note: "300만 × 32%" },
-                  { label: "패스트 스타트 5%", amount: 150000, note: "90일 미션 달성 시" },
-                ],
-                total: 1110000,
-              },
-              {
-                title: "📈 3개월 차 — 팀 3명 구성",
-                color: "#378ADD", base: "창업비 300만원 기준",
-                items: [
-                  { label: "직판 수당 32%", amount: 960000, note: "내 창업비" },
-                  { label: "추천 오버라이드 × 3명", amount: 900000, note: "300만 × 10% × 3" },
-                  { label: "팀원 첫모집 보너스", amount: 270000, note: "300만 × 3% × 3" },
-                  { label: "패스트 스타트", amount: 150000, note: "+5%" },
-                ],
-                total: 2280000,
-              },
-              {
-                title: "💎 디렉터 — 팀 완성",
-                color: "#E8599A", base: "창업비 500만원 기준",
-                items: [
-                  { label: "직판 수당 32%", amount: 1600000, note: "500만 × 32%" },
-                  { label: "추천 오버라이드 × 5명", amount: 1500000, note: "300만 × 10% × 5" },
-                  { label: "팀원 첫모집 보너스", amount: 450000, note: "300만 × 3% × 5" },
-                  { label: "디렉터 풀 배분", amount: 500000, note: "전체 매출 2% ÷ N명" },
-                ],
-                total: 4050000,
-              },
-            ].map((s, i) => (
-              <div key={i} style={{ background: `${s.color}08`, border: `1.5px solid ${s.color}30`, borderRadius: "16px", padding: "18px" }}>
-                <p style={{ fontSize: "13px", fontWeight: 800, color: s.color, marginBottom: "12px" }}>{s.title}</p>
-                <div style={{ display: "flex", flexDirection: "column", gap: "7px", marginBottom: "12px" }}>
+            {SCENARIOS.map((s, i) => (
+              <div key={i} style={{ background: `${s.color}08`, border: `1.5px solid ${s.color}30`, borderRadius: "16px", padding: "16px" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "12px" }}>
+                  <p style={{ fontSize: "13px", fontWeight: 800, color: s.color, margin: 0 }}>{s.title}</p>
+                  <span style={{ padding: "2px 8px", borderRadius: "999px", background: `${s.color}15`, fontSize: "10px", fontWeight: 700, color: s.color }}>
+                    {s.rank} · {s.basis}
+                  </span>
+                </div>
+                <div style={{ display: "flex", flexDirection: "column", gap: "6px", marginBottom: "12px" }}>
                   {s.items.map((item, j) => (
                     <div key={j} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 12px", borderRadius: "9px", background: "var(--bg)" }}>
                       <div>
@@ -267,63 +332,75 @@ export default function CommissionGuideModal({ onClose }: { onClose: () => void 
         {/* ── 승급 조건 ── */}
         {tab === "promotion" && (
           <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+
+            {/* 멤버 → 매니저 → 디렉터 로드맵 */}
             {[
-              {
-                from: { emoji: "👤", label: "멤버", badge: "MEMBER", color: "#6B7280", fee: "5만원+" },
-                to:   { emoji: "👔", label: "매니저", badge: "MANAGER", color: "#378ADD", fee: "소매창업 330만원" },
-                arrow: "소개 누적 창업비 합계 1,000만원",
-                tip: "창업자 3~4명 소개하면 달성",
-              },
-              {
-                from: { emoji: "👔", label: "매니저", badge: "MANAGER", color: "#378ADD", fee: "소매창업 330만원" },
-                to:   { emoji: "👑", label: "디렉터", badge: "DIRECTOR", color: "#E8599A", fee: "도매창업 550만원" },
-                arrow: "직추천 매니저 3명 + 산하 전체 누적 2,000만원",
-                tip: "또는 도매 창업(550만원)으로 즉시 디렉터",
-              },
+              { from: { e: "👤", l: "멤버", b: "MEMBER", c: "#6B7280", f: "5만원+" },
+                to:   { e: "👔", l: "매니저", b: "MANAGER", c: "#378ADD", f: "소매창업 330만원" },
+                cond: "소개 누적 창업비 합계 1,000만원", tip: "창업자 3~4명 소개하면 달성" },
+              { from: { e: "👔", l: "매니저", b: "MANAGER", c: "#378ADD", f: "소매창업 330만원" },
+                to:   { e: "👑", l: "디렉터", b: "DIRECTOR", c: "#E8599A", f: "도매창업 550만원" },
+                cond: "직추천 매니저 3명 + 산하 전체 누적 2,000만원", tip: "또는 도매 창업(550만원)으로 즉시 디렉터" },
             ].map((s, i) => (
-              <div key={i} style={{ background: "var(--bg-elevated)", border: "1px solid var(--bg-border)", borderRadius: "16px", padding: "20px" }}>
+              <div key={i} style={{ background: "var(--bg-elevated)", border: "1px solid var(--bg-border)", borderRadius: "16px", padding: "18px" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: "12px", flexWrap: "wrap" }}>
-                  <Person emoji={s.from.emoji} label={s.from.label} badge={s.from.badge} color={s.from.color} sub={s.from.fee} />
+                  <Person emoji={s.from.e} label={s.from.l} badge={s.from.b} color={s.from.c} sub={s.from.f} />
                   <div style={{ flex: 1, minWidth: "120px", textAlign: "center" }}>
-                    <div style={{ fontSize: "20px", marginBottom: "6px" }}>→</div>
-                    <div style={{ padding: "6px 10px", borderRadius: "10px", background: `${s.to.color}15`, border: `1px solid ${s.to.color}30` }}>
-                      <p style={{ fontSize: "11px", fontWeight: 700, color: s.to.color, margin: 0 }}>{s.arrow}</p>
+                    <div style={{ fontSize: "18px", marginBottom: "6px" }}>→</div>
+                    <div style={{ padding: "6px 10px", borderRadius: "10px", background: `${s.to.c}12`, border: `1px solid ${s.to.c}30` }}>
+                      <p style={{ fontSize: "11px", fontWeight: 700, color: s.to.c, margin: 0 }}>{s.cond}</p>
                     </div>
                   </div>
-                  <Person emoji={s.to.emoji} label={s.to.label} badge={s.to.badge} color={s.to.color} sub={s.to.fee} />
+                  <Person emoji={s.to.e} label={s.to.l} badge={s.to.b} color={s.to.c} sub={s.to.f} />
                 </div>
-                <div style={{ marginTop: "12px", padding: "9px 12px", borderRadius: "10px", background: "rgba(201,168,76,0.07)", border: "1px solid rgba(201,168,76,0.2)" }}>
-                  <span style={{ fontSize: "10px", color: "#C9A84C", fontWeight: 700 }}>💡 TIP </span>
+                <div style={{ marginTop: "10px", padding: "8px 12px", borderRadius: "8px", background: "rgba(201,168,76,0.07)", border: "1px solid rgba(201,168,76,0.2)" }}>
+                  <span style={{ fontSize: "10px", color: "#C9A84C", fontWeight: 700 }}>💡 </span>
                   <span style={{ fontSize: "11px", color: "var(--text-muted)" }}>{s.tip}</span>
                 </div>
               </div>
             ))}
 
+            {/* 본부장 타이틀 */}
+            <div style={{ background: "rgba(255,215,0,0.07)", border: "2px solid rgba(255,215,0,0.4)", borderRadius: "16px", padding: "18px" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "10px" }}>
+                <div style={{ width: 52, height: 52, borderRadius: "50%", background: "linear-gradient(135deg, #FFD700, #FFA500)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "26px", flexShrink: 0 }}>🏅</div>
+                <div>
+                  <div style={{ display: "inline-block", padding: "2px 10px", borderRadius: "999px", background: "rgba(255,215,0,0.2)", border: "1px solid rgba(255,215,0,0.5)", fontSize: "10px", fontWeight: 800, color: "#FFD700", marginBottom: "4px" }}>SPECIAL TITLE</div>
+                  <h3 style={{ fontFamily: "Syne,sans-serif", fontSize: "20px", fontWeight: 900, color: "#FFD700", margin: 0 }}>본부장</h3>
+                </div>
+              </div>
+              <div style={{ padding: "12px 14px", borderRadius: "10px", background: "rgba(255,215,0,0.06)", border: "1px solid rgba(255,215,0,0.2)" }}>
+                <p style={{ fontSize: "12px", fontWeight: 700, color: "var(--text-primary)", margin: "0 0 4px" }}>조건: 디렉터가 디렉터를 3명 배출</p>
+                <p style={{ fontSize: "11px", color: "var(--text-muted)", margin: 0 }}>본부장 타이틀이 부여됩니다. 추가 혜택은 추후 공개 예정입니다.</p>
+              </div>
+            </div>
+
             {/* 창업 유형 비교 */}
-            <div style={{ background: "var(--bg-elevated)", border: "1px solid var(--bg-border)", borderRadius: "16px", overflow: "hidden" }}>
-              <div style={{ padding: "14px 16px", borderBottom: "1px solid var(--bg-border)" }}>
-                <p style={{ fontSize: "13px", fontWeight: 700, color: "#fff", margin: 0 }}>창업 유형 비교</p>
+            <div style={{ background: "var(--bg-elevated)", border: "1px solid var(--bg-border)", borderRadius: "14px", overflow: "hidden" }}>
+              <div style={{ padding: "12px 16px", borderBottom: "1px solid var(--bg-border)" }}>
+                <p style={{ fontSize: "13px", fontWeight: 700, color: "var(--text-primary)", margin: 0 }}>창업 유형 비교</p>
               </div>
               <table style={{ width: "100%", borderCollapse: "collapse" }}>
                 <thead>
                   <tr style={{ borderBottom: "1px solid var(--bg-border)" }}>
-                    <th style={{ padding: "10px 14px", textAlign: "left", fontSize: "11px", color: "var(--text-muted)", fontWeight: 600 }}>구분</th>
-                    <th style={{ padding: "10px 14px", textAlign: "center", fontSize: "12px", fontWeight: 700, color: "#378ADD" }}>소매창업</th>
-                    <th style={{ padding: "10px 14px", textAlign: "center", fontSize: "12px", fontWeight: 700, color: "#E8599A" }}>도매창업</th>
+                    <th style={{ padding: "9px 14px", textAlign: "left", fontSize: "11px", color: "var(--text-muted)", fontWeight: 600 }}>구분</th>
+                    <th style={{ padding: "9px 14px", textAlign: "center", fontSize: "12px", fontWeight: 700, color: "#378ADD" }}>👔 매니저</th>
+                    <th style={{ padding: "9px 14px", textAlign: "center", fontSize: "12px", fontWeight: 700, color: "#E8599A" }}>👑 디렉터</th>
                   </tr>
                 </thead>
                 <tbody>
                   {[
-                    { label: "창업비", v1: "330만원", v2: "550만원" },
-                    { label: "직급", v1: "매니저", v2: "디렉터" },
-                    { label: "직판 수당", v1: "96만원", v2: "160만원" },
-                    { label: "추천 오버라이드", v1: "30만원/명", v2: "50만원/명" },
-                    { label: "구매 가격", v1: "소매가", v2: "도매가 (더 저렴)" },
+                    { label: "창업비",    v1: "330만원",        v2: "550만원" },
+                    { label: "판권",      v1: "25%",            v2: "32%" },
+                    { label: "소개 시",   v1: "75만원/건",      v2: "160만원/건" },
+                    { label: "패스트스타트", v1: "+3%",         v2: "+5%" },
+                    { label: "팀원첫모집",  v1: "+2%/건",       v2: "+3%/건" },
+                    { label: "구매가격",   v1: "소매가",        v2: "도매가" },
                   ].map(({ label, v1, v2 }) => (
-                    <tr key={label} style={{ borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
-                      <td style={{ padding: "9px 14px", fontSize: "12px", color: "var(--text-muted)" }}>{label}</td>
-                      <td style={{ padding: "9px 14px", textAlign: "center", fontSize: "12px", fontWeight: 700, color: "#378ADD" }}>{v1}</td>
-                      <td style={{ padding: "9px 14px", textAlign: "center", fontSize: "12px", fontWeight: 700, color: "#E8599A" }}>{v2}</td>
+                    <tr key={label} style={{ borderBottom: "1px solid var(--bg-border)" }}>
+                      <td style={{ padding: "8px 14px", fontSize: "11px", color: "var(--text-muted)" }}>{label}</td>
+                      <td style={{ padding: "8px 14px", textAlign: "center", fontSize: "12px", fontWeight: 700, color: "#378ADD" }}>{v1}</td>
+                      <td style={{ padding: "8px 14px", textAlign: "center", fontSize: "12px", fontWeight: 700, color: "#E8599A" }}>{v2}</td>
                     </tr>
                   ))}
                 </tbody>
