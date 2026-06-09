@@ -8,7 +8,7 @@ import {
   LayoutDashboard, Users, ShoppingBag, Calculator,
   Settings, TrendingUp, LogOut, GitBranch,
   Wallet, Package, Bell, Menu, X, ChevronLeft, ExternalLink, CheckCircle,
-  Calendar as CalendarIcon, Banknote as BanknoteIcon, BookOpen, HeartPulse,
+  Calendar as CalendarIcon, Banknote as BanknoteIcon, BookOpen, HeartPulse, Eye,
 } from "lucide-react";
 import ThemeToggle from "@/components/ui/ThemeToggle";
 import CommissionPlanModal from "@/components/ui/CommissionPlanModal";
@@ -54,6 +54,7 @@ const NAV_GROUPS = [
     label: "설정",
     color: "var(--text-muted)",
     items: [
+      { label: "기능 미리보기", href: "/preview", icon: Eye },
       { label: "시스템 설정", href: "/settings", icon: Settings },
     ],
   },
