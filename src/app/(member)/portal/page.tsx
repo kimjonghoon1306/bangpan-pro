@@ -9,6 +9,7 @@ import { Skeleton, SkeletonStat, SkeletonCard, SkeletonStyle } from "@/component
 import CommissionPlanModal from "@/components/ui/CommissionPlanModal";
 import CommissionGuideModal from "@/components/ui/CommissionGuideModal";
 import NextActionCard from "@/components/ui/NextActionCard";
+import RankProgressCard from "@/components/ui/RankProgressCard";
 
 const QUICK_MENU = [
   { label: "내 조직",   href: "/network",  icon: Users,       color: "#6C47FF", bg: "rgba(108,71,255,0.10)" },  // violet — 사람
@@ -204,6 +205,9 @@ export default function PortalPage() {
 
       {/* 오늘 할 일 (다음 행동 추천) */}
       <NextActionCard />
+
+      {/* 승급 진행률 */}
+      <RankProgressCard />
 
       {/* 빠른 메뉴 */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(80px, 1fr))", gap: "10px" }}>
